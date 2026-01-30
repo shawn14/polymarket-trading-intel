@@ -283,10 +283,13 @@ async function main() {
   // Fetch active high-volume markets and subscribe
   console.log('\n[System] Fetching high-volume markets...\n');
 
+  // Configurable market limit via env var (default: 200)
+  const marketLimit = parseInt(process.env.MARKET_LIMIT || '200', 10);
+
   const rawMarkets = await client.fetchMarkets({
     active: true,
     closed: false,
-    limit: 50,
+    limit: 500,  // Fetch all available
     order: 'volume',
     ascending: false,
   });
@@ -298,17 +301,22 @@ async function main() {
     const market = parseMarket(rawMarket);
 
     if (market.tokenIds.length > 0 && market.question) {
-      const questionPreview = market.question.length > 60
-        ? market.question.slice(0, 57) + '...'
-        : market.question;
-      const priceStr = market.outcomePrices.length > 0
-        ? ` (${(market.outcomePrices[0] * 100).toFixed(0)}%)`
-        : '';
+      // Only print first 10 markets to avoid noise
+      if (marketCount < 10) {
+        const questionPreview = market.question.length > 60
+          ? market.question.slice(0, 57) + '...'
+          : market.question;
+        const priceStr = market.outcomePrices.length > 0
+          ? ` (${(market.outcomePrices[0] * 100).toFixed(0)}%)`
+          : '';
+        console.log(`  ${questionPreview}${priceStr}`);
+      } else if (marketCount === 10) {
+        console.log(`  ... and ${marketLimit - 10} more markets`);
+      }
 
-      console.log(`  ${questionPreview}${priceStr}`);
-
-      // Register with analysis engines
+      // Register with detector and analysis engines
       for (let i = 0; i < market.tokenIds.length; i++) {
+        detector.setMarketQuestion(market.tokenIds[i], market.question);
         explainEngine.setMarketQuestion(market.tokenIds[i], market.question);
         arbDetector.updateMarket(
           market.tokenIds[i],
@@ -320,7 +328,7 @@ async function main() {
       assetIds.push(...market.tokenIds);
       marketCount++;
 
-      if (marketCount >= 10) break;
+      if (marketCount >= marketLimit) break;
     }
   }
 

@@ -19,12 +19,20 @@ import type { Alert, AlertPriority } from './types.js';
 export function formatSignalAlert(signal: Signal): Alert {
   const priority = signalStrengthToPriority(signal.strength);
 
+  // Use market question if available (not a hex condition ID), otherwise show asset ID
+  const isConditionId = signal.market.startsWith('0x') || /^[a-f0-9]{64}$/i.test(signal.market);
+  const marketDisplay = isConditionId
+    ? `${signal.assetId.slice(0, 8)}...`
+    : signal.market.length > 50
+      ? signal.market.slice(0, 47) + '...'
+      : signal.market;
+
   return {
     id: signal.id,
     timestamp: signal.timestamp,
     priority,
     source: { type: 'signal', signal },
-    title: `${signal.type.toUpperCase()}: ${signal.assetId.slice(0, 8)}...`,
+    title: `${signal.type.toUpperCase()}: ${marketDisplay}`,
     body: signal.description,
     metadata: {
       assetId: signal.assetId,

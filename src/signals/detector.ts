@@ -42,10 +42,25 @@ export class SignalDetector extends EventEmitter<SignalDetectorEvents> {
   private marketStates: Map<string, MarketState> = new Map();
   private client: PolymarketClient | null = null;
   private lastSignals: Map<string, number> = new Map(); // assetId:type -> timestamp
+  private marketQuestions: Map<string, string> = new Map(); // assetId -> question
 
   constructor(config: Partial<DetectorConfig> = {}) {
     super();
     this.config = { ...DEFAULT_CONFIG, ...config };
+  }
+
+  /**
+   * Register a market question for better signal descriptions
+   */
+  setMarketQuestion(assetId: string, question: string): void {
+    this.marketQuestions.set(assetId, question);
+  }
+
+  /**
+   * Get the human-readable question for an asset
+   */
+  getMarketQuestion(assetId: string): string | undefined {
+    return this.marketQuestions.get(assetId);
   }
 
   /**
@@ -437,12 +452,15 @@ export class SignalDetector extends EventEmitter<SignalDetectorEvents> {
     // Record this signal
     this.lastSignals.set(cooldownKey, now);
 
+    // Use stored question if available, otherwise fall back to condition ID
+    const marketQuestion = this.marketQuestions.get(state.assetId) || state.market;
+
     const signal: Signal = {
       id: randomUUID(),
       type,
       strength,
       assetId: state.assetId,
-      market: state.market,
+      market: marketQuestion,
       timestamp: now,
       data,
       description,
