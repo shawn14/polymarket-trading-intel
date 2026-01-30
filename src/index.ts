@@ -12,6 +12,7 @@ import { SportsClient } from './ingestion/sports/index.js';
 import { SignalDetector, TruthMarketLinker } from './signals/index.js';
 import { AlertEngine } from './alerts/index.js';
 import { APIServer } from './api/index.js';
+import { ExplainMoveEngine, ArbDetector } from './analysis/index.js';
 import type { ChannelConfig } from './alerts/index.js';
 
 async function main() {
@@ -59,6 +60,48 @@ async function main() {
   // Attach detector to Polymarket client
   detector.attach(client);
 
+  // Initialize analysis engines
+  const explainEngine = new ExplainMoveEngine({
+    moveThreshold: 0.03,  // Explain moves of 3%+
+    lookbackMs: 5 * 60 * 1000,  // 5 minute lookback
+  });
+
+  const arbDetector = new ArbDetector({
+    minEdge: 0.02,  // Alert on 2%+ edge
+    checkIntervalMs: 30 * 1000,  // Check every 30s
+  });
+
+  // Attach analysis engines
+  explainEngine.attachPolymarket(client);
+  arbDetector.start();
+
+  // Wire up signal recording for explanations
+  detector.on('signal', (signal) => {
+    explainEngine.recordSignal(signal);
+  });
+
+  // Log significant moves and explanations
+  explainEngine.on('explanation', (explanation) => {
+    const pct = (explanation.move.magnitude * 100).toFixed(1);
+    console.log(`\n[ExplainMove] ${explanation.move.direction.toUpperCase()} ${pct}%: ${explanation.question.slice(0, 50)}...`);
+    console.log(`  Type: ${explanation.moveType} | Confidence: ${explanation.confidence}`);
+    console.log(`  ${explanation.summary}`);
+    for (const detail of explanation.details.slice(0, 3)) {
+      console.log(`  • ${detail}`);
+    }
+  });
+
+  // Log arbitrage opportunities
+  arbDetector.on('opportunity', (opp) => {
+    console.log(`\n[ArbDetector] ${opp.type.toUpperCase()} opportunity (${(opp.expectedEdge * 100).toFixed(1)}% edge)`);
+    console.log(`  ${opp.description}`);
+    for (const market of opp.markets) {
+      console.log(`  • ${market.position}: ${market.question.slice(0, 40)}... @ ${(market.currentPrice * 100).toFixed(0)}%`);
+    }
+  });
+
+  console.log('[System] Analysis engines enabled (ExplainMove + ArbDetector)');
+
   // Track data flow
   let bookCount = 0;
   let priceCount = 0;
@@ -98,6 +141,14 @@ async function main() {
 
     congressClient.on('billChange', (change) => {
       alertEngine.sendCongressChange(change);
+      // Record for move explanations
+      explainEngine.recordTruthEvent({
+        source: 'congress',
+        type: change.action.type,
+        description: `${change.bill.type} ${change.bill.number}: ${change.action.text.slice(0, 100)}`,
+        timestamp: Date.now(),
+        confidence: change.significance === 'critical' ? 0.95 : change.significance === 'high' ? 0.8 : 0.6,
+      });
     });
 
     congressClient.on('error', (error) => {
@@ -118,6 +169,14 @@ async function main() {
 
   weatherClient.on('alert', (event) => {
     alertEngine.sendWeatherEvent(event);
+    // Record for move explanations
+    explainEngine.recordTruthEvent({
+      source: 'weather',
+      type: event.event,
+      description: event.headline.slice(0, 100),
+      timestamp: event.timestamp,
+      confidence: event.significance === 'critical' ? 0.95 : event.significance === 'high' ? 0.8 : 0.6,
+    });
   });
 
   weatherClient.on('error', (error) => {
@@ -135,6 +194,14 @@ async function main() {
 
   fedClient.on('event', (event) => {
     alertEngine.sendFedEvent(event);
+    // Record for move explanations
+    explainEngine.recordTruthEvent({
+      source: 'fed',
+      type: event.type,
+      description: event.title.slice(0, 100),
+      timestamp: event.timestamp,
+      confidence: event.significance === 'critical' ? 0.95 : event.significance === 'high' ? 0.8 : 0.6,
+    });
   });
 
   fedClient.on('error', (error) => {
@@ -152,6 +219,14 @@ async function main() {
 
   sportsClient.on('event', (event) => {
     alertEngine.sendSportsEvent(event);
+    // Record for move explanations
+    explainEngine.recordTruthEvent({
+      source: 'sports',
+      type: event.type,
+      description: event.headline,
+      timestamp: event.timestamp,
+      confidence: event.significance === 'critical' ? 0.95 : event.significance === 'high' ? 0.8 : 0.6,
+    });
   });
 
   sportsClient.on('error', (error) => {
@@ -232,6 +307,16 @@ async function main() {
 
       console.log(`  ${questionPreview}${priceStr}`);
 
+      // Register with analysis engines
+      for (let i = 0; i < market.tokenIds.length; i++) {
+        explainEngine.setMarketQuestion(market.tokenIds[i], market.question);
+        arbDetector.updateMarket(
+          market.tokenIds[i],
+          market.question,
+          market.outcomePrices[i] ?? 0.5
+        );
+      }
+
       assetIds.push(...market.tokenIds);
       marketCount++;
 
@@ -260,6 +345,7 @@ async function main() {
     process.on('SIGINT', async () => {
       console.log('\n[System] Shutting down...');
       clearInterval(statusInterval);
+      arbDetector.stop();
       await apiServer.stop();
       linker.stop();
       sportsClient.stop();
