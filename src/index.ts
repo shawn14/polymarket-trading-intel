@@ -13,6 +13,7 @@ import { SignalDetector, TruthMarketLinker } from './signals/index.js';
 import { AlertEngine } from './alerts/index.js';
 import { APIServer } from './api/index.js';
 import { ExplainMoveEngine, ArbDetector } from './analysis/index.js';
+import { WatchlistManager } from './watchlist/index.js';
 import type { ChannelConfig } from './alerts/index.js';
 
 async function main() {
@@ -236,6 +237,25 @@ async function main() {
   sportsClient.start();
   console.log('[System] Sports monitoring enabled');
 
+  // Initialize Watchlist Manager
+  const watchlistPath = process.env.WATCHLIST_PATH || './watchlist.json';
+  const watchlistOnly = process.env.WATCHLIST_ONLY === 'true';
+  const watchlistManager = new WatchlistManager(watchlistPath);
+
+  try {
+    await watchlistManager.load();
+    const watchlist = watchlistManager.getWatchlist();
+    console.log(`[System] Watchlist loaded: ${watchlist.markets.length} markets`);
+    if (watchlistOnly) {
+      console.log('[System] WATCHLIST_ONLY mode: alerts filtered to watched markets only');
+    }
+  } catch (error) {
+    console.log('[System] No watchlist found, starting fresh');
+  }
+
+  // Attach watchlist to linker for targeted alerting
+  linker.setWatchlistManager(watchlistManager, watchlistOnly);
+
   // Attach linker to all data sources
   linker.attach({
     polymarket: client,
@@ -268,6 +288,7 @@ async function main() {
       detector,
       linker,
       alertEngine,
+      watchlist: watchlistManager,
     }
   );
 

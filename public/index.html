@@ -332,6 +332,311 @@
     .full-width {
       grid-column: 1 / -1;
     }
+
+    .watchlist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 6px;
+      background: var(--bg-hover);
+      margin-bottom: 8px;
+    }
+
+    .watchlist-item .question {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .watchlist-item .sources {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .watchlist-item .source-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+
+    .watchlist-item .source-badge.congress { background: rgba(210, 153, 34, 0.2); color: var(--accent-yellow); }
+    .watchlist-item .source-badge.weather { background: rgba(163, 113, 247, 0.2); color: var(--accent-purple); }
+    .watchlist-item .source-badge.fed { background: rgba(88, 166, 255, 0.2); color: var(--accent-blue); }
+    .watchlist-item .source-badge.sports { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+    .watchlist-item .source-badge.news { background: rgba(139, 148, 158, 0.2); color: var(--text-secondary); }
+
+    .watchlist-item .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .watchlist-item .keyword-tag {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+    }
+
+    .watchlist-item .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .watchlist-item .remove-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 8px;
+    }
+
+    .watchlist-item .remove-btn:hover {
+      color: var(--accent-red);
+    }
+
+    .search-result {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: var(--bg-card);
+      margin-bottom: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .search-result .question-text {
+      flex: 1;
+      font-size: 12px;
+    }
+
+    .search-result .add-btn {
+      background: var(--accent-blue);
+      border: none;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .search-result .add-btn:hover {
+      opacity: 0.9;
+    }
+
+    .search-result .add-btn:disabled {
+      background: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .suggestions-panel {
+      padding: 10px;
+      background: var(--bg-card);
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+
+    .suggestions-panel .label {
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* Market Browser Styles */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    .filter-bar select,
+    .filter-bar input[type="text"],
+    .filter-bar input[type="number"] {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    .filter-bar select {
+      min-width: 120px;
+    }
+
+    .filter-bar input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .filter-bar input[type="number"] {
+      width: 70px;
+    }
+
+    .filter-bar label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .filter-bar input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    .browser-stats {
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .markets-table th {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .markets-table th:hover {
+      background: var(--bg-hover);
+    }
+
+    .markets-table th.sorted-asc::after {
+      content: ' ▲';
+      font-size: 10px;
+    }
+
+    .markets-table th.sorted-desc::after {
+      content: ' ▼';
+      font-size: 10px;
+    }
+
+    .source-icon {
+      display: inline-block;
+      font-size: 12px;
+      margin-right: 2px;
+    }
+
+    .urgency-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .urgency-badge.critical {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .urgency-badge.high {
+      background: rgba(210, 153, 34, 0.2);
+      color: var(--accent-yellow);
+    }
+
+    .urgency-badge.medium {
+      background: rgba(88, 166, 255, 0.2);
+      color: var(--accent-blue);
+    }
+
+    .urgency-badge.low {
+      background: rgba(139, 148, 158, 0.2);
+      color: var(--text-muted);
+    }
+
+    .watch-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .watch-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .watch-btn.watched {
+      background: rgba(63, 185, 80, 0.15);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .market-row {
+      cursor: pointer;
+    }
+
+    .market-row.expanded {
+      background: var(--bg-hover);
+    }
+
+    .market-details {
+      display: none;
+      padding: 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .market-details.visible {
+      display: table-row;
+    }
+
+    .market-details td {
+      padding: 12px;
+      background: var(--bg-card);
+    }
+
+    .details-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .details-section h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .details-section .keywords-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .countdown-badge {
+      font-family: 'SF Mono', Consolas, monospace;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .countdown-badge.urgent {
+      color: var(--accent-red);
+    }
+
+    .countdown-badge.soon {
+      color: var(--accent-yellow);
+    }
   </style>
 </head>
 <body>
@@ -372,18 +677,72 @@
 
     <div class="grid">
       <div class="card full-width">
-        <h2>Recent Alerts</h2>
-        <div id="alerts" class="alerts-list">
-          <div class="loading">Loading alerts</div>
+        <h2>Watchlist</h2>
+        <div id="watchlist-controls" style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+          <input type="text" id="watchlist-search" placeholder="Search markets to add..."
+            style="flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);
+            background: var(--bg-hover); color: var(--text-primary); font-size: 13px;">
+          <button onclick="searchMarkets()" class="refresh-btn">Search</button>
+        </div>
+        <div id="watchlist-results" style="display: none; margin-bottom: 16px;"></div>
+        <div id="watchlist">
+          <div class="loading">Loading watchlist</div>
         </div>
       </div>
     </div>
 
     <div class="grid">
       <div class="card full-width">
-        <h2>Tracked Markets</h2>
+        <h2>All Markets</h2>
+
+        <!-- Filter Controls -->
+        <div class="filter-bar">
+          <select id="category-filter">
+            <option value="">All Categories</option>
+            <option value="government_shutdown">Shutdown</option>
+            <option value="fed_rate">Fed Rate</option>
+            <option value="hurricane">Hurricane</option>
+            <option value="legislation">Legislation</option>
+            <option value="sports_player">Sports Player</option>
+            <option value="sports_outcome">Sports Outcome</option>
+            <option value="other">Other</option>
+          </select>
+
+          <select id="source-filter">
+            <option value="">All Sources</option>
+            <option value="congress">Congress</option>
+            <option value="weather">Weather</option>
+            <option value="fed">Fed</option>
+            <option value="sports">Sports</option>
+          </select>
+
+          <input type="text" id="search-filter" placeholder="Search markets...">
+
+          <input type="number" id="price-min" placeholder="Min %" min="0" max="100">
+          <span style="color: var(--text-muted);">–</span>
+          <input type="number" id="price-max" placeholder="Max %" min="0" max="100">
+
+          <label>
+            <input type="checkbox" id="urgency-filter">
+            High urgency only
+          </label>
+        </div>
+
+        <div class="browser-stats" id="browser-stats">
+          Loading markets...
+        </div>
+
         <div id="markets">
           <div class="loading">Loading markets</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card full-width">
+        <h2>Recent Alerts</h2>
+        <div id="alerts" class="alerts-list">
+          <div class="loading">Loading alerts</div>
         </div>
       </div>
     </div>
@@ -498,48 +857,312 @@
       }
     }
 
+    // Market Browser state
+    let allBrowseMarkets = [];
+    let filteredMarkets = [];
+    let sortColumn = 'urgency';
+    let sortDirection = 'asc';
+    let expandedMarketId = null;
+
     async function loadMarkets() {
       try {
-        const markets = await fetchJSON('/markets/all');
+        console.log('Loading markets from /markets/browse...');
+        const markets = await fetchJSON('/markets/browse');
+        console.log('Loaded markets:', markets?.length || 0);
 
-        if (markets.length === 0) {
-          document.getElementById('markets').innerHTML = '<div class="loading" style="animation:none">No markets tracked</div>';
+        if (!markets || markets.length === 0) {
+          document.getElementById('markets').innerHTML = '<div class="loading" style="animation:none">No markets tracked yet. Waiting for data...</div>';
+          document.getElementById('browser-stats').innerHTML = '0 markets - waiting for WebSocket data';
           return;
         }
 
-        // Show first 50 markets, sorted by last update
-        const displayMarkets = markets.slice(0, 50);
+        allBrowseMarkets = markets;
+        applyFilters();
+      } catch (e) {
+        console.error('Failed to load markets:', e);
+        // Show more helpful error
+        const errorMsg = e.message || 'Unknown error';
+        document.getElementById('markets').innerHTML = `<div class="error">Failed to load markets: ${escapeHtml(errorMsg)}</div>`;
+        document.getElementById('browser-stats').innerHTML = 'Error - check console for details';
+      }
+    }
 
-        const html = `
-          <div style="margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">
-            Showing ${displayMarkets.length} of ${markets.length} markets
-          </div>
-          <table class="markets-table">
-            <thead>
-              <tr>
-                <th>Question</th>
-                <th>Price</th>
-                <th>Spread</th>
-                <th>Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${displayMarkets.map(m => `
-                <tr>
-                  <td>${escapeHtml(m.question.slice(0, 55))}${m.question.length > 55 ? '...' : ''}</td>
-                  <td class="price">${(m.currentPrice * 100).toFixed(0)}%</td>
-                  <td style="color: var(--text-muted)">${(m.spread * 100).toFixed(1)}%</td>
-                  <td style="color: var(--text-muted)">${m.lastUpdated ? formatTime(m.lastUpdated) : '-'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+    function applyFilters() {
+      const categoryFilter = document.getElementById('category-filter')?.value || '';
+      const sourceFilter = document.getElementById('source-filter')?.value || '';
+      const searchFilter = (document.getElementById('search-filter')?.value || '').toLowerCase();
+      const priceMin = parseFloat(document.getElementById('price-min')?.value) || 0;
+      const priceMax = parseFloat(document.getElementById('price-max')?.value) || 100;
+      const urgencyOnly = document.getElementById('urgency-filter')?.checked || false;
+
+      filteredMarkets = allBrowseMarkets.filter(m => {
+        // Category filter
+        if (categoryFilter && m.category !== categoryFilter) return false;
+
+        // Source filter
+        if (sourceFilter && !m.truthSources.includes(sourceFilter)) return false;
+
+        // Search filter
+        if (searchFilter && !m.question.toLowerCase().includes(searchFilter)) return false;
+
+        // Price filter
+        const pricePercent = m.currentPrice * 100;
+        if (pricePercent < priceMin || pricePercent > priceMax) return false;
+
+        // Urgency filter
+        if (urgencyOnly && m.urgency !== 'high' && m.urgency !== 'critical') return false;
+
+        return true;
+      });
+
+      sortMarkets();
+      renderMarkets();
+    }
+
+    function sortMarkets() {
+      const urgencyOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+
+      filteredMarkets.sort((a, b) => {
+        let valA, valB;
+
+        switch (sortColumn) {
+          case 'price':
+            valA = a.currentPrice;
+            valB = b.currentPrice;
+            break;
+          case 'question':
+            valA = a.question.toLowerCase();
+            valB = b.question.toLowerCase();
+            break;
+          case 'category':
+            valA = a.category;
+            valB = b.category;
+            break;
+          case 'urgency':
+            valA = urgencyOrder[a.urgency] ?? 4;
+            valB = urgencyOrder[b.urgency] ?? 4;
+            break;
+          default:
+            valA = urgencyOrder[a.urgency] ?? 4;
+            valB = urgencyOrder[b.urgency] ?? 4;
+        }
+
+        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function handleSort(column) {
+      if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = column;
+        sortDirection = 'asc';
+      }
+      sortMarkets();
+      renderMarkets();
+    }
+
+    function getSourceIcon(source) {
+      switch (source) {
+        case 'congress': return '📜';
+        case 'weather': return '🌀';
+        case 'fed': return '💰';
+        case 'sports': return '🏈';
+        default: return '📊';
+      }
+    }
+
+    function getCategoryLabel(category) {
+      switch (category) {
+        case 'government_shutdown': return 'shutdown';
+        case 'fed_rate': return 'fed';
+        case 'hurricane': return 'hurricane';
+        case 'legislation': return 'legislation';
+        case 'sports_player': return 'player';
+        case 'sports_outcome': return 'outcome';
+        default: return category;
+      }
+    }
+
+    function toggleMarketDetails(marketId) {
+      if (expandedMarketId === marketId) {
+        expandedMarketId = null;
+      } else {
+        expandedMarketId = marketId;
+      }
+      renderMarkets();
+    }
+
+    async function toggleWatchlist(market, event) {
+      event.stopPropagation();
+
+      if (market.isWatched) {
+        // Remove from watchlist
+        try {
+          const response = await fetch(`${API_BASE}/watchlist/${market.id}`, { method: 'DELETE' });
+          if (response.ok) {
+            market.isWatched = false;
+            watchedMarketIds.delete(market.id);
+            renderMarkets();
+            loadWatchlist();
+          }
+        } catch (e) {
+          console.error('Failed to remove from watchlist:', e);
+        }
+      } else {
+        // Add to watchlist
+        try {
+          const suggestions = await fetchJSON('/watchlist/suggest?q=' + encodeURIComponent(market.question));
+          const response = await fetch(`${API_BASE}/watchlist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              marketId: market.id,
+              conditionId: '',
+              question: market.question,
+              truthSources: suggestions.truthSources || market.truthSources,
+              keywords: suggestions.keywords || market.keywords,
+              minConfidence: 'medium',
+            }),
+          });
+          if (response.ok) {
+            market.isWatched = true;
+            watchedMarketIds.add(market.id);
+            renderMarkets();
+            loadWatchlist();
+          }
+        } catch (e) {
+          console.error('Failed to add to watchlist:', e);
+        }
+      }
+    }
+
+    function renderMarkets() {
+      const displayMarkets = filteredMarkets.slice(0, 100);
+
+      // Update stats
+      const categoryStats = {};
+      filteredMarkets.forEach(m => {
+        categoryStats[m.category] = (categoryStats[m.category] || 0) + 1;
+      });
+      const statsHtml = `Showing ${displayMarkets.length} of ${filteredMarkets.length} markets (${allBrowseMarkets.length} total)`;
+      document.getElementById('browser-stats').innerHTML = statsHtml;
+
+      // Build table
+      const getSortClass = (col) => {
+        if (sortColumn !== col) return '';
+        return sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc';
+      };
+
+      let html = `
+        <table class="markets-table">
+          <thead>
+            <tr>
+              <th class="${getSortClass('price')}" onclick="handleSort('price')" style="width: 70px;">Price</th>
+              <th class="${getSortClass('question')}" onclick="handleSort('question')">Question</th>
+              <th class="${getSortClass('category')}" onclick="handleSort('category')" style="width: 90px;">Category</th>
+              <th style="width: 80px;">Sources</th>
+              <th class="${getSortClass('urgency')}" onclick="handleSort('urgency')" style="width: 80px;">Urgency</th>
+              <th style="width: 60px;">Watch</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      displayMarkets.forEach(m => {
+        const isExpanded = expandedMarketId === m.id;
+        const pricePercent = (m.currentPrice * 100).toFixed(0);
+
+        // Sources icons
+        const sourcesHtml = m.truthSources.map(s => `<span class="source-icon" title="${s}">${getSourceIcon(s)}</span>`).join('');
+
+        // Urgency badge
+        const urgencyHtml = m.urgency
+          ? `<span class="urgency-badge ${m.urgency}">${m.urgency}</span>`
+          : '<span style="color: var(--text-muted);">-</span>';
+
+        // Watch button
+        const watchHtml = `<button class="watch-btn ${m.isWatched ? 'watched' : ''}" onclick="toggleWatchlist(filteredMarkets.find(x => x.id === '${m.id}'), event)">${m.isWatched ? '✓' : '+'}</button>`;
+
+        // Countdown
+        let countdownHtml = '';
+        if (m.countdown) {
+          const urgClass = m.countdown.daysRemaining <= 1 ? 'urgent' : m.countdown.daysRemaining <= 7 ? 'soon' : '';
+          countdownHtml = ` <span class="countdown-badge ${urgClass}">${m.countdown.daysRemaining}d</span>`;
+        }
+
+        html += `
+          <tr class="market-row ${isExpanded ? 'expanded' : ''}" onclick="toggleMarketDetails('${m.id}')">
+            <td class="price">${pricePercent}%</td>
+            <td>${escapeHtml(m.question.slice(0, 60))}${m.question.length > 60 ? '...' : ''}${countdownHtml}</td>
+            <td><span class="category-badge ${m.category}">${getCategoryLabel(m.category)}</span></td>
+            <td>${sourcesHtml || '-'}</td>
+            <td>${urgencyHtml}</td>
+            <td>${watchHtml}</td>
+          </tr>
         `;
 
-        document.getElementById('markets').innerHTML = html;
-      } catch (e) {
-        document.getElementById('markets').innerHTML = '<div class="error">Failed to load markets</div>';
-      }
+        // Expanded details row
+        if (isExpanded) {
+          html += `
+            <tr class="market-details visible">
+              <td colspan="6">
+                <div class="details-content">
+                  <div class="details-section">
+                    <h4>Full Question</h4>
+                    <p style="font-size: 13px;">${escapeHtml(m.question)}</p>
+                  </div>
+                  <div class="details-section">
+                    <h4>Keywords</h4>
+                    <div class="keywords-list">
+                      ${m.keywords.length > 0
+                        ? m.keywords.map(k => `<span class="keyword-tag">${escapeHtml(k)}</span>`).join('')
+                        : '<span style="color: var(--text-muted);">No keywords</span>'}
+                    </div>
+                  </div>
+                  <div class="details-section">
+                    <h4>Analysis</h4>
+                    <p style="font-size: 12px; color: var(--text-secondary);">
+                      Phase: ${m.phase || 'N/A'}<br>
+                      Spread: ${(m.spread * 100).toFixed(1)}%
+                      ${m.countdown ? `<br>Event: ${escapeHtml(m.countdown.eventName)} in ${m.countdown.daysRemaining} days` : ''}
+                    </p>
+                  </div>
+                  <div class="details-section">
+                    <h4>Actions</h4>
+                    ${m.slug ? `<a href="https://polymarket.com/event/${m.slug}" target="_blank" style="color: var(--accent-blue); font-size: 12px;">View on Polymarket →</a>` : ''}
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('markets').innerHTML = html;
+    }
+
+    // Set up filter event listeners
+    function setupFilterListeners() {
+      const filters = ['category-filter', 'source-filter', 'search-filter', 'price-min', 'price-max', 'urgency-filter'];
+      filters.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          const eventType = el.type === 'checkbox' ? 'change' : 'input';
+          el.addEventListener(eventType, () => {
+            // Debounce search input
+            if (id === 'search-filter') {
+              clearTimeout(window._searchDebounce);
+              window._searchDebounce = setTimeout(applyFilters, 300);
+            } else {
+              applyFilters();
+            }
+          });
+        }
+      });
     }
 
     async function loadDates() {
@@ -589,11 +1212,228 @@
       ]);
     }
 
+    // Watchlist functions
+    let allMarkets = [];
+    let watchedMarketIds = new Set();
+
+    async function loadWatchlist() {
+      try {
+        const data = await fetchJSON('/watchlist');
+
+        if (!data.enabled) {
+          document.getElementById('watchlist').innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">Watchlist not configured</div>';
+          return;
+        }
+
+        watchedMarketIds = new Set(data.markets.map(m => m.marketId));
+
+        if (data.markets.length === 0) {
+          document.getElementById('watchlist').innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">No markets in watchlist. Search above to add markets.</div>';
+          return;
+        }
+
+        // Fetch current prices if we have markets cached
+        const priceMap = {};
+        if (allMarkets.length > 0) {
+          for (const m of allMarkets) {
+            priceMap[m.assetId] = m.currentPrice;
+          }
+        } else {
+          // Load markets to get prices
+          try {
+            const markets = await fetchJSON('/markets/all');
+            for (const m of markets) {
+              priceMap[m.assetId] = m.currentPrice;
+            }
+            allMarkets = markets;
+          } catch (e) {
+            console.log('Could not load prices');
+          }
+        }
+
+        const html = data.markets.map(m => {
+          const price = priceMap[m.marketId];
+          const priceDisplay = price !== undefined ? `<span class="price" style="font-size: 20px; color: var(--accent-green);">${(price * 100).toFixed(0)}%</span>` : '';
+          return `
+          <div class="watchlist-item" data-market-id="${m.marketId}">
+            ${priceDisplay}
+            <div style="flex: 1;">
+              <div class="question">${escapeHtml(m.question.slice(0, 70))}${m.question.length > 70 ? '...' : ''}</div>
+              <div class="sources">
+                ${m.truthSources.map(s => `<span class="source-badge ${s}">${s}</span>`).join('')}
+                <span style="margin-left: 8px; font-size: 10px; color: var(--text-muted);">min: ${m.minConfidence}</span>
+              </div>
+              <div class="keywords">
+                ${m.keywords.slice(0, 5).map(k => `<span class="keyword-tag">${escapeHtml(k)}</span>`).join('')}
+                ${m.keywords.length > 5 ? `<span class="keyword-tag">+${m.keywords.length - 5} more</span>` : ''}
+              </div>
+            </div>
+            <div class="actions">
+              <button class="remove-btn" onclick="removeFromWatchlist('${m.marketId}')" title="Remove from watchlist">×</button>
+            </div>
+          </div>
+        `}).join('');
+
+        document.getElementById('watchlist').innerHTML = html;
+      } catch (e) {
+        document.getElementById('watchlist').innerHTML = '<div class="error">Failed to load watchlist</div>';
+      }
+    }
+
+    async function searchMarkets() {
+      console.log('searchMarkets called');
+      const searchInput = document.getElementById('watchlist-search');
+      const resultsEl = document.getElementById('watchlist-results');
+
+      if (!searchInput) {
+        console.error('Search input not found!');
+        return;
+      }
+      if (!resultsEl) {
+        console.error('Results element not found!');
+        return;
+      }
+
+      const query = searchInput.value.trim().toLowerCase();
+      console.log('Search query:', query);
+
+      if (!query) {
+        resultsEl.style.display = 'none';
+        return;
+      }
+
+      resultsEl.innerHTML = '<div class="loading">Searching...</div>';
+      resultsEl.style.display = 'block';
+
+      // Load all markets if not cached
+      if (allMarkets.length === 0) {
+        try {
+          console.log('Fetching all markets...');
+          allMarkets = await fetchJSON('/markets/all');
+          console.log('Loaded', allMarkets.length, 'markets');
+        } catch (e) {
+          console.error('Failed to fetch markets:', e);
+          resultsEl.innerHTML = '<div class="error">Failed to load markets: ' + e.message + '</div>';
+          resultsEl.style.display = 'block';
+          return;
+        }
+      }
+
+      // Filter markets by query
+      const matches = allMarkets
+        .filter(m => m.question && m.question.toLowerCase().includes(query))
+        .slice(0, 10);
+
+      console.log('Found', matches.length, 'matches for:', query);
+
+      if (matches.length === 0) {
+        resultsEl.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">No markets found matching your search</div>';
+        resultsEl.style.display = 'block';
+        return;
+      }
+
+      const html = matches.map((m, idx) => {
+        const isWatched = watchedMarketIds.has(m.assetId);
+        // Store market data for click handler
+        window._searchResults = window._searchResults || {};
+        window._searchResults[idx] = { id: m.assetId, question: m.question };
+        const pricePercent = (m.currentPrice * 100).toFixed(0);
+        return `
+          <div class="search-result">
+            <span class="price" style="min-width: 50px; color: var(--accent-green);">${pricePercent}%</span>
+            <span class="question-text">${escapeHtml(m.question.slice(0, 55))}${m.question.length > 55 ? '...' : ''}</span>
+            <button class="add-btn" onclick="addFromSearch(${idx})" ${isWatched ? 'disabled' : ''}>
+              ${isWatched ? 'Added' : '+ Add'}
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      resultsEl.innerHTML = html;
+      resultsEl.style.display = 'block';
+    }
+
+    function addFromSearch(idx) {
+      const data = window._searchResults && window._searchResults[idx];
+      if (data) {
+        addToWatchlist(data.id, data.question);
+      }
+    }
+
+    async function addToWatchlist(marketId, question) {
+      try {
+        // Get suggestions for this market
+        const suggestions = await fetchJSON('/watchlist/suggest?q=' + encodeURIComponent(question));
+
+        const response = await fetch(`${API_BASE}/watchlist`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            marketId,
+            conditionId: '',
+            question,
+            truthSources: suggestions.truthSources,
+            keywords: suggestions.keywords,
+            minConfidence: 'medium',
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          alert('Failed to add: ' + (err.error || 'Unknown error'));
+          return;
+        }
+
+        watchedMarketIds.add(marketId);
+        await loadWatchlist();
+        searchMarkets(); // Refresh search results
+      } catch (e) {
+        alert('Failed to add market to watchlist');
+      }
+    }
+
+    async function removeFromWatchlist(marketId) {
+      if (!confirm('Remove this market from your watchlist?')) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/watchlist/${marketId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          alert('Failed to remove market');
+          return;
+        }
+
+        watchedMarketIds.delete(marketId);
+        await loadWatchlist();
+        searchMarkets(); // Refresh search results
+      } catch (e) {
+        alert('Failed to remove market from watchlist');
+      }
+    }
+
+    // Handle Enter key in search box
+    const searchEl = document.getElementById('watchlist-search');
+    if (searchEl) {
+      searchEl.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          searchMarkets();
+        }
+      });
+    } else {
+      console.error('watchlist-search element not found!');
+    }
+
     // Initial load
+    console.log('Starting initial load...');
+    setupFilterListeners();
     refreshAll();
+    loadWatchlist();
 
     // Auto-refresh every 30 seconds
     setInterval(refreshAll, 30000);
+    setInterval(loadWatchlist, 30000);
   </script>
 </body>
 </html>

@@ -129,3 +129,28 @@ export interface ErrorResponse {
   code: string;
   timestamp: number;
 }
+
+// Browse market response (combined data from multiple sources)
+export interface BrowseMarket {
+  // Basic info
+  id: string;
+  question: string;
+  slug: string;
+
+  // Pricing
+  currentPrice: number;
+  spread: number;
+
+  // Categorization
+  category: string;
+  truthSources: string[];
+  keywords: string[];
+
+  // Analysis (if playbook available)
+  phase?: string;
+  urgency?: string;
+  countdown?: { eventName: string; daysRemaining: number };
+
+  // Watchlist status
+  isWatched: boolean;
+}

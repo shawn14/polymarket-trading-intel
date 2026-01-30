@@ -19,6 +19,7 @@ import { parseMarket } from '../../ingestion/polymarket/types.js';
 import type { BillStatusChange } from '../../ingestion/congress/types.js';
 import type { WeatherEvent } from '../../ingestion/weather/types.js';
 import type { FedEvent } from '../../ingestion/fed/types.js';
+import type { WatchlistManager, WatchlistMatch } from '../../watchlist/index.js';
 import type {
   TruthMap,
   TrackedMarket,
@@ -26,6 +27,7 @@ import type {
   AffectedMarket,
   CongressEvent,
   MarketCategory,
+  TruthSourceEvent,
 } from './types.js';
 import {
   SHUTDOWN_TRUTH_MAP,
@@ -44,9 +46,21 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
   private trackedMarkets: Map<string, TrackedMarket> = new Map();
   private polymarketClient: PolymarketClient | null = null;
   private marketRefreshInterval: NodeJS.Timeout | null = null;
+  private watchlistManager: WatchlistManager | null = null;
+  private watchlistOnly: boolean = false;
 
   constructor() {
     super();
+  }
+
+  /**
+   * Set watchlist manager for targeted alerting
+   * When set with watchlistOnly=true, only emit alerts for watched markets
+   */
+  setWatchlistManager(manager: WatchlistManager, watchlistOnly: boolean = false): void {
+    this.watchlistManager = manager;
+    this.watchlistOnly = watchlistOnly;
+    console.log(`[Linker] Watchlist manager attached (watchlistOnly=${watchlistOnly})`);
   }
 
   /**
@@ -111,6 +125,71 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
       clearInterval(this.marketRefreshInterval);
       this.marketRefreshInterval = null;
     }
+  }
+
+  /**
+   * Filter affected markets through watchlist
+   * Returns only watched markets if watchlistOnly is true
+   */
+  private filterThroughWatchlist(
+    affectedMarkets: AffectedMarket[],
+    event: TruthSourceEvent
+  ): AffectedMarket[] {
+    if (!this.watchlistManager) {
+      return affectedMarkets;
+    }
+
+    // Find matching watched markets
+    const matches = this.watchlistManager.findMatchingMarkets(event);
+    const watchedMarketIds = new Set(matches.map(m => m.market.marketId));
+
+    if (this.watchlistOnly) {
+      // Only return markets that are in watchlist AND match keywords
+      return affectedMarkets.filter(m => watchedMarketIds.has(m.marketId));
+    }
+
+    // Otherwise, boost relevance for watched markets
+    return affectedMarkets.map(m => {
+      if (watchedMarketIds.has(m.marketId)) {
+        const match = matches.find(wm => wm.market.marketId === m.marketId);
+        return {
+          ...m,
+          relevanceScore: Math.min(m.relevanceScore + 0.2, 1.0),
+          reasoning: match?.matchedKeywords.length
+            ? `${m.reasoning} [Watchlist: ${match.matchedKeywords.join(', ')}]`
+            : m.reasoning,
+        };
+      }
+      return m;
+    });
+  }
+
+  /**
+   * Check if alert meets minimum confidence for watched markets
+   */
+  private meetsWatchlistConfidence(
+    affectedMarkets: AffectedMarket[],
+    confidence: LinkedAlert['confidence']
+  ): boolean {
+    if (!this.watchlistManager || !this.watchlistOnly) {
+      return true;
+    }
+
+    const confidenceLevel = { low: 1, medium: 2, high: 3, very_high: 4 };
+    const alertLevel = confidenceLevel[confidence];
+
+    // Check if any affected market's min confidence is met
+    for (const affected of affectedMarkets) {
+      const watched = this.watchlistManager.getMarket(affected.marketId);
+      if (watched) {
+        const minLevel = confidenceLevel[watched.minConfidence];
+        if (alertLevel >= minLevel) {
+          return true;
+        }
+      }
+    }
+
+    return affectedMarkets.length === 0 ? false : true;
   }
 
   /**
@@ -281,15 +360,23 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
     };
 
     // Find affected markets
-    const affectedMarkets = this.findAffectedMarkets(event);
+    let affectedMarkets = this.findAffectedMarkets(event);
+
+    // Filter through watchlist
+    affectedMarkets = this.filterThroughWatchlist(affectedMarkets, event);
 
     if (affectedMarkets.length === 0) {
-      return; // No relevant markets
+      return; // No relevant markets (or none in watchlist)
     }
 
     // Determine confidence and urgency
     const confidence = this.calculateConfidence(change, affectedMarkets);
     const urgency = this.calculateUrgency(change);
+
+    // Check if alert meets minimum confidence for watched markets
+    if (!this.meetsWatchlistConfidence(affectedMarkets, confidence)) {
+      return;
+    }
 
     // Generate alert
     const alert: LinkedAlert = {
@@ -312,8 +399,21 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
    * Handle Fed events
    */
   private handleFedEvent(event: FedEvent): void {
+    // Build the source event for watchlist matching
+    const sourceEvent: TruthSourceEvent = {
+      type: 'fed',
+      eventType: event.type === 'fomc_statement' ? 'statement' :
+        event.type === 'fomc_minutes' ? 'minutes' :
+        event.type === 'rate_decision' ? 'rate_decision' : 'speech',
+      content: event.description,
+      rateChange: event.rateChange,
+    };
+
     // Find affected markets
-    const affectedMarkets = this.findFedAffectedMarkets(event);
+    let affectedMarkets = this.findFedAffectedMarkets(event);
+
+    // Filter through watchlist
+    affectedMarkets = this.filterThroughWatchlist(affectedMarkets, sourceEvent);
 
     if (affectedMarkets.length === 0) {
       return;
@@ -324,19 +424,17 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
       event.significance === 'high' ? 'high' : 'medium';
     const urgency = event.significance;
 
+    // Check if alert meets minimum confidence for watched markets
+    if (!this.meetsWatchlistConfidence(affectedMarkets, confidence)) {
+      return;
+    }
+
     // Generate alert
     const alert: LinkedAlert = {
       id: randomUUID(),
       timestamp: Date.now(),
       sourceType: 'fed',
-      sourceEvent: {
-        type: 'fed',
-        eventType: event.type === 'fomc_statement' ? 'statement' :
-          event.type === 'fomc_minutes' ? 'minutes' :
-          event.type === 'rate_decision' ? 'rate_decision' : 'speech',
-        content: event.description,
-        rateChange: event.rateChange,
-      },
+      sourceEvent,
       affectedMarkets,
       confidence,
       urgency,
@@ -356,8 +454,21 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
    * Handle Sports events
    */
   private handleSportsEvent(event: SportsClientEvent): void {
+    // Build the source event for watchlist matching
+    const sourceEvent: TruthSourceEvent = {
+      type: 'sports',
+      league: event.league,
+      eventType: event.type === 'injury_update' ? 'injury' : 'lineup',
+      team: event.injury?.team,
+      player: event.injury?.player,
+      details: event.details,
+    };
+
     // Find affected markets
-    const affectedMarkets = this.findSportsAffectedMarkets(event);
+    let affectedMarkets = this.findSportsAffectedMarkets(event);
+
+    // Filter through watchlist
+    affectedMarkets = this.filterThroughWatchlist(affectedMarkets, sourceEvent);
 
     if (affectedMarkets.length === 0) {
       return;
@@ -368,19 +479,17 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
       event.significance === 'high' ? 'high' : 'medium';
     const urgency = event.significance;
 
+    // Check if alert meets minimum confidence for watched markets
+    if (!this.meetsWatchlistConfidence(affectedMarkets, confidence)) {
+      return;
+    }
+
     // Generate alert
     const alert: LinkedAlert = {
       id: randomUUID(),
       timestamp: Date.now(),
       sourceType: 'sports',
-      sourceEvent: {
-        type: 'sports',
-        league: event.league,
-        eventType: event.type === 'injury_update' ? 'injury' : 'lineup',
-        team: event.injury?.team,
-        player: event.injury?.player,
-        details: event.details,
-      },
+      sourceEvent,
       affectedMarkets,
       confidence,
       urgency,
@@ -615,11 +724,23 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
    * Handle Weather alert events
    */
   private handleWeatherEvent(event: WeatherEvent): void {
+    // Build the source event for watchlist matching
+    const sourceEvent: TruthSourceEvent = {
+      type: 'weather',
+      alertType: event.event,
+      region: event.areas.join(', '),
+      severity: event.severity,
+      headline: event.headline,
+    };
+
     // Find affected markets
-    const affectedMarkets = this.findWeatherAffectedMarkets(event);
+    let affectedMarkets = this.findWeatherAffectedMarkets(event);
+
+    // Filter through watchlist
+    affectedMarkets = this.filterThroughWatchlist(affectedMarkets, sourceEvent);
 
     if (affectedMarkets.length === 0) {
-      return; // No relevant markets
+      return; // No relevant markets (or none in watchlist)
     }
 
     // Determine confidence and urgency
@@ -627,18 +748,17 @@ export class TruthMarketLinker extends EventEmitter<TruthMarketLinkerEvents> {
       event.significance === 'high' ? 'high' : 'medium';
     const urgency = event.significance;
 
+    // Check if alert meets minimum confidence for watched markets
+    if (!this.meetsWatchlistConfidence(affectedMarkets, confidence)) {
+      return;
+    }
+
     // Generate alert
     const alert: LinkedAlert = {
       id: randomUUID(),
       timestamp: Date.now(),
       sourceType: 'weather',
-      sourceEvent: {
-        type: 'weather',
-        alertType: event.event,
-        region: event.areas.join(', '),
-        severity: event.severity,
-        headline: event.headline,
-      },
+      sourceEvent,
       affectedMarkets,
       confidence,
       urgency,

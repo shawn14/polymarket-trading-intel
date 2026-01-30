@@ -17,6 +17,7 @@ import type { SportsClient } from '../ingestion/sports/client.js';
 import type { SignalDetector } from '../signals/detector.js';
 import type { TruthMarketLinker } from '../signals/truth-change/linker.js';
 import type { AlertEngine } from '../alerts/engine.js';
+import type { WatchlistManager, AddMarketInput, UpdateMarketInput } from '../watchlist/index.js';
 import { findPlaybook, getAllPlaybooks } from '../playbooks/index.js';
 import type {
   SystemStatus,
@@ -26,6 +27,7 @@ import type {
   KeyDatesResponse,
   HealthResponse,
   ErrorResponse,
+  BrowseMarket,
 } from './types.js';
 
 export interface APIServerConfig {
@@ -42,6 +44,7 @@ export interface APIServerDependencies {
   detector: SignalDetector;
   linker: TruthMarketLinker;
   alertEngine: AlertEngine;
+  watchlist?: WatchlistManager;
 }
 
 export class APIServer {
@@ -197,7 +200,7 @@ export class APIServer {
   private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') {
@@ -208,6 +211,7 @@ export class APIServer {
 
     const url = new URL(req.url || '/', `http://${req.headers.host}`);
     const path = url.pathname;
+    const method = req.method || 'GET';
 
     try {
       switch (path) {
@@ -234,6 +238,10 @@ export class APIServer {
 
         case '/api/markets/all':
           this.sendJSON(res, this.getAllSubscribedMarkets());
+          break;
+
+        case '/api/markets/browse':
+          this.sendJSON(res, await this.getBrowseMarkets());
           break;
 
         case '/api/alerts':
@@ -263,7 +271,66 @@ export class APIServer {
           this.sendJSON(res, this.getPlaybookInfo());
           break;
 
+        case '/api/watchlist':
+          if (method === 'GET') {
+            this.sendJSON(res, this.getWatchlist());
+          } else if (method === 'POST') {
+            const body = await this.parseBody(req);
+            const result = await this.addToWatchlist(body);
+            if (result.error) {
+              this.sendError(res, 400, result.error, 'INVALID_REQUEST');
+            } else {
+              this.sendJSON(res, result.data);
+            }
+          } else {
+            this.sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+          }
+          break;
+
+        case '/api/watchlist/matches':
+          this.sendJSON(res, this.getWatchlistMatches());
+          break;
+
+        case '/api/watchlist/suggest':
+          const q = url.searchParams.get('q') || '';
+          this.sendJSON(res, this.suggestWatchlistConfig(q));
+          break;
+
         default:
+          // Check for /api/watchlist/:id pattern
+          if (path.startsWith('/api/watchlist/')) {
+            const marketId = path.slice('/api/watchlist/'.length);
+            if (marketId && marketId !== 'matches' && marketId !== 'suggest') {
+              if (method === 'PUT') {
+                const body = await this.parseBody(req);
+                const result = this.updateWatchlistMarket(marketId, body);
+                if (result.error) {
+                  this.sendError(res, 400, result.error, 'INVALID_REQUEST');
+                } else if (!result.data) {
+                  this.sendError(res, 404, 'Market not in watchlist', 'NOT_FOUND');
+                } else {
+                  this.sendJSON(res, result.data);
+                }
+              } else if (method === 'DELETE') {
+                const removed = this.removeFromWatchlist(marketId);
+                if (removed) {
+                  this.sendJSON(res, { success: true, marketId });
+                } else {
+                  this.sendError(res, 404, 'Market not in watchlist', 'NOT_FOUND');
+                }
+              } else if (method === 'GET') {
+                const market = this.getWatchlistMarket(marketId);
+                if (market) {
+                  this.sendJSON(res, market);
+                } else {
+                  this.sendError(res, 404, 'Market not in watchlist', 'NOT_FOUND');
+                }
+              } else {
+                this.sendError(res, 405, 'Method not allowed', 'METHOD_NOT_ALLOWED');
+              }
+              break;
+            }
+          }
           this.sendError(res, 404, 'Endpoint not found', 'NOT_FOUND');
       }
     } catch (error) {
@@ -314,10 +381,13 @@ export class APIServer {
         { path: '/api/health', description: 'Health check' },
         { path: '/api/status', description: 'System status and metrics' },
         { path: '/api/markets', description: 'Tracked markets' },
+        { path: '/api/markets/all', description: 'All subscribed markets' },
+        { path: '/api/markets/browse', description: 'Browse all markets with categories, sources, and analysis' },
         { path: '/api/alerts', description: 'Recent alerts (use ?limit=N)' },
         { path: '/api/analysis', description: 'Playbook analysis (use ?market=ID for specific)' },
         { path: '/api/dates', description: 'Upcoming key dates' },
         { path: '/api/playbooks', description: 'Available playbooks' },
+        { path: '/api/watchlist', description: 'Watchlist management (GET, POST)' },
       ],
     };
   }
@@ -432,6 +502,113 @@ export class APIServer {
 
     // Sort by last update, most recent first
     return markets.sort((a: any, b: any) => b.lastUpdated - a.lastUpdated);
+  }
+
+  /**
+   * Get all markets with combined data for browsing
+   * Merges: subscribed markets, tracked markets (with truth maps), analysis, and watchlist status
+   */
+  private async getBrowseMarkets(): Promise<BrowseMarket[]> {
+    try {
+      const marketQuestions = this.deps.detector.getAllMarketQuestions();
+      const marketStates = this.deps.detector.getAllMarketStates();
+      const trackedMarkets = this.deps.linker.getTrackedMarkets();
+
+      // Get watchlist market IDs for quick lookup
+      const watchedIds = new Set<string>();
+      if (this.deps.watchlist) {
+        try {
+          const watchlist = this.deps.watchlist.getWatchlist();
+          for (const m of watchlist.markets) {
+            watchedIds.add(m.marketId);
+          }
+        } catch (e) {
+          console.error('[API] Error loading watchlist:', e);
+        }
+      }
+
+      // Build analysis cache (only for tracked markets with playbooks)
+      // Limit to first 50 to avoid performance issues
+      const analysisCache = new Map<string, PlaybookAnalysis>();
+      let analysisCount = 0;
+      for (const [id] of trackedMarkets) {
+        if (analysisCount >= 50) break;
+        try {
+          const analysis = await this.getMarketAnalysis(id);
+          if (analysis) {
+            analysisCache.set(id, analysis);
+            analysisCount++;
+          }
+        } catch (e) {
+          // Skip failed analysis
+        }
+      }
+
+      const browseMarkets: BrowseMarket[] = [];
+
+      // First, add all subscribed markets (from detector)
+      for (const [assetId, question] of marketQuestions) {
+        const state = marketStates.get(assetId);
+        const tracked = trackedMarkets.get(assetId);
+        const analysis = analysisCache.get(assetId);
+
+        browseMarkets.push({
+          id: assetId,
+          question: question || 'Unknown',
+          slug: tracked?.slug || '',
+          currentPrice: state?.currentPrice ?? 0.5,
+          spread: state?.spread ?? 1,
+          category: tracked?.truthMap?.category || 'other',
+          truthSources: tracked?.truthMap?.truthSources || [],
+          keywords: tracked?.truthMap?.keywords || [],
+          phase: analysis?.phase,
+          urgency: analysis?.urgency,
+          countdown: analysis?.countdown ? {
+            eventName: analysis.countdown.eventName,
+            daysRemaining: analysis.countdown.daysRemaining,
+          } : undefined,
+          isWatched: watchedIds.has(assetId),
+        });
+      }
+
+      // Add tracked markets that might not be in subscribed list
+      for (const [id, market] of trackedMarkets) {
+        if (!marketQuestions.has(id)) {
+          const analysis = analysisCache.get(id);
+          browseMarkets.push({
+            id,
+            question: market.question || 'Unknown',
+            slug: market.slug || '',
+            currentPrice: market.currentPrices?.[0] ?? 0.5,
+            spread: 0,
+            category: market.truthMap?.category || 'other',
+            truthSources: market.truthMap?.truthSources || [],
+            keywords: market.truthMap?.keywords || [],
+            phase: analysis?.phase,
+            urgency: analysis?.urgency,
+            countdown: analysis?.countdown ? {
+              eventName: analysis.countdown.eventName,
+              daysRemaining: analysis.countdown.daysRemaining,
+            } : undefined,
+            isWatched: watchedIds.has(id),
+          });
+        }
+      }
+
+      // Sort by urgency (critical first), then by price
+      const urgencyOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+      browseMarkets.sort((a, b) => {
+        const urgA = urgencyOrder[a.urgency || 'low'] ?? 4;
+        const urgB = urgencyOrder[b.urgency || 'low'] ?? 4;
+        if (urgA !== urgB) return urgA - urgB;
+        return b.currentPrice - a.currentPrice;
+      });
+
+      return browseMarkets;
+    } catch (error) {
+      console.error('[API] Error in getBrowseMarkets:', error);
+      return [];
+    }
   }
 
   private getAlerts(limit: number): AlertSummary[] {
@@ -566,5 +743,138 @@ export class APIServer {
       default:
         return 'Unknown category';
     }
+  }
+
+  // Watchlist API methods
+
+  private async parseBody(req: IncomingMessage): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      req.on('data', (chunk) => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        try {
+          resolve(body ? JSON.parse(body) : {});
+        } catch (e) {
+          reject(new Error('Invalid JSON'));
+        }
+      });
+      req.on('error', reject);
+    });
+  }
+
+  private getWatchlist(): object {
+    if (!this.deps.watchlist) {
+      return { enabled: false, message: 'Watchlist not configured' };
+    }
+    const watchlist = this.deps.watchlist.getWatchlist();
+    return {
+      enabled: true,
+      version: watchlist.version,
+      markets: watchlist.markets,
+      count: watchlist.markets.length,
+      createdAt: watchlist.createdAt,
+      updatedAt: watchlist.updatedAt,
+    };
+  }
+
+  private getWatchlistMarket(marketId: string): object | null {
+    if (!this.deps.watchlist) return null;
+    const market = this.deps.watchlist.getMarket(marketId);
+    return market || null;
+  }
+
+  private async addToWatchlist(body: any): Promise<{ data?: object; error?: string }> {
+    if (!this.deps.watchlist) {
+      return { error: 'Watchlist not configured' };
+    }
+
+    const input: AddMarketInput = {
+      marketId: body.marketId,
+      conditionId: body.conditionId || '',
+      question: body.question,
+      truthSources: body.truthSources,
+      keywords: body.keywords,
+      minConfidence: body.minConfidence,
+      notes: body.notes,
+    };
+
+    if (!input.marketId || !input.question) {
+      return { error: 'marketId and question are required' };
+    }
+
+    try {
+      const market = this.deps.watchlist.addMarket(input);
+      await this.deps.watchlist.save();
+      return { data: market };
+    } catch (err: any) {
+      return { error: err.message };
+    }
+  }
+
+  private updateWatchlistMarket(marketId: string, body: any): { data?: object | null; error?: string } {
+    if (!this.deps.watchlist) {
+      return { error: 'Watchlist not configured' };
+    }
+
+    const updates: UpdateMarketInput = {};
+    if (body.truthSources !== undefined) updates.truthSources = body.truthSources;
+    if (body.keywords !== undefined) updates.keywords = body.keywords;
+    if (body.minConfidence !== undefined) updates.minConfidence = body.minConfidence;
+    if (body.notes !== undefined) updates.notes = body.notes;
+
+    const market = this.deps.watchlist.updateMarket(marketId, updates);
+    if (market) {
+      this.deps.watchlist.save().catch(console.error);
+    }
+    return { data: market };
+  }
+
+  private removeFromWatchlist(marketId: string): boolean {
+    if (!this.deps.watchlist) return false;
+    const removed = this.deps.watchlist.removeMarket(marketId);
+    if (removed) {
+      this.deps.watchlist.save().catch(console.error);
+    }
+    return removed;
+  }
+
+  private getWatchlistMatches(): object {
+    if (!this.deps.watchlist) {
+      return { enabled: false, matches: [] };
+    }
+
+    // Get recent alerts and see which ones matched watchlist
+    const recentWithMatches = this.recentAlerts
+      .slice(0, 20)
+      .filter((alert) => {
+        // Check if any watched market was mentioned
+        const watchlist = this.deps.watchlist!.getWatchlist();
+        return watchlist.markets.some((m) =>
+          alert.body?.toLowerCase().includes(m.question.toLowerCase().slice(0, 30))
+        );
+      });
+
+    return {
+      enabled: true,
+      matches: recentWithMatches,
+      count: recentWithMatches.length,
+    };
+  }
+
+  private suggestWatchlistConfig(question: string): object {
+    if (!this.deps.watchlist || !question) {
+      return { truthSources: [], keywords: [], category: 'other' };
+    }
+
+    const detected = this.deps.watchlist.detectTruthSources(question);
+    const keywords = this.deps.watchlist.suggestKeywords(question);
+
+    return {
+      category: detected.category,
+      truthSources: detected.truthSources,
+      keywords,
+    };
   }
 }
