@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polymarket Trading Intel</title>
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-card: #161b22;
+      --bg-hover: #21262d;
+      --border: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-green: #3fb950;
+      --accent-yellow: #d29922;
+      --accent-red: #f85149;
+      --accent-blue: #58a6ff;
+      --accent-purple: #a371f7;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-badge.healthy {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
+    }
+
+    .status-badge.degraded {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--accent-yellow);
+    }
+
+    .status-badge.unhealthy {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .metric-value {
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .alerts-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .alert-item {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: var(--bg-hover);
+      border-left: 3px solid var(--border);
+    }
+
+    .alert-item.critical {
+      border-left-color: var(--accent-red);
+    }
+
+    .alert-item.high {
+      border-left-color: var(--accent-yellow);
+    }
+
+    .alert-item.medium {
+      border-left-color: var(--accent-blue);
+    }
+
+    .alert-item.low {
+      border-left-color: var(--text-muted);
+    }
+
+    .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+
+    .alert-title {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .alert-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    .alert-priority {
+      font-size: 10px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .alert-priority.critical {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .alert-priority.high {
+      background: rgba(210, 153, 34, 0.2);
+      color: var(--accent-yellow);
+    }
+
+    .alert-body {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      max-height: 60px;
+      overflow: hidden;
+    }
+
+    .markets-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .markets-table th {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .markets-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .markets-table tr:hover {
+      background: var(--bg-hover);
+    }
+
+    .price {
+      font-family: 'SF Mono', Consolas, monospace;
+      font-weight: 600;
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+    }
+
+    .category-badge.shutdown { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); }
+    .category-badge.hurricane { background: rgba(163, 113, 247, 0.15); color: var(--accent-purple); }
+    .category-badge.fed_rate { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); }
+    .category-badge.sports_player { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); }
+    .category-badge.legislation { background: rgba(210, 153, 34, 0.15); color: var(--accent-yellow); }
+
+    .key-dates {
+      display: grid;
+      gap: 8px;
+    }
+
+    .date-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: 6px;
+      background: var(--bg-hover);
+    }
+
+    .date-countdown {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'SF Mono', Consolas, monospace;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .date-countdown.urgent {
+      color: var(--accent-red);
+    }
+
+    .date-countdown.soon {
+      color: var(--accent-yellow);
+    }
+
+    .date-info {
+      flex: 1;
+    }
+
+    .date-name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .date-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .error {
+      text-align: center;
+      padding: 40px;
+      color: var(--accent-red);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .loading::after {
+      content: '...';
+      animation: pulse 1.5s infinite;
+    }
+
+    .refresh-btn {
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .refresh-btn:hover {
+      background: var(--border);
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 Polymarket Trading Intel</h1>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div id="health-badge" class="status-badge">
+          <span class="status-dot"></span>
+          <span>Loading</span>
+        </div>
+        <button class="refresh-btn" onclick="refreshAll()">⟳ Refresh</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h2>System Metrics</h2>
+        <div id="metrics">
+          <div class="loading">Loading metrics</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Data Sources</h2>
+        <div id="connections">
+          <div class="loading">Loading connections</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Key Upcoming Dates</h2>
+        <div id="dates">
+          <div class="loading">Loading dates</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card full-width">
+        <h2>Recent Alerts</h2>
+        <div id="alerts" class="alerts-list">
+          <div class="loading">Loading alerts</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card full-width">
+        <h2>Tracked Markets</h2>
+        <div id="markets">
+          <div class="loading">Loading markets</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+
+    async function fetchJSON(endpoint) {
+      const res = await fetch(`${API_BASE}${endpoint}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString();
+    }
+
+    function formatUptime(ms) {
+      const hours = Math.floor(ms / (1000 * 60 * 60));
+      const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+      return `${hours}h ${minutes}m`;
+    }
+
+    async function loadHealth() {
+      try {
+        const health = await fetchJSON('/health');
+        const badge = document.getElementById('health-badge');
+        badge.className = `status-badge ${health.status}`;
+        badge.innerHTML = `<span class="status-dot"></span><span>${health.status.charAt(0).toUpperCase() + health.status.slice(1)}</span>`;
+      } catch (e) {
+        const badge = document.getElementById('health-badge');
+        badge.className = 'status-badge unhealthy';
+        badge.innerHTML = '<span class="status-dot"></span><span>Offline</span>';
+      }
+    }
+
+    async function loadStatus() {
+      try {
+        const status = await fetchJSON('/status');
+
+        // Metrics
+        document.getElementById('metrics').innerHTML = `
+          <div class="metric">
+            <span class="metric-label">Uptime</span>
+            <span class="metric-value">${formatUptime(status.uptime)}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Markets Tracked</span>
+            <span class="metric-value">${status.metrics.marketsTracked}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Alerts/min</span>
+            <span class="metric-value">${status.metrics.alertsPerMinute}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Signals Detected</span>
+            <span class="metric-value">${status.metrics.signalsDetected}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Books Received</span>
+            <span class="metric-value">${status.metrics.booksReceived}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Trades Received</span>
+            <span class="metric-value">${status.metrics.tradesReceived}</span>
+          </div>
+        `;
+
+        // Connections
+        const connHTML = Object.entries(status.connections).map(([name, conn]) => `
+          <div class="metric">
+            <span class="metric-label">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
+            <span class="metric-value" style="color: ${conn.connected ? 'var(--accent-green)' : 'var(--accent-red)'}">
+              ${conn.connected ? '●' : '○'}
+            </span>
+          </div>
+        `).join('');
+        document.getElementById('connections').innerHTML = connHTML;
+
+      } catch (e) {
+        document.getElementById('metrics').innerHTML = '<div class="error">Failed to load</div>';
+        document.getElementById('connections').innerHTML = '<div class="error">Failed to load</div>';
+      }
+    }
+
+    async function loadAlerts() {
+      try {
+        const alerts = await fetchJSON('/alerts?limit=20');
+
+        if (alerts.length === 0) {
+          document.getElementById('alerts').innerHTML = '<div class="loading" style="animation:none">No alerts yet</div>';
+          return;
+        }
+
+        const html = alerts.map(alert => `
+          <div class="alert-item ${alert.priority}">
+            <div class="alert-header">
+              <span class="alert-title">${escapeHtml(alert.title)}</span>
+              <span class="alert-priority ${alert.priority}">${alert.priority}</span>
+              <span class="alert-time">${formatTime(alert.timestamp)}</span>
+            </div>
+            <div class="alert-body">${escapeHtml(alert.body.slice(0, 200))}${alert.body.length > 200 ? '...' : ''}</div>
+          </div>
+        `).join('');
+
+        document.getElementById('alerts').innerHTML = html;
+      } catch (e) {
+        document.getElementById('alerts').innerHTML = '<div class="error">Failed to load alerts</div>';
+      }
+    }
+
+    async function loadMarkets() {
+      try {
+        const markets = await fetchJSON('/markets');
+
+        if (markets.length === 0) {
+          document.getElementById('markets').innerHTML = '<div class="loading" style="animation:none">No markets tracked</div>';
+          return;
+        }
+
+        const html = `
+          <table class="markets-table">
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${markets.map(m => `
+                <tr>
+                  <td>${escapeHtml(m.question.slice(0, 60))}${m.question.length > 60 ? '...' : ''}</td>
+                  <td><span class="category-badge ${m.category}">${m.category.replace('_', ' ')}</span></td>
+                  <td class="price">${(m.currentPrice * 100).toFixed(0)}%</td>
+                  <td style="color: var(--text-muted)">${formatTime(m.lastUpdated)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        document.getElementById('markets').innerHTML = html;
+      } catch (e) {
+        document.getElementById('markets').innerHTML = '<div class="error">Failed to load markets</div>';
+      }
+    }
+
+    async function loadDates() {
+      try {
+        const data = await fetchJSON('/dates');
+
+        if (data.dates.length === 0) {
+          document.getElementById('dates').innerHTML = '<div class="loading" style="animation:none">No upcoming dates</div>';
+          return;
+        }
+
+        const html = data.dates.slice(0, 5).map(d => {
+          const urgencyClass = d.daysUntil <= 1 ? 'urgent' : d.daysUntil <= 7 ? 'soon' : '';
+          const countdownText = d.daysUntil === 0 ? 'Today' : d.daysUntil === 1 ? '1 day' : `${d.daysUntil} days`;
+
+          return `
+            <div class="date-item">
+              <span class="date-countdown ${urgencyClass}">${countdownText}</span>
+              <div class="date-info">
+                <div class="date-name">${escapeHtml(d.name)}</div>
+                <div class="date-desc">${escapeHtml(d.description)}</div>
+              </div>
+              <span class="category-badge">${d.category}</span>
+            </div>
+          `;
+        }).join('');
+
+        document.getElementById('dates').innerHTML = `<div class="key-dates">${html}</div>`;
+      } catch (e) {
+        document.getElementById('dates').innerHTML = '<div class="error">Failed to load dates</div>';
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function refreshAll() {
+      await Promise.all([
+        loadHealth(),
+        loadStatus(),
+        loadAlerts(),
+        loadMarkets(),
+        loadDates(),
+      ]);
+    }
+
+    // Initial load
+    refreshAll();
+
+    // Auto-refresh every 30 seconds
+    setInterval(refreshAll, 30000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+/**
+ * Polymarket Trading Intelligence System
+ *
+ * Detects truth-changing events before Polymarket prices adjust.
+ */
+
+import { PolymarketClient, parseMarket } from './ingestion/polymarket/index.js';
+import { CongressClient } from './ingestion/congress/index.js';
+import { WeatherClient } from './ingestion/weather/index.js';
+import { FedClient } from './ingestion/fed/index.js';
+import { SportsClient } from './ingestion/sports/index.js';
+import { SignalDetector, TruthMarketLinker } from './signals/index.js';
+import { AlertEngine } from './alerts/index.js';
+import { APIServer } from './api/index.js';
+import type { ChannelConfig } from './alerts/index.js';
+
+async function main() {
+  console.log('Polymarket Trading Intel');
+  console.log('========================\n');
+
+  // Configure alert channels
+  const channels: ChannelConfig[] = [
+    { type: 'console', minPriority: 'low', colorize: true },
+  ];
+
+  // Add webhook if configured
+  const webhookUrl = process.env.ALERT_WEBHOOK_URL;
+  if (webhookUrl) {
+    channels.push({
+      type: 'webhook',
+      url: webhookUrl,
+      minPriority: 'medium',
+    });
+    console.log('[System] Webhook alerts enabled');
+  }
+
+  // Add file logging if configured
+  const alertLogPath = process.env.ALERT_LOG_PATH;
+  if (alertLogPath) {
+    channels.push({
+      type: 'file',
+      path: alertLogPath,
+      format: 'json',
+      minPriority: 'low',
+    });
+    console.log(`[System] Logging alerts to ${alertLogPath}`);
+  }
+
+  // Initialize core components
+  const client = new PolymarketClient({ autoReconnect: true });
+  const detector = new SignalDetector();
+  const linker = new TruthMarketLinker();
+  const alertEngine = new AlertEngine({
+    channels,
+    dedupeWindowMs: 60 * 1000,
+    rateLimitPerMinute: 60,
+  });
+
+  // Attach detector to Polymarket client
+  detector.attach(client);
+
+  // Track data flow
+  let bookCount = 0;
+  let priceCount = 0;
+  let tradeCount = 0;
+
+  // Route signals to alert engine
+  detector.on('signal', (signal) => {
+    alertEngine.sendSignal(signal);
+  });
+
+  // Polymarket event handlers
+  client.on('connected', () => {
+    console.log('[System] Connected to Polymarket WebSocket\n');
+  });
+
+  client.on('book', () => bookCount++);
+  client.on('price', () => priceCount++);
+  client.on('trade', () => tradeCount++);
+
+  client.on('error', (error) => {
+    console.error('[System] WebSocket error:', error.message);
+  });
+
+  client.on('disconnected', (code, reason) => {
+    console.log(`[System] Disconnected: ${code} ${reason}`);
+  });
+
+  // Initialize Congress.gov client if API key is available
+  const congressApiKey = process.env.CONGRESS_API_KEY;
+  let congressClient: CongressClient | null = null;
+
+  if (congressApiKey) {
+    congressClient = new CongressClient({
+      apiKey: congressApiKey,
+      pollIntervalMs: 5 * 60 * 1000,
+    });
+
+    congressClient.on('billChange', (change) => {
+      alertEngine.sendCongressChange(change);
+    });
+
+    congressClient.on('error', (error) => {
+      console.error('[Congress] Error:', error.message);
+    });
+
+    congressClient.start();
+    console.log('[System] Congress.gov monitoring enabled');
+  } else {
+    console.log('[System] Congress.gov disabled (set CONGRESS_API_KEY)');
+  }
+
+  // Initialize Weather client
+  const weatherClient = new WeatherClient({
+    pollIntervalMs: 5 * 60 * 1000,
+    includeMinor: false,
+  });
+
+  weatherClient.on('alert', (event) => {
+    alertEngine.sendWeatherEvent(event);
+  });
+
+  weatherClient.on('error', (error) => {
+    console.error('[Weather] Error:', error.message);
+  });
+
+  weatherClient.start();
+  console.log('[System] Weather monitoring enabled');
+
+  // Initialize Fed client
+  const fedClient = new FedClient({
+    pollIntervalMs: 5 * 60 * 1000,
+    fredApiKey: process.env.FRED_API_KEY,
+  });
+
+  fedClient.on('event', (event) => {
+    alertEngine.sendFedEvent(event);
+  });
+
+  fedClient.on('error', (error) => {
+    console.error('[Fed] Error:', error.message);
+  });
+
+  fedClient.start();
+  console.log('[System] Fed/FOMC monitoring enabled');
+
+  // Initialize Sports client
+  const sportsClient = new SportsClient({
+    leagues: ['NFL', 'NBA', 'MLB'],
+    pollIntervalMs: 10 * 60 * 1000, // 10 minutes
+  });
+
+  sportsClient.on('event', (event) => {
+    alertEngine.sendSportsEvent(event);
+  });
+
+  sportsClient.on('error', (error) => {
+    console.error('[Sports] Error:', error.message);
+  });
+
+  sportsClient.start();
+  console.log('[System] Sports monitoring enabled');
+
+  // Attach linker to all data sources
+  linker.attach({
+    polymarket: client,
+    congress: congressClient ?? undefined,
+    weather: weatherClient,
+    fed: fedClient,
+    sports: sportsClient,
+  });
+
+  // Route linked alerts to alert engine
+  linker.on('alert', (alert) => {
+    alertEngine.sendLinkedAlert(alert);
+  });
+
+  // Alert engine error handling
+  alertEngine.on('error', (error, channel) => {
+    console.error(`[AlertEngine] Error on ${channel}:`, error.message);
+  });
+
+  // Initialize API server
+  const apiPort = parseInt(process.env.API_PORT || '3000', 10);
+  const apiServer = new APIServer(
+    { port: apiPort },
+    {
+      polymarket: client,
+      congress: congressClient,
+      weather: weatherClient,
+      fed: fedClient,
+      sports: sportsClient,
+      detector,
+      linker,
+      alertEngine,
+    }
+  );
+
+  try {
+    await apiServer.start();
+  } catch (error) {
+    console.error('[API] Failed to start:', error);
+  }
+
+  // Connect to Polymarket
+  await client.connect();
+
+  // Fetch active high-volume markets and subscribe
+  console.log('\n[System] Fetching high-volume markets...\n');
+
+  const rawMarkets = await client.fetchMarkets({
+    active: true,
+    closed: false,
+    limit: 50,
+    order: 'volume',
+    ascending: false,
+  });
+
+  const assetIds: string[] = [];
+  let marketCount = 0;
+
+  for (const rawMarket of rawMarkets) {
+    const market = parseMarket(rawMarket);
+
+    if (market.tokenIds.length > 0 && market.question) {
+      const questionPreview = market.question.length > 60
+        ? market.question.slice(0, 57) + '...'
+        : market.question;
+      const priceStr = market.outcomePrices.length > 0
+        ? ` (${(market.outcomePrices[0] * 100).toFixed(0)}%)`
+        : '';
+
+      console.log(`  ${questionPreview}${priceStr}`);
+
+      assetIds.push(...market.tokenIds);
+      marketCount++;
+
+      if (marketCount >= 10) break;
+    }
+  }
+
+  if (assetIds.length > 0) {
+    console.log(`\n[System] Subscribing to ${assetIds.length} tokens from ${marketCount} markets`);
+    console.log('[System] Watching for signals...\n');
+    client.subscribe(assetIds);
+
+    // Status update every 30 seconds
+    const statusInterval = setInterval(() => {
+      const states = detector.getAllMarketStates();
+      const rate = alertEngine.getCurrentRate();
+      const weatherAlerts = weatherClient.getSeenAlertCount();
+      const trackedPlayers = sportsClient.getTrackedPlayerCount();
+      console.log(
+        `[Status] Books: ${bookCount} | Prices: ${priceCount} | Trades: ${tradeCount} | ` +
+        `Markets: ${states.size} | Weather: ${weatherAlerts} | Players: ${trackedPlayers} | Alerts/min: ${rate}`
+      );
+    }, 30000);
+
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log('\n[System] Shutting down...');
+      clearInterval(statusInterval);
+      await apiServer.stop();
+      linker.stop();
+      sportsClient.stop();
+      fedClient.stop();
+      weatherClient.stop();
+      congressClient?.stop();
+      client.disconnect();
+      process.exit(0);
+    });
+  } else {
+    console.log('[System] No markets with tokens found');
+    process.exit(1);
+  }
+}
+
+main().catch(console.error);
