@@ -154,3 +154,81 @@ export interface BrowseMarket {
   // Watchlist status
   isWatched: boolean;
 }
+
+// Market Detail Panel Types
+
+// Price history point for charting
+export interface PricePoint {
+  price: number;
+  timestamp: number;
+}
+
+// Trade entry for order flow display
+export interface TradeEntry {
+  price: number;
+  size: number;
+  side: 'BUY' | 'SELL';
+  timestamp: number;
+}
+
+// Full market detail for the detail panel
+export interface MarketDetail {
+  // Basic info
+  id: string;
+  conditionId: string;
+  question: string;
+  description: string;
+  slug: string;
+
+  // Current pricing
+  currentPrice: number;
+  yesPrice: number;
+  noPrice: number;
+  impliedProbability: number;
+
+  // Order book
+  spread: number;
+  bestBid: number;
+  bestAsk: number;
+  bidDepth: number;
+  askDepth: number;
+
+  // Historical data (capped for performance)
+  priceHistory: PricePoint[];
+  recentTrades: TradeEntry[];
+
+  // Categorization from TruthMarketLinker
+  category: string;
+  truthSources: string[];
+  keywords: string[];
+
+  // Playbook analysis (if available)
+  analysis?: PlaybookAnalysis;
+
+  // Metadata
+  lastUpdated: number;
+  isWatched: boolean;
+}
+
+// Events/alerts related to a market
+export interface MarketEventsResponse {
+  marketId: string;
+  events: AlertSummary[];
+  totalCount: number;
+}
+
+// Related markets (same category or shared keywords)
+export interface RelatedMarketsResponse {
+  marketId: string;
+  sameCategory: RelatedMarket[];
+  sharedKeywords: RelatedMarket[];
+}
+
+export interface RelatedMarket {
+  id: string;
+  question: string;
+  currentPrice: number;
+  category: string;
+  sharedKeywords?: string[];
+  urgency?: string;
+}

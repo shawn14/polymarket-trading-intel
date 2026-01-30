@@ -637,6 +637,577 @@
     .countdown-badge.soon {
       color: var(--accent-yellow);
     }
+
+    /* Market Detail Panel */
+    .detail-panel-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .detail-panel-overlay.visible {
+      display: block;
+    }
+
+    .detail-panel {
+      position: fixed;
+      top: 0;
+      right: -500px;
+      width: 480px;
+      max-width: 100vw;
+      height: 100vh;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      z-index: 1000;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .detail-panel.visible {
+      right: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-dark);
+    }
+
+    .panel-title {
+      flex: 1;
+      margin-right: 12px;
+    }
+
+    .panel-title h3 {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .panel-title .market-id {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .panel-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .panel-close:hover {
+      color: var(--text-primary);
+    }
+
+    .panel-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-dark);
+    }
+
+    .panel-tab {
+      flex: 1;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .panel-tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .panel-tab.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Overview Tab Styles */
+    .price-chart-container {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .price-chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .price-chart-header h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .price-big {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'SF Mono', Consolas, monospace;
+      color: var(--accent-green);
+    }
+
+    #priceChart {
+      width: 100%;
+      height: 120px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .stat-box .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .stat-box .value {
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .stat-box .value.yes { color: var(--accent-green); }
+    .stat-box .value.no { color: var(--accent-red); }
+
+    .stat-box .sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .analysis-section {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .analysis-section h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .analysis-phase {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .phase-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .phase-badge.monitoring { background: rgba(139, 148, 158, 0.2); color: var(--text-muted); }
+    .phase-badge.approaching { background: rgba(88, 166, 255, 0.2); color: var(--accent-blue); }
+    .phase-badge.imminent { background: rgba(210, 153, 34, 0.2); color: var(--accent-yellow); }
+    .phase-badge.active { background: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+    .phase-badge.resolution { background: rgba(163, 113, 247, 0.2); color: var(--accent-purple); }
+
+    .recommendation-box {
+      background: var(--bg-hover);
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    .recommendation-box .action {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .recommendation-box .action.buy { color: var(--accent-green); }
+    .recommendation-box .action.sell { color: var(--accent-red); }
+    .recommendation-box .action.watch { color: var(--accent-yellow); }
+    .recommendation-box .action.hold { color: var(--text-secondary); }
+
+    .recommendation-box .reasoning {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .recommendation-box .confidence {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .description-section {
+      margin-bottom: 16px;
+    }
+
+    .description-section h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .description-section p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Order Flow Tab Styles */
+    .flow-bar-container {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .flow-bar-container h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .flow-bar {
+      height: 24px;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      background: var(--bg-hover);
+    }
+
+    .flow-bar .buy-side {
+      background: var(--accent-green);
+      transition: width 0.3s;
+    }
+
+    .flow-bar .sell-side {
+      background: var(--accent-red);
+      transition: width 0.3s;
+    }
+
+    .flow-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+
+    .flow-labels .buy-label { color: var(--accent-green); }
+    .flow-labels .sell-label { color: var(--accent-red); }
+
+    .order-book-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .book-side {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .book-side h5 {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .book-side.bid h5 { color: var(--accent-green); }
+    .book-side.ask h5 { color: var(--accent-red); }
+
+    .book-side .price {
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .book-side.bid .price { color: var(--accent-green); }
+    .book-side.ask .price { color: var(--accent-red); }
+
+    .book-side .depth {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .trades-list {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .trades-list h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .trade-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .trade-item:last-child {
+      border-bottom: none;
+    }
+
+    .trade-item .side {
+      font-weight: 600;
+      width: 40px;
+    }
+
+    .trade-item .side.BUY { color: var(--accent-green); }
+    .trade-item .side.SELL { color: var(--accent-red); }
+
+    .trade-item .price {
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .trade-item .size {
+      color: var(--text-secondary);
+    }
+
+    .trade-item .time {
+      color: var(--text-muted);
+    }
+
+    /* Evidence Tab Styles */
+    .event-timeline {
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .event-timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 16px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -18px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+    }
+
+    .timeline-item.critical::before { border-color: var(--accent-red); background: var(--accent-red); }
+    .timeline-item.high::before { border-color: var(--accent-yellow); background: var(--accent-yellow); }
+    .timeline-item.medium::before { border-color: var(--accent-blue); }
+
+    .timeline-item .source-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+      margin-right: 6px;
+    }
+
+    .timeline-item .event-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .timeline-item .event-body {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .timeline-item .event-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .no-events {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* Related Tab Styles */
+    .related-section {
+      margin-bottom: 20px;
+    }
+
+    .related-section h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .related-market {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .related-market:hover {
+      background: var(--bg-hover);
+    }
+
+    .related-market .price {
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'SF Mono', Consolas, monospace;
+      color: var(--accent-green);
+      min-width: 50px;
+    }
+
+    .related-market .info {
+      flex: 1;
+    }
+
+    .related-market .question {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .related-market .shared {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Notes Tab Styles */
+    .notes-textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 12px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    .notes-textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .notes-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .polymarket-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    .polymarket-link:hover {
+      background: var(--border);
+    }
   </style>
 </head>
 <body>
@@ -744,6 +1315,128 @@
         <div id="alerts" class="alerts-list">
           <div class="loading">Loading alerts</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market Detail Panel -->
+  <div id="detail-overlay" class="detail-panel-overlay" onclick="closeDetailPanel()"></div>
+  <div id="detail-panel" class="detail-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <h3 id="panel-question">Loading...</h3>
+        <div class="market-id" id="panel-market-id"></div>
+      </div>
+      <button class="panel-close" onclick="closeDetailPanel()">&times;</button>
+    </div>
+
+    <div class="panel-tabs">
+      <button class="panel-tab active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+      <button class="panel-tab" data-tab="flow" onclick="switchTab('flow')">Order Flow</button>
+      <button class="panel-tab" data-tab="evidence" onclick="switchTab('evidence')">Evidence</button>
+      <button class="panel-tab" data-tab="related" onclick="switchTab('related')">Related</button>
+      <button class="panel-tab" data-tab="notes" onclick="switchTab('notes')">Notes</button>
+    </div>
+
+    <div class="panel-content">
+      <!-- Overview Tab -->
+      <div id="tab-overview" class="tab-pane active">
+        <div class="price-chart-container">
+          <div class="price-chart-header">
+            <h4>Price History</h4>
+            <span class="price-big" id="overview-price">--</span>
+          </div>
+          <canvas id="priceChart"></canvas>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="label">YES</div>
+            <div class="value yes" id="overview-yes">--</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">NO</div>
+            <div class="value no" id="overview-no">--</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Spread</div>
+            <div class="value" id="overview-spread">--</div>
+          </div>
+          <div class="stat-box">
+            <div class="label">Last Update</div>
+            <div class="value" id="overview-updated" style="font-size: 12px;">--</div>
+          </div>
+        </div>
+
+        <div id="analysis-container" class="analysis-section" style="display: none;">
+          <h4>Analysis</h4>
+          <div class="analysis-phase" id="analysis-phase"></div>
+          <div class="recommendation-box" id="analysis-recommendation" style="display: none;"></div>
+        </div>
+
+        <div class="description-section">
+          <h4>Resolution Criteria</h4>
+          <p id="overview-description">--</p>
+        </div>
+
+        <a id="polymarket-link" class="polymarket-link" href="#" target="_blank" style="display: none;">
+          View on Polymarket &rarr;
+        </a>
+      </div>
+
+      <!-- Order Flow Tab -->
+      <div id="tab-flow" class="tab-pane">
+        <div class="flow-bar-container">
+          <h4>Net Flow (Recent Trades)</h4>
+          <div class="flow-bar">
+            <div class="buy-side" id="flow-buy" style="width: 50%;"></div>
+            <div class="sell-side" id="flow-sell" style="width: 50%;"></div>
+          </div>
+          <div class="flow-labels">
+            <span class="buy-label" id="flow-buy-label">BUY: 0</span>
+            <span class="sell-label" id="flow-sell-label">SELL: 0</span>
+          </div>
+        </div>
+
+        <div class="order-book-summary">
+          <div class="book-side bid">
+            <h5>Best Bid</h5>
+            <div class="price" id="flow-bid">--</div>
+            <div class="depth" id="flow-bid-depth">Depth: --</div>
+          </div>
+          <div class="book-side ask">
+            <h5>Best Ask</h5>
+            <div class="price" id="flow-ask">--</div>
+            <div class="depth" id="flow-ask-depth">Depth: --</div>
+          </div>
+        </div>
+
+        <div class="trades-list">
+          <h4>Recent Trades</h4>
+          <div id="trades-container">
+            <div class="no-events">No trades recorded</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidence Tab -->
+      <div id="tab-evidence" class="tab-pane">
+        <div id="evidence-container">
+          <div class="loading">Loading events...</div>
+        </div>
+      </div>
+
+      <!-- Related Tab -->
+      <div id="tab-related" class="tab-pane">
+        <div id="related-container">
+          <div class="loading">Loading related markets...</div>
+        </div>
+      </div>
+
+      <!-- Notes Tab -->
+      <div id="tab-notes" class="tab-pane">
+        <textarea id="notes-textarea" class="notes-textarea" placeholder="Add your notes about this market..."></textarea>
+        <div class="notes-hint">Notes are saved locally in your browser.</div>
       </div>
     </div>
   </div>
@@ -862,7 +1555,6 @@
     let filteredMarkets = [];
     let sortColumn = 'urgency';
     let sortDirection = 'asc';
-    let expandedMarketId = null;
 
     async function loadMarkets() {
       try {
@@ -986,15 +1678,6 @@
       }
     }
 
-    function toggleMarketDetails(marketId) {
-      if (expandedMarketId === marketId) {
-        expandedMarketId = null;
-      } else {
-        expandedMarketId = marketId;
-      }
-      renderMarkets();
-    }
-
     async function toggleWatchlist(market, event) {
       event.stopPropagation();
 
@@ -1072,7 +1755,6 @@
       `;
 
       displayMarkets.forEach(m => {
-        const isExpanded = expandedMarketId === m.id;
         const pricePercent = (m.currentPrice * 100).toFixed(0);
 
         // Sources icons
@@ -1094,7 +1776,7 @@
         }
 
         html += `
-          <tr class="market-row ${isExpanded ? 'expanded' : ''}" onclick="toggleMarketDetails('${m.id}')">
+          <tr class="market-row" onclick="openDetailPanel('${m.id}')">
             <td class="price">${pricePercent}%</td>
             <td>${escapeHtml(m.question.slice(0, 60))}${m.question.length > 60 ? '...' : ''}${countdownHtml}</td>
             <td><span class="category-badge ${m.category}">${getCategoryLabel(m.category)}</span></td>
@@ -1103,42 +1785,6 @@
             <td>${watchHtml}</td>
           </tr>
         `;
-
-        // Expanded details row
-        if (isExpanded) {
-          html += `
-            <tr class="market-details visible">
-              <td colspan="6">
-                <div class="details-content">
-                  <div class="details-section">
-                    <h4>Full Question</h4>
-                    <p style="font-size: 13px;">${escapeHtml(m.question)}</p>
-                  </div>
-                  <div class="details-section">
-                    <h4>Keywords</h4>
-                    <div class="keywords-list">
-                      ${m.keywords.length > 0
-                        ? m.keywords.map(k => `<span class="keyword-tag">${escapeHtml(k)}</span>`).join('')
-                        : '<span style="color: var(--text-muted);">No keywords</span>'}
-                    </div>
-                  </div>
-                  <div class="details-section">
-                    <h4>Analysis</h4>
-                    <p style="font-size: 12px; color: var(--text-secondary);">
-                      Phase: ${m.phase || 'N/A'}<br>
-                      Spread: ${(m.spread * 100).toFixed(1)}%
-                      ${m.countdown ? `<br>Event: ${escapeHtml(m.countdown.eventName)} in ${m.countdown.daysRemaining} days` : ''}
-                    </p>
-                  </div>
-                  <div class="details-section">
-                    <h4>Actions</h4>
-                    ${m.slug ? `<a href="https://polymarket.com/event/${m.slug}" target="_blank" style="color: var(--accent-blue); font-size: 12px;">View on Polymarket →</a>` : ''}
-                  </div>
-                </div>
-              </td>
-            </tr>
-          `;
-        }
       });
 
       html += '</tbody></table>';
@@ -1434,6 +2080,413 @@
     // Auto-refresh every 30 seconds
     setInterval(refreshAll, 30000);
     setInterval(loadWatchlist, 30000);
+
+    // ==========================================
+    // Market Detail Panel Functions
+    // ==========================================
+
+    let currentPanelMarketId = null;
+    let currentPanelData = null;
+
+    async function openDetailPanel(marketId) {
+      currentPanelMarketId = marketId;
+
+      // Show panel
+      document.getElementById('detail-overlay').classList.add('visible');
+      document.getElementById('detail-panel').classList.add('visible');
+
+      // Reset to overview tab
+      switchTab('overview');
+
+      // Show loading state
+      document.getElementById('panel-question').textContent = 'Loading...';
+      document.getElementById('panel-market-id').textContent = marketId;
+
+      try {
+        // Fetch market detail
+        const data = await fetchJSON(`/market/${marketId}`);
+        currentPanelData = data;
+
+        // Update header
+        document.getElementById('panel-question').textContent = data.question;
+        document.getElementById('panel-market-id').textContent = `ID: ${marketId.slice(0, 12)}...`;
+
+        // Render Overview tab
+        renderOverviewTab(data);
+
+        // Load notes from localStorage
+        loadMarketNotes(marketId);
+
+      } catch (e) {
+        console.error('Failed to load market detail:', e);
+        document.getElementById('panel-question').textContent = 'Failed to load market';
+      }
+    }
+
+    function closeDetailPanel() {
+      document.getElementById('detail-overlay').classList.remove('visible');
+      document.getElementById('detail-panel').classList.remove('visible');
+
+      // Save notes if there are any
+      if (currentPanelMarketId) {
+        saveMarketNotes(currentPanelMarketId);
+      }
+
+      currentPanelMarketId = null;
+      currentPanelData = null;
+    }
+
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.panel-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabName);
+      });
+
+      // Update tab panes
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.toggle('active', pane.id === `tab-${tabName}`);
+      });
+
+      // Lazy-load content for certain tabs
+      if (tabName === 'flow' && currentPanelData) {
+        renderOrderFlowTab(currentPanelData);
+      } else if (tabName === 'evidence' && currentPanelMarketId) {
+        loadEvidenceTab(currentPanelMarketId);
+      } else if (tabName === 'related' && currentPanelMarketId) {
+        loadRelatedTab(currentPanelMarketId);
+      }
+    }
+
+    function renderOverviewTab(data) {
+      // Big price
+      const pricePercent = (data.currentPrice * 100).toFixed(0);
+      document.getElementById('overview-price').textContent = `${pricePercent}%`;
+
+      // YES/NO prices
+      document.getElementById('overview-yes').textContent = `${(data.yesPrice * 100).toFixed(1)}%`;
+      document.getElementById('overview-no').textContent = `${(data.noPrice * 100).toFixed(1)}%`;
+
+      // Spread
+      const spreadPercent = (data.spread * 100).toFixed(2);
+      document.getElementById('overview-spread').textContent = `${spreadPercent}%`;
+
+      // Last update
+      const lastUpdate = new Date(data.lastUpdated);
+      document.getElementById('overview-updated').textContent = lastUpdate.toLocaleTimeString();
+
+      // Description
+      document.getElementById('overview-description').textContent = data.description || 'No resolution criteria available.';
+
+      // Polymarket link
+      const linkEl = document.getElementById('polymarket-link');
+      if (data.slug) {
+        linkEl.href = `https://polymarket.com/event/${data.slug}`;
+        linkEl.style.display = 'inline-flex';
+      } else {
+        linkEl.style.display = 'none';
+      }
+
+      // Analysis section
+      const analysisContainer = document.getElementById('analysis-container');
+      if (data.analysis) {
+        analysisContainer.style.display = 'block';
+
+        // Phase badge
+        const phaseEl = document.getElementById('analysis-phase');
+        phaseEl.innerHTML = `
+          <span class="phase-badge ${data.analysis.phase}">${data.analysis.phase}</span>
+          <span class="urgency-badge ${data.analysis.urgency}">${data.analysis.urgency}</span>
+          ${data.analysis.countdown ? `<span style="color: var(--text-muted); font-size: 12px;">${data.analysis.countdown.daysRemaining}d to ${escapeHtml(data.analysis.countdown.eventName)}</span>` : ''}
+        `;
+
+        // Recommendation
+        const recEl = document.getElementById('analysis-recommendation');
+        if (data.analysis.recommendation) {
+          const rec = data.analysis.recommendation;
+          const actionClass = rec.action.toLowerCase().includes('buy') ? 'buy' :
+                              rec.action.toLowerCase().includes('sell') ? 'sell' :
+                              rec.action.toLowerCase().includes('watch') ? 'watch' : 'hold';
+          recEl.style.display = 'block';
+          recEl.innerHTML = `
+            <div class="action ${actionClass}">${escapeHtml(rec.action.toUpperCase())}</div>
+            <div class="reasoning">${escapeHtml(rec.reasoning)}</div>
+            <div class="confidence">Confidence: ${(rec.confidence * 100).toFixed(0)}%</div>
+          `;
+        } else {
+          recEl.style.display = 'none';
+        }
+      } else {
+        analysisContainer.style.display = 'none';
+      }
+
+      // Draw price chart
+      drawPriceChart(data.priceHistory);
+    }
+
+    function renderOrderFlowTab(data) {
+      // Calculate buy/sell flow from recent trades
+      let buyVolume = 0;
+      let sellVolume = 0;
+      for (const trade of data.recentTrades) {
+        if (trade.side === 'BUY') {
+          buyVolume += trade.size;
+        } else {
+          sellVolume += trade.size;
+        }
+      }
+      const totalVolume = buyVolume + sellVolume;
+
+      // Flow bar
+      const buyPercent = totalVolume > 0 ? (buyVolume / totalVolume) * 100 : 50;
+      const sellPercent = totalVolume > 0 ? (sellVolume / totalVolume) * 100 : 50;
+      document.getElementById('flow-buy').style.width = `${buyPercent}%`;
+      document.getElementById('flow-sell').style.width = `${sellPercent}%`;
+      document.getElementById('flow-buy-label').textContent = `BUY: ${buyVolume.toFixed(0)}`;
+      document.getElementById('flow-sell-label').textContent = `SELL: ${sellVolume.toFixed(0)}`;
+
+      // Order book
+      document.getElementById('flow-bid').textContent = `${(data.bestBid * 100).toFixed(1)}%`;
+      document.getElementById('flow-ask').textContent = `${(data.bestAsk * 100).toFixed(1)}%`;
+      document.getElementById('flow-bid-depth').textContent = `Depth: ${data.bidDepth.toFixed(0)}`;
+      document.getElementById('flow-ask-depth').textContent = `Depth: ${data.askDepth.toFixed(0)}`;
+
+      // Recent trades
+      const tradesEl = document.getElementById('trades-container');
+      if (data.recentTrades.length === 0) {
+        tradesEl.innerHTML = '<div class="no-events">No trades recorded</div>';
+      } else {
+        // Show most recent first
+        const trades = [...data.recentTrades].reverse().slice(0, 30);
+        tradesEl.innerHTML = trades.map(t => `
+          <div class="trade-item">
+            <span class="side ${t.side}">${t.side}</span>
+            <span class="price">${(t.price * 100).toFixed(1)}%</span>
+            <span class="size">${t.size.toFixed(0)}</span>
+            <span class="time">${new Date(t.timestamp).toLocaleTimeString()}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    async function loadEvidenceTab(marketId) {
+      const container = document.getElementById('evidence-container');
+      container.innerHTML = '<div class="loading">Loading events...</div>';
+
+      try {
+        const data = await fetchJSON(`/market/${marketId}/events`);
+
+        if (data.events.length === 0) {
+          container.innerHTML = '<div class="no-events">No events recorded for this market yet.</div>';
+          return;
+        }
+
+        const html = `
+          <div class="event-timeline">
+            ${data.events.map(e => `
+              <div class="timeline-item ${e.priority}">
+                <span class="source-badge">${getSourceIcon(e.source)} ${e.source}</span>
+                <div class="event-title">${escapeHtml(e.title)}</div>
+                <div class="event-body">${escapeHtml(e.body.slice(0, 150))}${e.body.length > 150 ? '...' : ''}</div>
+                <div class="event-time">${new Date(e.timestamp).toLocaleString()}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.innerHTML = html;
+
+      } catch (e) {
+        container.innerHTML = '<div class="error">Failed to load events</div>';
+      }
+    }
+
+    async function loadRelatedTab(marketId) {
+      const container = document.getElementById('related-container');
+      container.innerHTML = '<div class="loading">Loading related markets...</div>';
+
+      try {
+        const data = await fetchJSON(`/market/${marketId}/related`);
+
+        let html = '';
+
+        if (data.sameCategory.length > 0) {
+          html += `
+            <div class="related-section">
+              <h4>Same Category</h4>
+              ${data.sameCategory.map(m => `
+                <div class="related-market" onclick="openDetailPanel('${m.id}')">
+                  <span class="price">${(m.currentPrice * 100).toFixed(0)}%</span>
+                  <div class="info">
+                    <div class="question">${escapeHtml(m.question.slice(0, 50))}${m.question.length > 50 ? '...' : ''}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        if (data.sharedKeywords.length > 0) {
+          html += `
+            <div class="related-section">
+              <h4>Shared Keywords</h4>
+              ${data.sharedKeywords.map(m => `
+                <div class="related-market" onclick="openDetailPanel('${m.id}')">
+                  <span class="price">${(m.currentPrice * 100).toFixed(0)}%</span>
+                  <div class="info">
+                    <div class="question">${escapeHtml(m.question.slice(0, 50))}${m.question.length > 50 ? '...' : ''}</div>
+                    <div class="shared">${(m.sharedKeywords || []).join(', ')}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        if (!html) {
+          html = '<div class="no-events">No related markets found.</div>';
+        }
+
+        container.innerHTML = html;
+
+      } catch (e) {
+        container.innerHTML = '<div class="error">Failed to load related markets</div>';
+      }
+    }
+
+    function loadMarketNotes(marketId) {
+      const key = `market_notes_${marketId}`;
+      const notes = localStorage.getItem(key) || '';
+      document.getElementById('notes-textarea').value = notes;
+    }
+
+    function saveMarketNotes(marketId) {
+      const key = `market_notes_${marketId}`;
+      const notes = document.getElementById('notes-textarea').value;
+      if (notes) {
+        localStorage.setItem(key, notes);
+      } else {
+        localStorage.removeItem(key);
+      }
+    }
+
+    // Auto-save notes on change
+    document.getElementById('notes-textarea').addEventListener('input', () => {
+      if (currentPanelMarketId) {
+        saveMarketNotes(currentPanelMarketId);
+      }
+    });
+
+    function drawPriceChart(priceHistory) {
+      const canvas = document.getElementById('priceChart');
+      const ctx = canvas.getContext('2d');
+
+      // Get actual pixel dimensions
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+
+      if (!priceHistory || priceHistory.length < 2) {
+        ctx.fillStyle = '#6e7681';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Not enough price history', width / 2, height / 2);
+        return;
+      }
+
+      // Find min/max prices
+      const prices = priceHistory.map(p => p.price);
+      let minPrice = Math.min(...prices);
+      let maxPrice = Math.max(...prices);
+
+      // Add some padding
+      const range = maxPrice - minPrice;
+      if (range < 0.05) {
+        minPrice -= 0.025;
+        maxPrice += 0.025;
+      } else {
+        minPrice -= range * 0.1;
+        maxPrice += range * 0.1;
+      }
+
+      // Clamp to valid range
+      minPrice = Math.max(0, minPrice);
+      maxPrice = Math.min(1, maxPrice);
+
+      const padding = { top: 10, right: 10, bottom: 20, left: 40 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+
+      // Draw axes
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding.left, padding.top);
+      ctx.lineTo(padding.left, height - padding.bottom);
+      ctx.lineTo(width - padding.right, height - padding.bottom);
+      ctx.stroke();
+
+      // Draw Y-axis labels
+      ctx.fillStyle = '#6e7681';
+      ctx.font = '10px SF Mono, Consolas, monospace';
+      ctx.textAlign = 'right';
+      const yLabels = 3;
+      for (let i = 0; i <= yLabels; i++) {
+        const price = minPrice + (maxPrice - minPrice) * (i / yLabels);
+        const y = height - padding.bottom - (i / yLabels) * chartHeight;
+        ctx.fillText(`${(price * 100).toFixed(0)}%`, padding.left - 5, y + 3);
+
+        // Grid line
+        ctx.strokeStyle = '#21262d';
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+      }
+
+      // Draw the line
+      ctx.strokeStyle = '#3fb950';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      const xStep = chartWidth / (priceHistory.length - 1);
+
+      for (let i = 0; i < priceHistory.length; i++) {
+        const x = padding.left + i * xStep;
+        const normalizedPrice = (priceHistory[i].price - minPrice) / (maxPrice - minPrice);
+        const y = height - padding.bottom - normalizedPrice * chartHeight;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.stroke();
+
+      // Draw area under line
+      ctx.lineTo(padding.left + (priceHistory.length - 1) * xStep, height - padding.bottom);
+      ctx.lineTo(padding.left, height - padding.bottom);
+      ctx.closePath();
+
+      const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+      gradient.addColorStop(0, 'rgba(63, 185, 80, 0.3)');
+      gradient.addColorStop(1, 'rgba(63, 185, 80, 0)');
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    // Escape key to close panel
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && currentPanelMarketId) {
+        closeDetailPanel();
+      }
+    });
   </script>
 </body>
 </html>

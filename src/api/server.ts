@@ -28,6 +28,10 @@ import type {
   HealthResponse,
   ErrorResponse,
   BrowseMarket,
+  MarketDetail,
+  MarketEventsResponse,
+  RelatedMarketsResponse,
+  RelatedMarket,
 } from './types.js';
 
 export interface APIServerConfig {
@@ -297,6 +301,36 @@ export class APIServer {
           break;
 
         default:
+          // Check for /api/market/:id pattern (detail panel endpoints)
+          if (path.startsWith('/api/market/')) {
+            const parts = path.slice('/api/market/'.length).split('/');
+            const marketId = parts[0];
+            const subpath = parts[1];
+
+            if (marketId) {
+              if (!subpath) {
+                // GET /api/market/:id - full detail
+                const detail = await this.getMarketDetail(marketId);
+                if (detail) {
+                  this.sendJSON(res, detail);
+                } else {
+                  this.sendError(res, 404, 'Market not found', 'NOT_FOUND');
+                }
+              } else if (subpath === 'events') {
+                // GET /api/market/:id/events
+                const events = this.getMarketEvents(marketId);
+                this.sendJSON(res, events);
+              } else if (subpath === 'related') {
+                // GET /api/market/:id/related
+                const related = this.getRelatedMarkets(marketId);
+                this.sendJSON(res, related);
+              } else {
+                this.sendError(res, 404, 'Endpoint not found', 'NOT_FOUND');
+              }
+              break;
+            }
+          }
+
           // Check for /api/watchlist/:id pattern
           if (path.startsWith('/api/watchlist/')) {
             const marketId = path.slice('/api/watchlist/'.length);
@@ -875,6 +909,240 @@ export class APIServer {
       category: detected.category,
       truthSources: detected.truthSources,
       keywords,
+    };
+  }
+
+  // Market Detail Panel API methods
+
+  /**
+   * Get full market detail for the detail panel
+   * Merges data from: SignalDetector state, TruthMarketLinker, Playbook analysis, Watchlist
+   */
+  private async getMarketDetail(marketId: string): Promise<MarketDetail | null> {
+    // Try to find in tracked markets first (has richer data)
+    const trackedMarkets = this.deps.linker.getTrackedMarkets();
+    const tracked = trackedMarkets.get(marketId);
+
+    // Also check detector state (has price/trade history)
+    const marketState = this.deps.detector.getMarketState(marketId);
+    const question = this.deps.detector.getMarketQuestion(marketId);
+
+    // Need at least one source of data
+    if (!tracked && !marketState && !question) {
+      return null;
+    }
+
+    // Get watchlist status
+    let isWatched = false;
+    if (this.deps.watchlist) {
+      const watchlist = this.deps.watchlist.getWatchlist();
+      isWatched = watchlist.markets.some((m) => m.marketId === marketId);
+    }
+
+    // Get playbook analysis if available
+    let analysis: PlaybookAnalysis | undefined;
+    if (tracked) {
+      const playbook = findPlaybook(tracked.question, tracked.description);
+      if (playbook) {
+        try {
+          const status = await playbook.analyze(
+            marketId,
+            tracked.question,
+            tracked.currentPrices[0] ?? 0.5
+          );
+          analysis = {
+            marketId,
+            question: tracked.question,
+            category: status.category,
+            phase: status.phase,
+            urgency: status.urgency,
+            countdown: status.countdown ? {
+              eventName: status.countdown.eventName,
+              daysRemaining: status.countdown.daysRemaining,
+              hoursRemaining: status.countdown.hoursRemaining,
+            } : undefined,
+            signals: status.signals.map((s) => ({
+              type: s.type,
+              description: s.description,
+              strength: s.strength,
+            })),
+            recommendation: status.recommendation ? {
+              action: status.recommendation.action,
+              confidence: status.recommendation.confidence,
+              reasoning: status.recommendation.reasoning,
+              caveats: status.recommendation.caveats,
+            } : undefined,
+            nextEvent: status.nextKeyEvent ? {
+              name: status.nextKeyEvent.name,
+              timestamp: status.nextKeyEvent.timestamp,
+              description: status.nextKeyEvent.description,
+            } : undefined,
+          };
+        } catch (e) {
+          // Playbook analysis failed, continue without it
+        }
+      }
+    }
+
+    // Build the response
+    const currentPrice = marketState?.currentPrice ?? tracked?.currentPrices[0] ?? 0.5;
+
+    // Cap priceHistory at 500 points for performance
+    const priceHistory = (marketState?.priceHistory ?? []).slice(-500).map((p) => ({
+      price: p.price,
+      timestamp: p.timestamp,
+    }));
+
+    // Cap recentTrades at 50 for performance
+    const recentTrades = (marketState?.recentTrades ?? []).slice(-50).map((t) => ({
+      price: t.price,
+      size: t.size,
+      side: t.side as 'BUY' | 'SELL',
+      timestamp: t.timestamp,
+    }));
+
+    return {
+      id: marketId,
+      conditionId: tracked?.conditionId ?? '',
+      question: tracked?.question ?? question ?? 'Unknown',
+      description: tracked?.description ?? '',
+      slug: tracked?.slug ?? '',
+
+      currentPrice,
+      yesPrice: currentPrice,
+      noPrice: 1 - currentPrice,
+      impliedProbability: currentPrice,
+
+      spread: marketState?.spread ?? 0,
+      bestBid: marketState?.bestBid ?? 0,
+      bestAsk: marketState?.bestAsk ?? 1,
+      bidDepth: marketState?.bidDepth ?? 0,
+      askDepth: marketState?.askDepth ?? 0,
+
+      priceHistory,
+      recentTrades,
+
+      category: tracked?.truthMap?.category ?? 'other',
+      truthSources: tracked?.truthMap?.truthSources ?? [],
+      keywords: tracked?.truthMap?.keywords ?? [],
+
+      analysis,
+
+      lastUpdated: marketState?.lastUpdate ?? tracked?.lastUpdated ?? Date.now(),
+      isWatched,
+    };
+  }
+
+  /**
+   * Get alerts/events related to a specific market
+   * Filters recentAlerts by checking if the market was mentioned
+   */
+  private getMarketEvents(marketId: string): MarketEventsResponse {
+    const trackedMarkets = this.deps.linker.getTrackedMarkets();
+    const tracked = trackedMarkets.get(marketId);
+    const question = tracked?.question ?? this.deps.detector.getMarketQuestion(marketId) ?? '';
+
+    // Filter alerts that mention this market
+    // Check by marketId in body or by question match
+    const events = this.recentAlerts.filter((alert) => {
+      const bodyLower = (alert.body ?? '').toLowerCase();
+      const titleLower = (alert.title ?? '').toLowerCase();
+      const questionLower = question.toLowerCase().slice(0, 40);
+
+      return (
+        bodyLower.includes(marketId) ||
+        (questionLower && (bodyLower.includes(questionLower) || titleLower.includes(questionLower)))
+      );
+    });
+
+    return {
+      marketId,
+      events,
+      totalCount: events.length,
+    };
+  }
+
+  /**
+   * Get markets related to a specific market
+   * Returns markets with same category and/or shared keywords
+   */
+  private getRelatedMarkets(marketId: string): RelatedMarketsResponse {
+    const trackedMarkets = this.deps.linker.getTrackedMarkets();
+    const marketQuestions = this.deps.detector.getAllMarketQuestions();
+    const marketStates = this.deps.detector.getAllMarketStates();
+
+    const target = trackedMarkets.get(marketId);
+    const targetCategory = target?.truthMap?.category ?? 'other';
+    const targetKeywords = new Set(target?.truthMap?.keywords ?? []);
+
+    const sameCategory: RelatedMarket[] = [];
+    const sharedKeywords: RelatedMarket[] = [];
+
+    // Iterate through all tracked markets
+    for (const [id, market] of trackedMarkets) {
+      if (id === marketId) continue;
+
+      const state = marketStates.get(id);
+      const currentPrice = state?.currentPrice ?? market.currentPrices?.[0] ?? 0.5;
+
+      // Check same category
+      if (market.truthMap?.category === targetCategory && targetCategory !== 'other') {
+        sameCategory.push({
+          id,
+          question: market.question,
+          currentPrice,
+          category: market.truthMap.category,
+          urgency: undefined, // Could add playbook check here but expensive
+        });
+      }
+
+      // Check shared keywords (at least 2 shared)
+      const marketKeywords = market.truthMap?.keywords ?? [];
+      const shared = marketKeywords.filter((k) => targetKeywords.has(k));
+
+      if (shared.length >= 2) {
+        sharedKeywords.push({
+          id,
+          question: market.question,
+          currentPrice,
+          category: market.truthMap?.category ?? 'other',
+          sharedKeywords: shared,
+        });
+      }
+    }
+
+    // Also check subscribed markets that might not be in tracked
+    for (const [assetId, question] of marketQuestions) {
+      if (assetId === marketId || trackedMarkets.has(assetId)) continue;
+
+      const state = marketStates.get(assetId);
+      const currentPrice = state?.currentPrice ?? 0.5;
+
+      // Simple keyword matching for non-tracked markets
+      const questionLower = question.toLowerCase();
+      const keywordMatches: string[] = [];
+      for (const keyword of targetKeywords) {
+        if (questionLower.includes(keyword.toLowerCase())) {
+          keywordMatches.push(keyword);
+        }
+      }
+
+      if (keywordMatches.length >= 2) {
+        sharedKeywords.push({
+          id: assetId,
+          question,
+          currentPrice,
+          category: 'other',
+          sharedKeywords: keywordMatches,
+        });
+      }
+    }
+
+    // Limit results
+    return {
+      marketId,
+      sameCategory: sameCategory.slice(0, 10),
+      sharedKeywords: sharedKeywords.slice(0, 10),
     };
   }
 }
