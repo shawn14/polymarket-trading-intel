@@ -232,6 +232,10 @@ export class APIServer {
           this.sendJSON(res, this.getMarkets());
           break;
 
+        case '/api/markets/all':
+          this.sendJSON(res, this.getAllSubscribedMarkets());
+          break;
+
         case '/api/alerts':
           const limit = parseInt(url.searchParams.get('limit') || '50', 10);
           this.sendJSON(res, this.getAlerts(limit));
@@ -375,6 +379,7 @@ export class APIServer {
 
       metrics: {
         marketsTracked: trackedMarkets.size,
+        marketsSubscribed: this.deps.detector.getAllMarketQuestions().size,
         alertsPerMinute: this.deps.alertEngine.getCurrentRate(),
         signalsDetected: this.metrics.signalsDetected,
         booksReceived: this.metrics.booksReceived,
@@ -404,6 +409,29 @@ export class APIServer {
     }
 
     return markets.sort((a, b) => b.lastUpdated - a.lastUpdated);
+  }
+
+  private getAllSubscribedMarkets(): object[] {
+    const marketQuestions = this.deps.detector.getAllMarketQuestions();
+    const marketStates = this.deps.detector.getAllMarketStates();
+    const markets: object[] = [];
+
+    for (const [assetId, question] of marketQuestions) {
+      const state = marketStates.get(assetId);
+      markets.push({
+        assetId,
+        question,
+        currentPrice: state?.currentPrice ?? 0.5,
+        bestBid: state?.bestBid ?? 0,
+        bestAsk: state?.bestAsk ?? 1,
+        spread: state?.spread ?? 1,
+        lastUpdated: state?.lastUpdate ?? 0,
+        priceHistory: state?.priceHistory?.length ?? 0,
+      });
+    }
+
+    // Sort by last update, most recent first
+    return markets.sort((a: any, b: any) => b.lastUpdated - a.lastUpdated);
   }
 
   private getAlerts(limit: number): AlertSummary[] {

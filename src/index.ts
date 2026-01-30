@@ -283,8 +283,8 @@ async function main() {
   // Fetch active high-volume markets and subscribe
   console.log('\n[System] Fetching high-volume markets...\n');
 
-  // Configurable market limit via env var (default: 200)
-  const marketLimit = parseInt(process.env.MARKET_LIMIT || '200', 10);
+  // Configurable market limit via env var (default: all available)
+  const marketLimit = parseInt(process.env.MARKET_LIMIT || '500', 10);
 
   const rawMarkets = await client.fetchMarkets({
     active: true,

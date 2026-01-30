@@ -64,6 +64,13 @@ export class SignalDetector extends EventEmitter<SignalDetectorEvents> {
   }
 
   /**
+   * Get all registered market questions
+   */
+  getAllMarketQuestions(): Map<string, string> {
+    return new Map(this.marketQuestions);
+  }
+
+  /**
    * Attach to a PolymarketClient and start detecting signals
    */
   attach(client: PolymarketClient): void {

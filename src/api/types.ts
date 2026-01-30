@@ -22,6 +22,7 @@ export interface SystemStatus {
   // Metrics
   metrics: {
     marketsTracked: number;
+    marketsSubscribed: number;
     alertsPerMinute: number;
     signalsDetected: number;
     booksReceived: number;

@@ -434,8 +434,8 @@
             <span class="metric-value">${formatUptime(status.uptime)}</span>
           </div>
           <div class="metric">
-            <span class="metric-label">Markets Tracked</span>
-            <span class="metric-value">${status.metrics.marketsTracked}</span>
+            <span class="metric-label">Markets Subscribed</span>
+            <span class="metric-value">${status.metrics.marketsSubscribed || status.metrics.marketsTracked}</span>
           </div>
           <div class="metric">
             <span class="metric-label">Alerts/min</span>
@@ -500,30 +500,36 @@
 
     async function loadMarkets() {
       try {
-        const markets = await fetchJSON('/markets');
+        const markets = await fetchJSON('/markets/all');
 
         if (markets.length === 0) {
           document.getElementById('markets').innerHTML = '<div class="loading" style="animation:none">No markets tracked</div>';
           return;
         }
 
+        // Show first 50 markets, sorted by last update
+        const displayMarkets = markets.slice(0, 50);
+
         const html = `
+          <div style="margin-bottom: 8px; color: var(--text-secondary); font-size: 12px;">
+            Showing ${displayMarkets.length} of ${markets.length} markets
+          </div>
           <table class="markets-table">
             <thead>
               <tr>
                 <th>Question</th>
-                <th>Category</th>
                 <th>Price</th>
+                <th>Spread</th>
                 <th>Updated</th>
               </tr>
             </thead>
             <tbody>
-              ${markets.map(m => `
+              ${displayMarkets.map(m => `
                 <tr>
-                  <td>${escapeHtml(m.question.slice(0, 60))}${m.question.length > 60 ? '...' : ''}</td>
-                  <td><span class="category-badge ${m.category}">${m.category.replace('_', ' ')}</span></td>
+                  <td>${escapeHtml(m.question.slice(0, 55))}${m.question.length > 55 ? '...' : ''}</td>
                   <td class="price">${(m.currentPrice * 100).toFixed(0)}%</td>
-                  <td style="color: var(--text-muted)">${formatTime(m.lastUpdated)}</td>
+                  <td style="color: var(--text-muted)">${(m.spread * 100).toFixed(1)}%</td>
+                  <td style="color: var(--text-muted)">${m.lastUpdated ? formatTime(m.lastUpdated) : '-'}</td>
                 </tr>
               `).join('')}
             </tbody>
