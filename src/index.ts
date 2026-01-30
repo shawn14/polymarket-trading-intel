@@ -1,16 +1,12 @@
 /**
  * Polymarket Trading Intelligence System
  *
- * Detects truth-changing events before Polymarket prices adjust.
+ * Whale-focused trading intelligence for Polymarket.
  */
 
 import 'dotenv/config';
 
 import { PolymarketClient, parseMarket } from './ingestion/polymarket/index.js';
-import { CongressClient } from './ingestion/congress/index.js';
-import { WeatherClient } from './ingestion/weather/index.js';
-import { FedClient } from './ingestion/fed/index.js';
-import { SportsClient } from './ingestion/sports/index.js';
 import { WhaleTracker } from './ingestion/whales/index.js';
 import { SignalDetector, TruthMarketLinker } from './signals/index.js';
 import { AlertEngine } from './alerts/index.js';
@@ -133,113 +129,6 @@ async function main() {
     console.log(`[System] Disconnected: ${code} ${reason}`);
   });
 
-  // Initialize Congress.gov client if API key is available
-  const congressApiKey = process.env.CONGRESS_API_KEY;
-  let congressClient: CongressClient | null = null;
-
-  if (congressApiKey) {
-    congressClient = new CongressClient({
-      apiKey: congressApiKey,
-      pollIntervalMs: 5 * 60 * 1000,
-    });
-
-    congressClient.on('billChange', (change) => {
-      alertEngine.sendCongressChange(change);
-      // Record for move explanations
-      explainEngine.recordTruthEvent({
-        source: 'congress',
-        type: change.action.type,
-        description: `${change.bill.type} ${change.bill.number}: ${change.action.text.slice(0, 100)}`,
-        timestamp: Date.now(),
-        confidence: change.significance === 'critical' ? 0.95 : change.significance === 'high' ? 0.8 : 0.6,
-      });
-    });
-
-    congressClient.on('error', (error) => {
-      console.error('[Congress] Error:', error.message);
-    });
-
-    congressClient.start();
-    console.log('[System] Congress.gov monitoring enabled');
-  } else {
-    console.log('[System] Congress.gov disabled (set CONGRESS_API_KEY)');
-  }
-
-  // Initialize Weather client
-  const weatherClient = new WeatherClient({
-    pollIntervalMs: 5 * 60 * 1000,
-    includeMinor: false,
-  });
-
-  weatherClient.on('alert', (event) => {
-    alertEngine.sendWeatherEvent(event);
-    // Record for move explanations
-    explainEngine.recordTruthEvent({
-      source: 'weather',
-      type: event.event,
-      description: event.headline.slice(0, 100),
-      timestamp: event.timestamp,
-      confidence: event.significance === 'critical' ? 0.95 : event.significance === 'high' ? 0.8 : 0.6,
-    });
-  });
-
-  weatherClient.on('error', (error) => {
-    console.error('[Weather] Error:', error.message);
-  });
-
-  weatherClient.start();
-  console.log('[System] Weather monitoring enabled');
-
-  // Initialize Fed client
-  const fedClient = new FedClient({
-    pollIntervalMs: 5 * 60 * 1000,
-    fredApiKey: process.env.FRED_API_KEY,
-  });
-
-  fedClient.on('event', (event) => {
-    alertEngine.sendFedEvent(event);
-    // Record for move explanations
-    explainEngine.recordTruthEvent({
-      source: 'fed',
-      type: event.type,
-      description: event.title.slice(0, 100),
-      timestamp: event.timestamp,
-      confidence: event.significance === 'critical' ? 0.95 : event.significance === 'high' ? 0.8 : 0.6,
-    });
-  });
-
-  fedClient.on('error', (error) => {
-    console.error('[Fed] Error:', error.message);
-  });
-
-  fedClient.start();
-  console.log('[System] Fed/FOMC monitoring enabled');
-
-  // Initialize Sports client
-  const sportsClient = new SportsClient({
-    leagues: ['NFL', 'NBA', 'MLB'],
-    pollIntervalMs: 10 * 60 * 1000, // 10 minutes
-  });
-
-  sportsClient.on('event', (event) => {
-    alertEngine.sendSportsEvent(event);
-    // Record for move explanations
-    explainEngine.recordTruthEvent({
-      source: 'sports',
-      type: event.type,
-      description: event.headline,
-      timestamp: event.timestamp,
-      confidence: event.significance === 'critical' ? 0.95 : event.significance === 'high' ? 0.8 : 0.6,
-    });
-  });
-
-  sportsClient.on('error', (error) => {
-    console.error('[Sports] Error:', error.message);
-  });
-
-  sportsClient.start();
-  console.log('[System] Sports monitoring enabled');
-
   // Initialize Whale Tracker
   const whaleTracker = new WhaleTracker({ polymarket: client });
 
@@ -278,13 +167,9 @@ async function main() {
   // Attach watchlist to linker for targeted alerting
   linker.setWatchlistManager(watchlistManager, watchlistOnly);
 
-  // Attach linker to all data sources
+  // Attach linker to Polymarket
   linker.attach({
     polymarket: client,
-    congress: congressClient ?? undefined,
-    weather: weatherClient,
-    fed: fedClient,
-    sports: sportsClient,
   });
 
   // Route linked alerts to alert engine
@@ -303,10 +188,10 @@ async function main() {
     { port: apiPort },
     {
       polymarket: client,
-      congress: congressClient,
-      weather: weatherClient,
-      fed: fedClient,
-      sports: sportsClient,
+      congress: null,
+      weather: null,
+      fed: null,
+      sports: null,
       whaleTracker,
       detector,
       linker,
@@ -384,12 +269,10 @@ async function main() {
     // Status update every 30 seconds
     const statusInterval = setInterval(() => {
       const states = detector.getAllMarketStates();
-      const rate = alertEngine.getCurrentRate();
-      const weatherAlerts = weatherClient.getSeenAlertCount();
-      const trackedPlayers = sportsClient.getTrackedPlayerCount();
+      const whaleStats = whaleTracker.getStats();
       console.log(
         `[Status] Books: ${bookCount} | Prices: ${priceCount} | Trades: ${tradeCount} | ` +
-        `Markets: ${states.size} | Weather: ${weatherAlerts} | Players: ${trackedPlayers} | Alerts/min: ${rate}`
+        `Markets: ${states.size} | Whales: ${whaleStats.whales.total} | Whale Trades: ${whaleStats.cachedWhaleTrades}`
       );
     }, 30000);
 
@@ -401,10 +284,6 @@ async function main() {
       await apiServer.stop();
       linker.stop();
       whaleTracker.stop();
-      sportsClient.stop();
-      fedClient.stop();
-      weatherClient.stop();
-      congressClient?.stop();
       client.disconnect();
       process.exit(0);
     });

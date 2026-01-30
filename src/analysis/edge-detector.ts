@@ -50,9 +50,9 @@ const EXIT_THRESHOLDS = {
 
 export interface EdgeDetectorDeps {
   congress: CongressClient | null;
-  weather: WeatherClient;
-  fed: FedClient;
-  sports: SportsClient;
+  weather: WeatherClient | null;
+  fed: FedClient | null;
+  sports: SportsClient | null;
   linker: TruthMarketLinker;
   whaleTracker?: WhaleTracker;
 }
@@ -139,6 +139,8 @@ export class EdgeDetector {
    * Listen to sports events and cache them with market prices
    */
   private setupSportsListener(): void {
+    if (!this.deps.sports) return;
+
     this.deps.sports.on('event', (event: SportsEvent) => {
       // Only cache significant injury updates
       if (event.type !== 'injury_update') return;
@@ -689,10 +691,12 @@ export class EdgeDetector {
   getActiveWindows(): ActiveWindows {
     const injuryReport: string[] = [];
 
-    // Check each league for injury report window
-    for (const league of ['NFL', 'NBA', 'MLB'] as const) {
-      if (this.deps.sports.isInjuryReportWindow(league)) {
-        injuryReport.push(league);
+    // Check each league for injury report window (if sports client enabled)
+    if (this.deps.sports) {
+      for (const league of ['NFL', 'NBA', 'MLB'] as const) {
+        if (this.deps.sports.isInjuryReportWindow(league)) {
+          injuryReport.push(league);
+        }
       }
     }
 
@@ -701,7 +705,7 @@ export class EdgeDetector {
     const hurricaneSeason = month >= 5 && month <= 10;
 
     return {
-      fomc: this.deps.fed.isFOMCDay(),
+      fomc: this.deps.fed?.isFOMCDay() ?? false,
       injuryReport,
       hurricaneSeason,
     };

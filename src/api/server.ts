@@ -51,9 +51,9 @@ export interface APIServerConfig {
 export interface APIServerDependencies {
   polymarket: PolymarketClient;
   congress: CongressClient | null;
-  weather: WeatherClient;
-  fed: FedClient;
-  sports: SportsClient;
+  weather: WeatherClient | null;
+  fed: FedClient | null;
+  sports: SportsClient | null;
   detector: SignalDetector;
   linker: TruthMarketLinker;
   alertEngine: AlertEngine;
@@ -184,32 +184,38 @@ export class APIServer {
       });
     }
 
-    // Track Weather events
-    this.deps.weather.on('alert', () => {
-      this.lastUpdates.weather = Date.now();
-    });
+    // Track Weather events (if enabled)
+    if (this.deps.weather) {
+      this.deps.weather.on('alert', () => {
+        this.lastUpdates.weather = Date.now();
+      });
 
-    this.deps.weather.on('error', (error) => {
-      this.errors.weather = { message: error.message, time: Date.now() };
-    });
+      this.deps.weather.on('error', (error) => {
+        this.errors.weather = { message: error.message, time: Date.now() };
+      });
+    }
 
-    // Track Fed events
-    this.deps.fed.on('event', () => {
-      this.lastUpdates.fed = Date.now();
-    });
+    // Track Fed events (if enabled)
+    if (this.deps.fed) {
+      this.deps.fed.on('event', () => {
+        this.lastUpdates.fed = Date.now();
+      });
 
-    this.deps.fed.on('error', (error) => {
-      this.errors.fed = { message: error.message, time: Date.now() };
-    });
+      this.deps.fed.on('error', (error) => {
+        this.errors.fed = { message: error.message, time: Date.now() };
+      });
+    }
 
-    // Track Sports events
-    this.deps.sports.on('event', () => {
-      this.lastUpdates.sports = Date.now();
-    });
+    // Track Sports events (if enabled)
+    if (this.deps.sports) {
+      this.deps.sports.on('event', () => {
+        this.lastUpdates.sports = Date.now();
+      });
 
-    this.deps.sports.on('error', (error) => {
-      this.errors.sports = { message: error.message, time: Date.now() };
-    });
+      this.deps.sports.on('error', (error) => {
+        this.errors.sports = { message: error.message, time: Date.now() };
+      });
+    }
 
     // Track signals
     this.deps.detector.on('signal', () => {
