@@ -1323,21 +1323,23 @@ export class APIServer {
         lastSeen: w.lastSeen,
       }));
 
-    // Convert trades to response format
-    const trades: WhaleTradeResponse[] = recentTrades.map((ct) => ({
-      whaleAddress: ct.trade.whale.address,
-      whaleName: ct.trade.whale.name,
-      whaleTier: ct.trade.whale.tier,
-      marketId: ct.trade.marketId,
-      marketTitle: ct.trade.marketTitle,
-      marketSlug: ct.trade.marketSlug,
-      side: ct.trade.side,
-      outcome: ct.trade.outcome,
-      price: ct.trade.price,
-      sizeUsdc: ct.trade.sizeUsdc,
-      timestamp: ct.trade.timestamp,
-      isMaker: ct.trade.isMaker,
-    }));
+    // Convert trades to response format and sort by timestamp descending (most recent first)
+    const trades: WhaleTradeResponse[] = recentTrades
+      .map((ct) => ({
+        whaleAddress: ct.trade.whale.address,
+        whaleName: ct.trade.whale.name,
+        whaleTier: ct.trade.whale.tier,
+        marketId: ct.trade.marketId,
+        marketTitle: ct.trade.marketTitle,
+        marketSlug: ct.trade.marketSlug,
+        side: ct.trade.side,
+        outcome: ct.trade.outcome,
+        price: ct.trade.price,
+        sizeUsdc: ct.trade.sizeUsdc,
+        timestamp: ct.trade.timestamp,
+        isMaker: ct.trade.isMaker,
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp);
 
     return {
       timestamp: Date.now(),
@@ -1363,20 +1365,22 @@ export class APIServer {
 
     const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(limit);
 
-    return recentTrades.map((ct) => ({
-      whaleAddress: ct.trade.whale.address,
-      whaleName: ct.trade.whale.name,
-      whaleTier: ct.trade.whale.tier,
-      marketId: ct.trade.marketId,
-      marketTitle: ct.trade.marketTitle,
-      marketSlug: ct.trade.marketSlug,
-      side: ct.trade.side,
-      outcome: ct.trade.outcome,
-      price: ct.trade.price,
-      sizeUsdc: ct.trade.sizeUsdc,
-      timestamp: ct.trade.timestamp,
-      isMaker: ct.trade.isMaker,
-    }));
+    return recentTrades
+      .map((ct) => ({
+        whaleAddress: ct.trade.whale.address,
+        whaleName: ct.trade.whale.name,
+        whaleTier: ct.trade.whale.tier,
+        marketId: ct.trade.marketId,
+        marketTitle: ct.trade.marketTitle,
+        marketSlug: ct.trade.marketSlug,
+        side: ct.trade.side,
+        outcome: ct.trade.outcome,
+        price: ct.trade.price,
+        sizeUsdc: ct.trade.sizeUsdc,
+        timestamp: ct.trade.timestamp,
+        isMaker: ct.trade.isMaker,
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp);
   }
 
   /**
@@ -1390,7 +1394,10 @@ export class APIServer {
     const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(50);
     const now = new Date().toUTCString();
 
-    const items = recentTrades.map((ct) => {
+    // Sort by timestamp descending (most recent first)
+    const sortedTrades = [...recentTrades].sort((a, b) => b.trade.timestamp - a.trade.timestamp);
+
+    const items = sortedTrades.map((ct) => {
       const trade = ct.trade;
       const whale = trade.whale;
       const whaleName = whale.name || whale.address.slice(0, 10);
