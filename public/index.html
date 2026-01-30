@@ -6,18 +6,46 @@
   <title>Polymarket Trading Intel</title>
   <style>
     :root {
-      --bg-dark: #0d1117;
-      --bg-card: #161b22;
-      --bg-hover: #21262d;
-      --border: #30363d;
-      --text-primary: #e6edf3;
-      --text-secondary: #8b949e;
-      --text-muted: #6e7681;
-      --accent-green: #3fb950;
-      --accent-yellow: #d29922;
-      --accent-red: #f85149;
-      --accent-blue: #58a6ff;
-      --accent-purple: #a371f7;
+      /* Bloomberg-style dark terminal colors */
+      --bg-terminal: #000000;
+      --bg-panel: #0a0a0a;
+      --bg-card: #111111;
+      --bg-hover: #1a1a1a;
+      --bg-highlight: #1e1e1e;
+      --border: #2a2a2a;
+      --border-light: #333333;
+
+      /* Text colors */
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0b0;
+      --text-muted: #666666;
+      --text-dim: #444444;
+
+      /* Bloomberg signature colors */
+      --bb-orange: #ff6600;
+      --bb-blue: #0066cc;
+      --bb-green: #00cc66;
+      --bb-red: #ff3333;
+      --bb-yellow: #ffcc00;
+      --bb-cyan: #00cccc;
+      --bb-purple: #9966ff;
+
+      /* Semantic colors */
+      --positive: #00cc66;
+      --negative: #ff3333;
+      --warning: #ffcc00;
+      --info: #0099ff;
+
+      /* Legacy accent color aliases (for compatibility) */
+      --accent-green: var(--bb-green);
+      --accent-red: var(--bb-red);
+      --accent-yellow: var(--bb-yellow);
+      --accent-blue: var(--bb-blue);
+      --accent-purple: var(--bb-purple);
+
+      /* Fonts */
+      --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     * {
@@ -27,92 +55,210 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: var(--bg-dark);
+      font-family: var(--font-mono);
+      background: var(--bg-terminal);
       color: var(--text-primary);
-      line-height: 1.5;
-      padding: 20px;
+      line-height: 1.4;
+      font-size: 12px;
+      min-height: 100vh;
     }
 
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    header {
+    /* Top Status Bar */
+    .status-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
+      padding: 6px 16px;
+      background: var(--bg-panel);
       border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .status-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .status-bar-brand {
+      color: var(--bb-orange);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .status-bar-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+    }
+
+    .status-bar-item .label {
+      color: var(--text-muted);
+    }
+
+    .status-bar-item .value {
+      color: var(--text-primary);
+    }
+
+    .status-bar-item.live {
+      color: var(--bb-green);
+    }
+
+    .status-bar-item.live::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--bb-green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    /* Section Headers */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: linear-gradient(90deg, var(--bb-orange) 0%, var(--bb-orange) 4px, var(--bg-card) 4px);
+      border: 1px solid var(--border);
+      margin-bottom: 1px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section-meta {
+      font-size: 10px;
+      color: var(--text-muted);
     }
 
     h1 {
-      font-size: 24px;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .status-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .status-badge.healthy {
-      background: rgba(63, 185, 80, 0.15);
-      color: var(--accent-green);
+      background: var(--bb-green);
+      color: #000;
     }
 
     .status-badge.degraded {
-      background: rgba(210, 153, 34, 0.15);
-      color: var(--accent-yellow);
+      background: var(--bb-yellow);
+      color: #000;
     }
 
     .status-badge.unhealthy {
-      background: rgba(248, 81, 73, 0.15);
-      color: var(--accent-red);
+      background: var(--bb-red);
+      color: #fff;
     }
 
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: currentColor;
     }
 
+    /* Grid Layout */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 12px;
     }
 
+    .grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Cards / Panels */
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
+      padding: 0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--bb-orange);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-body {
+      padding: 12px;
     }
 
     .card h2 {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--bb-orange);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
+      letter-spacing: 1px;
+      padding: 8px 12px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      margin: 0;
     }
 
     .metric {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
+      padding: 6px 12px;
       border-bottom: 1px solid var(--border);
     }
 
@@ -121,14 +267,17 @@
     }
 
     .metric-label {
-      color: var(--text-secondary);
-      font-size: 13px;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .metric-value {
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 600;
-      font-family: 'SF Mono', Consolas, monospace;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
     }
 
     .alerts-list {
@@ -137,10 +286,9 @@
     }
 
     .alert-item {
-      padding: 12px;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      background: var(--bg-hover);
+      padding: 10px 12px;
+      margin-bottom: 1px;
+      background: var(--bg-card);
       border-left: 3px solid var(--border);
     }
 
@@ -686,23 +834,224 @@
       transform: translateY(-1px);
     }
 
-    /* RSS Link */
-    .rss-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      border-radius: 4px;
-      background: rgba(255, 165, 0, 0.15);
-      color: #ffa500;
-      font-size: 11px;
-      font-weight: 600;
+    /* RSS Button */
+    .rss-btn {
+      padding: 4px 10px;
+      background: var(--bb-orange);
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
       text-decoration: none;
-      transition: all 0.2s;
+      letter-spacing: 0.5px;
     }
 
-    .rss-link:hover {
-      background: rgba(255, 165, 0, 0.25);
+    .rss-btn:hover {
+      background: #ff8833;
+    }
+
+    /* Trading Panel Layout */
+    .trading-panel {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 1200px) {
+      .trading-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-section {
+      background: var(--bg-card);
+    }
+
+    /* Live Whale Feed */
+    .whale-feed {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .whale-feed::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .whale-feed::-webkit-scrollbar-track {
+      background: var(--bg-panel);
+    }
+
+    .whale-feed::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+    }
+
+    .feed-item {
+      display: grid;
+      grid-template-columns: 80px 60px 50px 1fr 80px 60px;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .feed-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .feed-item .whale-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .feed-item .whale-name.top10 {
+      color: var(--bb-orange);
+    }
+
+    .feed-item .whale-name.top50 {
+      color: var(--bb-cyan);
+    }
+
+    .feed-item .trade-side {
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .feed-item .trade-side.buy {
+      color: var(--bb-green);
+    }
+
+    .feed-item .trade-side.sell {
+      color: var(--bb-red);
+    }
+
+    .feed-item .trade-outcome {
+      font-weight: 600;
+    }
+
+    .feed-item .trade-outcome.yes {
+      color: var(--bb-green);
+    }
+
+    .feed-item .trade-outcome.no {
+      color: var(--bb-red);
+    }
+
+    .feed-item .market-title {
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .feed-item .trade-size {
+      text-align: right;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .feed-item .trade-price {
+      text-align: right;
+      color: var(--text-muted);
+    }
+
+    .feed-item .trade-time {
+      text-align: right;
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    /* Data Table */
+    .data-table-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 6px 10px;
+      background: var(--bg-panel);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+
+    .data-table th.right {
+      text-align: right;
+    }
+
+    .data-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .data-table td.right {
+      text-align: right;
+    }
+
+    .data-table td.mono {
+      font-family: var(--font-mono);
+    }
+
+    .data-table td.positive {
+      color: var(--bb-green);
+    }
+
+    .data-table td.negative {
+      color: var(--bb-red);
+    }
+
+    .data-table td.muted {
+      color: var(--text-muted);
+    }
+
+    .data-table tr:hover {
+      background: var(--bg-hover);
+    }
+
+    .rank-badge {
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .rank-badge.top10 {
+      color: var(--bb-orange);
+    }
+
+    .rank-badge.top50 {
+      color: var(--bb-cyan);
+    }
+
+    /* Loading State */
+    .loading-terminal {
+      padding: 20px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .loading-terminal::before {
+      content: '> ';
+      color: var(--bb-green);
     }
 
     /* Whale Intelligence Panel Styles */
@@ -2330,35 +2679,57 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>📊 Polymarket Trading Intel</h1>
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <div id="health-badge" class="status-badge">
-          <span class="status-dot"></span>
-          <span>Loading</span>
-        </div>
-        <button class="refresh-btn" onclick="refreshAll()">⟳ Refresh</button>
+  <!-- Bloomberg-style Status Bar -->
+  <div class="status-bar">
+    <div class="status-bar-left">
+      <span class="status-bar-brand">POLYMARKET INTEL</span>
+      <div class="status-bar-item live" id="live-indicator">
+        <span>LIVE</span>
       </div>
-    </header>
+      <div class="status-bar-item">
+        <span class="label">WHALES:</span>
+        <span class="value" id="whale-count">--</span>
+      </div>
+      <div class="status-bar-item">
+        <span class="label">TRADES:</span>
+        <span class="value" id="trade-count">--</span>
+      </div>
+      <div class="status-bar-item">
+        <span class="label">MARKETS:</span>
+        <span class="value" id="market-count">--</span>
+      </div>
+    </div>
+    <div class="status-bar-right" style="display: flex; align-items: center; gap: 16px;">
+      <div id="health-badge" class="status-badge healthy">CONNECTED</div>
+      <span id="current-time" style="color: var(--text-muted);"></span>
+      <a href="/api/whales/feed" target="_blank" class="rss-btn" title="RSS Feed">RSS</a>
+    </div>
+  </div>
 
-    <!-- Whale Intelligence Section -->
-    <div class="card full-width" id="whale-intel-card" style="margin-bottom: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <h2 style="margin-bottom: 0;">Whale Intelligence</h2>
-          <a href="/api/whales/feed" target="_blank" class="rss-link" title="Subscribe to RSS Feed">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="6.18" cy="17.82" r="2.18"/>
-              <path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/>
-            </svg>
-            RSS
-          </a>
+  <div class="container">
+
+    <!-- Main Trading Panel -->
+    <div class="trading-panel">
+      <!-- Live Whale Feed -->
+      <div class="panel-section" id="whale-feed-section">
+        <div class="section-header">
+          <span class="section-title">LIVE WHALE ACTIVITY</span>
+          <span class="section-meta" id="whale-last-update">--</span>
         </div>
-        <span id="whale-last-update" class="text-muted" style="font-size: 11px; color: var(--text-muted);">--</span>
+        <div id="whale-feed" class="whale-feed">
+          <div class="loading-terminal">Connecting to whale feed...</div>
+        </div>
       </div>
-      <div id="whale-intel-content">
-        <div class="loading">Loading whale data...</div>
+
+      <!-- Top Whales Leaderboard -->
+      <div class="panel-section" id="whale-leaderboard-section">
+        <div class="section-header">
+          <span class="section-title">TOP TRADERS</span>
+          <span class="section-meta">BY ALL-TIME P&L</span>
+        </div>
+        <div id="whale-leaderboard" class="data-table-container">
+          <div class="loading-terminal">Loading leaderboard...</div>
+        </div>
       </div>
     </div>
 
@@ -2911,7 +3282,7 @@
         const connHTML = Object.entries(status.connections).map(([name, conn]) => `
           <div class="metric">
             <span class="metric-label">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
-            <span class="metric-value" style="color: ${conn.connected ? 'var(--accent-green)' : 'var(--accent-red)'}">
+            <span class="metric-value" style="color: ${conn.connected ? 'var(--bb-green)' : 'var(--bb-red)'}">
               ${conn.connected ? '●' : '○'}
             </span>
           </div>
@@ -2961,6 +3332,9 @@
         console.log('Loading markets from /markets/browse...');
         const markets = await fetchJSON('/markets/browse');
         console.log('Loaded markets:', markets?.length || 0);
+
+        // Update status bar market count
+        document.getElementById('market-count').textContent = markets?.length || 0;
 
         if (!markets || markets.length === 0) {
           document.getElementById('markets').innerHTML = '<div class="loading" style="animation:none">No markets tracked yet. Waiting for data...</div>';
@@ -3263,123 +3637,90 @@
     async function loadWhaleIntel() {
       try {
         const data = await fetchJSON('/whales');
-        const container = document.getElementById('whale-intel-content');
+        const feedContainer = document.getElementById('whale-feed');
+        const leaderboardContainer = document.getElementById('whale-leaderboard');
         const lastUpdateEl = document.getElementById('whale-last-update');
 
-        lastUpdateEl.textContent = 'Updated: ' + new Date(data.timestamp).toLocaleTimeString();
+        // Update status bar
+        document.getElementById('whale-count').textContent = data.stats.totalWhales;
+        document.getElementById('trade-count').textContent = data.stats.cachedTrades;
 
-        const { stats, topWhales, recentTrades, activeAccumulations } = data;
+        lastUpdateEl.textContent = new Date(data.timestamp).toLocaleTimeString();
 
-        // Build the whale intel display
-        let html = '<div class="whale-intel-grid">';
+        const { stats, topWhales, recentTrades } = data;
 
-        // Stats row
-        html += `
-          <div class="whale-stats-row">
-            <div class="whale-stat">
-              <span class="whale-stat-value">${stats.totalWhales}</span>
-              <span class="whale-stat-label">Tracked Whales</span>
-            </div>
-            <div class="whale-stat">
-              <span class="whale-stat-value">${stats.top10Count}</span>
-              <span class="whale-stat-label">Top 10</span>
-            </div>
-            <div class="whale-stat">
-              <span class="whale-stat-value">${stats.top50Count}</span>
-              <span class="whale-stat-label">Top 50</span>
-            </div>
-            <div class="whale-stat">
-              <span class="whale-stat-value">${stats.cachedTrades}</span>
-              <span class="whale-stat-label">Cached Trades</span>
-            </div>
-          </div>
-        `;
-
-        // Active accumulations (if any)
-        if (activeAccumulations && activeAccumulations.length > 0) {
-          html += '<div class="whale-section"><h4>Active Accumulations</h4>';
-          for (const acc of activeAccumulations) {
-            html += `
-              <div class="whale-accumulation-item" onclick="openDetailPanel('${acc.marketId}')">
-                <span class="whale-signal-badge ${acc.confidence}">${acc.signalType.toUpperCase()}</span>
-                <span class="whale-question">${escapeHtml(acc.question.slice(0, 50))}...</span>
-                <span class="whale-direction ${acc.direction.toLowerCase()}">${acc.direction}</span>
-                <span class="whale-size">$${formatNumber(acc.totalWhaleSize)}</span>
-              </div>
-            `;
-          }
-          html += '</div>';
-        }
-
-        // Top whales list (if any)
-        if (topWhales && topWhales.length > 0) {
-          html += '<div class="whale-section"><h4>Top Whales</h4>';
-          html += '<div class="whale-list">';
-          for (const whale of topWhales.slice(0, 5)) {
-            const tierClass = whale.tier === 'top10' ? 'tier-top10' : whale.tier === 'top50' ? 'tier-top50' : 'tier-tracked';
-            const pnlClass = whale.pnl7d >= 0 ? 'positive' : 'negative';
-            const pnlStr = whale.pnl7d >= 0 ? '+' : '';
-            html += `
-              <div class="whale-row">
-                <span class="whale-tag ${tierClass}">${whale.name || whale.address.slice(0, 8)}...</span>
-                <span class="whale-pnl ${pnlClass}">${pnlStr}$${formatNumber(whale.pnl7d)}</span>
-                <span class="whale-volume">Vol: $${formatNumber(whale.volume7d)}</span>
-                <span class="whale-copy-score">Copy: ${whale.copySuitability}</span>
-              </div>
-            `;
-          }
-          html += '</div></div>';
-        }
-
-        // Recent trades (if any)
+        // Render Live Feed
         if (recentTrades && recentTrades.length > 0) {
-          html += '<div class="whale-section"><h4>Recent Whale Trades</h4>';
-          html += '<div class="whale-trades-list">';
-          for (const trade of recentTrades.slice(0, 5)) {
-            const tierClass = trade.whaleTier === 'top10' ? 'tier-top10' : trade.whaleTier === 'top50' ? 'tier-top50' : 'tier-tracked';
-            const sideClass = trade.side === 'BUY' ? 'buy' : 'sell';
+          let feedHtml = '';
+          for (const trade of recentTrades.slice(0, 20)) {
+            const tierClass = trade.whaleTier === 'top10' ? 'top10' : 'top50';
+            const sideClass = trade.side.toLowerCase();
+            const outcomeClass = trade.outcome.toLowerCase();
             const timeAgo = formatTimeAgo(trade.timestamp);
             const marketUrl = trade.marketSlug ? `https://polymarket.com/event/${trade.marketSlug}` : '#';
             const marketTitle = trade.marketTitle || 'Unknown Market';
-            const shortTitle = marketTitle.length > 50 ? marketTitle.slice(0, 47) + '...' : marketTitle;
-            html += `
-              <div class="whale-trade-card" onclick="window.open('${marketUrl}', '_blank')">
-                <div class="whale-trade-header">
-                  <span class="whale-tag ${tierClass}">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
-                  <span class="whale-trade-side ${sideClass}">${trade.side} ${trade.outcome}</span>
-                  <span class="whale-trade-size">$${formatNumber(trade.sizeUsdc)}</span>
-                  <span class="whale-trade-price">@ ${(trade.price * 100).toFixed(0)}%</span>
-                  <span class="whale-trade-time">${timeAgo}</span>
-                </div>
-                <div class="whale-trade-market">${escapeHtml(shortTitle)}</div>
+            const shortTitle = marketTitle.length > 60 ? marketTitle.slice(0, 57) + '...' : marketTitle;
+            const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
+
+            feedHtml += `
+              <div class="feed-item" onclick="window.open('${marketUrl}', '_blank')">
+                <span class="whale-name ${tierClass}">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
+                <span class="trade-side ${sideClass}">${trade.side}</span>
+                <span class="trade-outcome ${outcomeClass}">${trade.outcome}</span>
+                <span class="market-title">${escapeHtml(shortTitle)}</span>
+                <span class="trade-size">${sizeStr}</span>
+                <span class="trade-time">${timeAgo}</span>
               </div>
             `;
           }
-          html += '</div></div>';
+          feedContainer.innerHTML = feedHtml;
+        } else {
+          feedContainer.innerHTML = '<div class="loading-terminal">Waiting for whale trades...</div>';
         }
 
-        // Empty state
-        if (stats.totalWhales === 0 && (!recentTrades || recentTrades.length === 0)) {
-          html += `
-            <div class="whale-empty-state">
-              <div style="font-size: 32px; margin-bottom: 8px;">🐋</div>
-              <div style="color: var(--text-secondary); font-size: 13px;">
-                Building whale universe from trade data...
-              </div>
-              <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">
-                Whales are identified as trades accumulate. Check back soon.
-              </div>
-            </div>
+        // Render Leaderboard Table
+        if (topWhales && topWhales.length > 0) {
+          let tableHtml = `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>TRADER</th>
+                  <th class="right">P&L</th>
+                  <th class="right">SCORE</th>
+                </tr>
+              </thead>
+              <tbody>
           `;
-        }
 
-        html += '</div>';
-        container.innerHTML = html;
+          for (let i = 0; i < Math.min(topWhales.length, 15); i++) {
+            const whale = topWhales[i];
+            const rankClass = whale.tier === 'top10' ? 'top10' : 'top50';
+            const pnlClass = whale.pnl7d >= 0 ? 'positive' : 'negative';
+            const pnlStr = whale.pnl7d >= 1000000
+              ? `$${(whale.pnl7d / 1000000).toFixed(1)}M`
+              : `$${(whale.pnl7d / 1000).toFixed(0)}K`;
+
+            tableHtml += `
+              <tr>
+                <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
+                <td>${whale.name || whale.address.slice(0, 10)}</td>
+                <td class="right mono ${pnlClass}">${pnlStr}</td>
+                <td class="right muted">${whale.copySuitability}</td>
+              </tr>
+            `;
+          }
+
+          tableHtml += '</tbody></table>';
+          leaderboardContainer.innerHTML = tableHtml;
+        } else {
+          leaderboardContainer.innerHTML = '<div class="loading-terminal">Loading leaderboard...</div>';
+        }
 
       } catch (e) {
         console.error('Failed to load whale intel:', e);
-        document.getElementById('whale-intel-content').innerHTML =
-          '<div style="color: var(--text-muted);">Failed to load whale data</div>';
+        document.getElementById('whale-feed').innerHTML =
+          '<div class="loading-terminal">Error: Failed to load whale data</div>';
       }
     }
 
@@ -3606,11 +3947,32 @@
       console.error('watchlist-search element not found!');
     }
 
+    // Update clock in status bar
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const dateStr = now.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+      document.getElementById('current-time').textContent = `${dateStr} ${timeStr}`;
+    }
+
     // Initial load
     console.log('Starting initial load...');
     setupFilterListeners();
+    updateClock();
     refreshAll();
     loadWatchlist();
+
+    // Update clock every second
+    setInterval(updateClock, 1000);
 
     // Auto-refresh every 30 seconds
     setInterval(refreshAll, 30000);
