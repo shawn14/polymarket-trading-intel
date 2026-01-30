@@ -232,3 +232,293 @@ export interface RelatedMarket {
   sharedKeywords?: string[];
   urgency?: string;
 }
+
+// ============================================================================
+// Actionability Types - Trading Decision Support
+// ============================================================================
+
+// AI lean direction for trade framing
+export type AILean = 'YES' | 'NO' | 'NEUTRAL';
+
+// Trade framing box - answers "what should I do at this price?"
+export interface TradeFrame {
+  // AI recommendation
+  lean: AILean;
+  confidence: number; // 0-100
+  reasoning: string;
+
+  // What's already reflected in price
+  pricedIn: string[];
+
+  // What could move the market that isn't priced in
+  notPricedIn: string[];
+
+  // Key events that could swing the market
+  swingEvents: SwingEvent[];
+
+  // Specific trade ideas
+  tradeIdeas: string[];
+}
+
+export interface SwingEvent {
+  description: string;
+  direction: 'up' | 'down'; // ▲ or ▼
+  timing?: string; // "any day", "Mar 15", etc.
+}
+
+// Price zone classification
+export type ZoneType = 'attractive' | 'fair' | 'crowded';
+
+export interface PriceZones {
+  // Zone boundaries (as probabilities 0-100)
+  attractiveRange: { min: number; max: number };
+  fairRange: { min: number; max: number };
+  crowdedRange: { min: number; max: number };
+
+  // Current position
+  currentPrice: number;
+  currentZone: ZoneType;
+
+  // Historical context
+  historicalLow: number;
+  historicalHigh: number;
+  historicalMean: number;
+}
+
+// Edge score breakdown
+export interface EdgeScore {
+  total: number; // 0-100
+
+  // Component scores (each 0-25)
+  components: {
+    information: number; // Playbook + alerts
+    pricing: number; // Zone attractiveness
+    timing: number; // Event proximity
+    liquidity: number; // Spread + depth
+  };
+
+  // Human-readable assessment
+  assessment: 'Poor' | 'Fair' | 'Good' | 'Excellent';
+}
+
+// Disagreement signals - volume/price divergence warnings
+export type DisagreementType =
+  | 'high_volume_flat_price' // Absorption
+  | 'flow_direction_mismatch' // Divergence
+  | 'depth_imbalance'; // One-sided book
+
+export interface DisagreementSignal {
+  type: DisagreementType;
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  implication: string; // What this might mean for trading
+}
+
+// Evidence impact labeling
+export type EvidenceImpact = 'positive' | 'negative' | 'context';
+
+export type EvidenceMagnitude = 'major' | 'minor';
+
+export interface LabeledEvidence {
+  // Original alert data
+  id: string;
+  timestamp: number;
+  title: string;
+  body: string;
+  source: string;
+
+  // Impact classification
+  impact: EvidenceImpact; // ▲ positive, ▼ negative, ◇ context
+  magnitude: EvidenceMagnitude;
+
+  // Why we classified it this way
+  impactReasoning?: string;
+}
+
+export interface EvidenceSummary {
+  positive: number; // Count of ▲
+  negative: number; // Count of ▼
+  context: number; // Count of ◇
+  netDirection: 'bullish' | 'bearish' | 'neutral';
+}
+
+// Next best action recommendation
+export type ActionType =
+  | 'set_alert' // Set price alert
+  | 'wait' // Wait for better entry
+  | 'avoid' // Stay away
+  | 'monitor'; // Keep watching
+
+export interface NextBestAction {
+  action: ActionType;
+  label: string; // Button text
+  targetPrice?: number; // For set_alert
+  reasoning: string;
+}
+
+// User intent storage (for localStorage)
+export interface UserIntent {
+  action: ActionType;
+  timestamp: number;
+  notes?: string;
+  targetPrice?: number;
+}
+
+// Complete actionable market detail response
+export interface ActionableMarketDetail extends MarketDetail {
+  tradeFrame: TradeFrame;
+  priceZones: PriceZones;
+  edgeScore: EdgeScore;
+  disagreementSignals: DisagreementSignal[];
+  labeledEvidence: {
+    events: LabeledEvidence[];
+    summary: EvidenceSummary;
+  };
+  nextBestAction: NextBestAction;
+}
+
+// ============================================================================
+// Edge Scanner Types - Proactive Mispricing Detection
+// ============================================================================
+
+// Edge signal for a single market
+export interface EdgeSignal {
+  direction: 'YES' | 'NO';
+  magnitude: number; // Expected remaining move (0.10 = 10%)
+  confidence: 'high' | 'medium' | 'low';
+  source: 'congress' | 'weather' | 'fed' | 'sports';
+  event: string; // "CR passed House 2h ago"
+  eventTimestamp: number;
+  priceAtEvent?: number; // Price when event occurred
+  priceTarget: number; // Where we expect price to go
+  timeWindow?: number; // Hours until edge decays
+}
+
+// Full opportunity with market context
+export interface EdgeOpportunity {
+  marketId: string;
+  question: string;
+  currentPrice: number;
+  expectedPrice: number;
+  edge: EdgeSignal;
+  action: 'BUY_YES' | 'BUY_NO' | 'MONITOR';
+  urgency: 'immediate' | 'hours' | 'day';
+}
+
+// Active monitoring windows
+export interface ActiveWindows {
+  fomc: boolean;
+  injuryReport: string[]; // leagues currently in window
+  hurricaneSeason: boolean;
+}
+
+// API response for edge scan
+export interface EdgeScanResponse {
+  timestamp: number;
+  lastScanDuration: number;
+  opportunities: EdgeOpportunity[];
+  whaleOpportunities?: WhaleEdgeOpportunity[];
+  activeWindows: ActiveWindows;
+}
+
+// ============================================================================
+// Whale Intelligence Types - Smart Money Tracking
+// ============================================================================
+
+// Whale tier classification
+export type WhaleTier = 'top10' | 'top50' | 'tracked';
+
+// Whale signal types
+export type WhaleSignalType = 'accumulation' | 'exit' | 'consensus' | 'fade';
+
+// Whale action recommendation
+export type WhaleAction = 'COPY' | 'FADE' | 'WATCH' | 'ALERT';
+
+// Whale participant in a signal
+export interface WhaleSignalParticipant {
+  address: string;
+  name?: string;
+  tier: WhaleTier;
+  totalSize: number;
+  avgEntry: number;
+  tradeCount: number;
+  copySuitability: number;
+}
+
+// Whale edge opportunity
+export interface WhaleEdgeOpportunity {
+  marketId: string;
+  question: string;
+  currentPrice: number;
+  expectedPrice: number;
+  source: 'whale';
+  signalType: WhaleSignalType;
+  direction: 'YES' | 'NO';
+  magnitude: number;
+  confidence: 'high' | 'medium' | 'low';
+  whales: WhaleSignalParticipant[];
+  totalWhaleSize: number;
+  avgEntryPrice: number;
+  timeSinceFirst: number;
+  action: WhaleAction;
+  reasoning: string;
+  urgency: 'immediate' | 'hours' | 'day';
+}
+
+// Whale info for API responses
+export interface WhaleInfoResponse {
+  address: string;
+  name?: string;
+  tier: WhaleTier;
+  pnl7d: number;
+  pnl30d: number;
+  volume7d: number;
+  volume30d: number;
+  tradeCount7d: number;
+  tradeCount30d: number;
+  earlyEntryScore: number;
+  copySuitability: number;
+  lastSeen: number;
+}
+
+// Whale trade for API responses
+export interface WhaleTradeResponse {
+  whaleAddress: string;
+  whaleName?: string;
+  whaleTier: WhaleTier;
+  marketId: string;
+  marketTitle?: string;
+  marketSlug?: string;
+  side: 'BUY' | 'SELL';
+  outcome: 'YES' | 'NO';
+  price: number;
+  sizeUsdc: number;
+  timestamp: number;
+  isMaker: boolean;
+}
+
+// API response for whale activity
+export interface WhaleActivityResponse {
+  timestamp: number;
+  topWhales: WhaleInfoResponse[];
+  recentTrades: WhaleTradeResponse[];
+  activeAccumulations: WhaleEdgeOpportunity[];
+  stats: {
+    totalWhales: number;
+    top10Count: number;
+    top50Count: number;
+    cachedTrades: number;
+  };
+}
+
+// Whale positions response
+export interface WhalePositionResponse {
+  wallet: string;
+  marketId: string;
+  outcome: 'YES' | 'NO';
+  netShares: number;
+  vwapEntry: number;
+  realizedPnl: number;
+  peakShares: number;
+  reductionFromPeak: number;
+}

@@ -11,6 +11,7 @@ import { CongressClient } from './ingestion/congress/index.js';
 import { WeatherClient } from './ingestion/weather/index.js';
 import { FedClient } from './ingestion/fed/index.js';
 import { SportsClient } from './ingestion/sports/index.js';
+import { WhaleTracker } from './ingestion/whales/index.js';
 import { SignalDetector, TruthMarketLinker } from './signals/index.js';
 import { AlertEngine } from './alerts/index.js';
 import { APIServer } from './api/index.js';
@@ -239,6 +240,25 @@ async function main() {
   sportsClient.start();
   console.log('[System] Sports monitoring enabled');
 
+  // Initialize Whale Tracker
+  const whaleTracker = new WhaleTracker({ polymarket: client });
+
+  whaleTracker.on('whaleTrade', (trade) => {
+    const tierLabel = trade.whale.tier === 'top10' ? '🔴' : trade.whale.tier === 'top50' ? '🟡' : '🟢';
+    const sizeK = (trade.sizeUsdc / 1000).toFixed(1);
+    console.log(
+      `[Whale] ${tierLabel} ${trade.whale.name || trade.whale.address.slice(0, 10)} ` +
+      `${trade.side} ${trade.outcome} $${sizeK}k @ ${(trade.price * 100).toFixed(0)}%`
+    );
+  });
+
+  whaleTracker.on('error', (error) => {
+    console.error('[Whale] Error:', error.message);
+  });
+
+  await whaleTracker.start();
+  console.log('[System] Whale tracking enabled');
+
   // Initialize Watchlist Manager
   const watchlistPath = process.env.WATCHLIST_PATH || './watchlist.json';
   const watchlistOnly = process.env.WATCHLIST_ONLY === 'true';
@@ -287,6 +307,7 @@ async function main() {
       weather: weatherClient,
       fed: fedClient,
       sports: sportsClient,
+      whaleTracker,
       detector,
       linker,
       alertEngine,
@@ -379,6 +400,7 @@ async function main() {
       arbDetector.stop();
       await apiServer.stop();
       linker.stop();
+      whaleTracker.stop();
       sportsClient.stop();
       fedClient.stop();
       weatherClient.stop();

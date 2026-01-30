@@ -8,6 +8,8 @@
 
 export { ExplainMoveEngine, type ExplainMoveConfig, type ExplainMoveEvents } from './explain-move.js';
 export { ArbDetector, type ArbDetectorConfig, type ArbDetectorEvents } from './arb-detector.js';
+export { ActionabilityAnalyzer, type ActionabilityInput } from './actionability.js';
+export { EdgeDetector, type EdgeDetectorDeps } from './edge-detector.js';
 
 export type {
   MoveExplanation,

@@ -333,6 +333,602 @@
       grid-column: 1 / -1;
     }
 
+    /* Edge Opportunities Styles */
+    .edge-item {
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      border-radius: 8px;
+      background: var(--bg-hover);
+      margin-bottom: 10px;
+      border-left: 4px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .edge-item:hover {
+      background: var(--bg-card);
+    }
+
+    .edge-item.immediate {
+      border-left-color: var(--accent-red);
+    }
+
+    .edge-item.hours {
+      border-left-color: var(--accent-yellow);
+    }
+
+    .edge-item.day {
+      border-left-color: var(--accent-blue);
+    }
+
+    .edge-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .edge-urgency {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .edge-urgency.immediate {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .edge-urgency.hours {
+      background: rgba(210, 153, 34, 0.2);
+      color: var(--accent-yellow);
+    }
+
+    .edge-urgency.day {
+      background: rgba(88, 166, 255, 0.2);
+      color: var(--accent-blue);
+    }
+
+    .edge-question {
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      color: var(--text-primary);
+    }
+
+    .edge-prices {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .edge-prices .current {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .edge-prices .arrow {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .edge-prices .target {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .edge-reason {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .edge-action {
+      align-self: flex-start;
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .edge-action.buy_yes {
+      background: var(--accent-green);
+      color: white;
+    }
+
+    .edge-action.buy_no {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .edge-action.monitor {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .edge-no-opportunities {
+      text-align: center;
+      padding: 24px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .active-window-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .active-window-badge.fomc {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .active-window-badge.injury {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
+    }
+
+    .active-window-badge.hurricane {
+      background: rgba(163, 113, 247, 0.15);
+      color: var(--accent-purple);
+    }
+
+    /* Whale Edge Styles */
+    .whale-edge-section {
+      margin-bottom: 16px;
+    }
+
+    .whale-edge-item {
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      border-radius: 8px;
+      background: var(--bg-hover);
+      margin-bottom: 10px;
+      border-left: 4px solid var(--accent-purple);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .whale-edge-item:hover {
+      background: var(--bg-card);
+    }
+
+    .whale-edge-item.immediate {
+      border-left-color: var(--accent-red);
+    }
+
+    .whale-edge-item.hours {
+      border-left-color: var(--accent-yellow);
+    }
+
+    .whale-edge-item.day {
+      border-left-color: var(--accent-blue);
+    }
+
+    .whale-edge-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .whale-signal-type {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .whale-edge-direction {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .whale-edge-direction.yes {
+      background: rgba(63, 185, 80, 0.2);
+      color: var(--accent-green);
+    }
+
+    .whale-edge-direction.no {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .whale-edge-question {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .whale-edge-prices {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .whale-edge-prices .current {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .whale-edge-prices .arrow {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .whale-edge-prices .target {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
+
+    .whale-edge-prices .magnitude {
+      font-size: 11px;
+      color: var(--accent-green);
+    }
+
+    .whale-edge-whales {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .whale-tag {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+
+    .whale-tag.whale-tier-top10 {
+      background: rgba(163, 113, 247, 0.2);
+      color: var(--accent-purple);
+      border: 1px solid rgba(163, 113, 247, 0.4);
+    }
+
+    .whale-tag.whale-tier-top50 {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .whale-tag.copyable::after {
+      content: ' (Copy)';
+      font-size: 9px;
+      opacity: 0.8;
+    }
+
+    .whale-tag-more {
+      font-size: 10px;
+      color: var(--text-muted);
+      padding: 3px 6px;
+    }
+
+    .whale-edge-size {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: 'SF Mono', Consolas, monospace;
+      margin-bottom: 6px;
+    }
+
+    .whale-edge-reason {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .whale-edge-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .whale-action-btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .whale-action-btn.copy {
+      background: var(--accent-green);
+      color: white;
+    }
+
+    .whale-action-btn.fade {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .whale-action-btn.watch {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .whale-action-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* RSS Link */
+    .rss-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255, 165, 0, 0.15);
+      color: #ffa500;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .rss-link:hover {
+      background: rgba(255, 165, 0, 0.25);
+    }
+
+    /* Whale Intelligence Panel Styles */
+    .whale-intel-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .whale-stats-row {
+      display: flex;
+      gap: 24px;
+      padding: 12px 16px;
+      background: var(--bg-hover);
+      border-radius: 8px;
+    }
+
+    .whale-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .whale-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'SF Mono', Consolas, monospace;
+      color: var(--text-primary);
+    }
+
+    .whale-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .whale-section h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .whale-list, .whale-trades-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .whale-row, .whale-trade-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: var(--bg-hover);
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .whale-trade-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 12px;
+      background: var(--bg-hover);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border-left: 3px solid var(--accent-purple);
+    }
+
+    .whale-trade-card:hover {
+      background: var(--bg-card);
+    }
+
+    .whale-trade-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .whale-trade-market {
+      font-size: 13px;
+      color: var(--text-primary);
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    .whale-tag.tier-top10 {
+      background: rgba(163, 113, 247, 0.2);
+      color: var(--accent-purple);
+      border: 1px solid rgba(163, 113, 247, 0.4);
+    }
+
+    .whale-tag.tier-top50 {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--accent-blue);
+    }
+
+    .whale-tag.tier-tracked {
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+
+    .whale-pnl {
+      font-family: 'SF Mono', Consolas, monospace;
+      font-weight: 600;
+    }
+
+    .whale-pnl.positive {
+      color: var(--accent-green);
+    }
+
+    .whale-pnl.negative {
+      color: var(--accent-red);
+    }
+
+    .whale-volume, .whale-copy-score {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .whale-trade-side {
+      font-weight: 600;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .whale-trade-side.buy {
+      background: rgba(63, 185, 80, 0.2);
+      color: var(--accent-green);
+    }
+
+    .whale-trade-side.sell {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .whale-trade-outcome {
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .whale-trade-size, .whale-trade-price {
+      font-family: 'SF Mono', Consolas, monospace;
+      color: var(--text-secondary);
+    }
+
+    .whale-trade-time {
+      color: var(--text-muted);
+      font-size: 10px;
+      margin-left: auto;
+    }
+
+    .whale-accumulation-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-hover);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .whale-accumulation-item:hover {
+      background: var(--bg-card);
+    }
+
+    .whale-signal-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 6px;
+      border-radius: 3px;
+      background: var(--accent-purple);
+      color: white;
+    }
+
+    .whale-signal-badge.high {
+      background: var(--accent-red);
+    }
+
+    .whale-signal-badge.medium {
+      background: var(--accent-yellow);
+      color: #000;
+    }
+
+    .whale-question {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .whale-direction {
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .whale-direction.yes {
+      color: var(--accent-green);
+    }
+
+    .whale-direction.no {
+      color: var(--accent-red);
+    }
+
+    .whale-size {
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 12px;
+      color: var(--accent-purple);
+    }
+
+    .whale-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      text-align: center;
+    }
+
     .watchlist-item {
       display: flex;
       align-items: flex-start;
@@ -1208,6 +1804,529 @@
     .polymarket-link:hover {
       background: var(--border);
     }
+
+    /* Actionability UI Styles */
+
+    /* Trade Framing Box */
+    .trade-frame-box {
+      background: var(--bg-dark);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .trade-frame-header {
+      padding: 12px;
+      background: var(--bg-hover);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ai-lean {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .ai-lean-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ai-lean-direction {
+      font-size: 18px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 4px;
+    }
+
+    .ai-lean-direction.YES {
+      background: rgba(63, 185, 80, 0.2);
+      color: var(--accent-green);
+    }
+
+    .ai-lean-direction.NO {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .ai-lean-direction.NEUTRAL {
+      background: rgba(139, 148, 158, 0.2);
+      color: var(--text-secondary);
+    }
+
+    .ai-lean-confidence {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .ai-lean-reasoning {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .trade-frame-body {
+      padding: 12px;
+    }
+
+    .priced-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .priced-column h5 {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .priced-column h5::before {
+      font-size: 14px;
+    }
+
+    .priced-column.in h5::before { content: '✓'; color: var(--accent-green); }
+    .priced-column.out h5::before { content: '!'; color: var(--accent-yellow); }
+
+    .priced-column ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .priced-column li {
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .priced-column li:last-child {
+      border-bottom: none;
+    }
+
+    .swing-events {
+      margin-bottom: 12px;
+    }
+
+    .swing-events h5 {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .swing-event {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      padding: 4px 0;
+    }
+
+    .swing-event .direction {
+      font-size: 14px;
+    }
+
+    .swing-event .direction.up { color: var(--accent-green); }
+    .swing-event .direction.down { color: var(--accent-red); }
+
+    .swing-event .timing {
+      color: var(--text-muted);
+      margin-left: auto;
+      font-size: 10px;
+    }
+
+    .trade-ideas {
+      background: var(--bg-hover);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .trade-ideas h5 {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .trade-idea {
+      font-size: 11px;
+      padding: 4px 0;
+      color: var(--text-secondary);
+    }
+
+    .trade-idea::before {
+      content: '•';
+      margin-right: 6px;
+      color: var(--accent-blue);
+    }
+
+    /* Price Zones Bar */
+    .price-zones-container {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .price-zones-container h4 {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .price-zones-bar {
+      display: flex;
+      height: 24px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--bg-hover);
+      position: relative;
+    }
+
+    .zone {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .zone.attractive {
+      background: rgba(63, 185, 80, 0.3);
+      color: var(--accent-green);
+    }
+
+    .zone.fair {
+      background: rgba(210, 153, 34, 0.3);
+      color: var(--accent-yellow);
+    }
+
+    .zone.crowded {
+      background: rgba(248, 81, 73, 0.3);
+      color: var(--accent-red);
+    }
+
+    .price-marker {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      width: 3px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transform: translateX(-50%);
+    }
+
+    .price-marker::before {
+      content: attr(data-price);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+      padding-bottom: 2px;
+    }
+
+    .price-zones-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    /* Edge Score */
+    .edge-score-container {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .edge-score-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .edge-score-header h4 {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .edge-score-total {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .edge-score-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    .edge-score-value.excellent { color: var(--accent-green); }
+    .edge-score-value.good { color: var(--accent-blue); }
+    .edge-score-value.fair { color: var(--accent-yellow); }
+    .edge-score-value.poor { color: var(--accent-red); }
+
+    .edge-assessment {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .edge-assessment.excellent { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+    .edge-assessment.good { background: rgba(88, 166, 255, 0.2); color: var(--accent-blue); }
+    .edge-assessment.fair { background: rgba(210, 153, 34, 0.2); color: var(--accent-yellow); }
+    .edge-assessment.poor { background: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+
+    .edge-components {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .edge-component {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .edge-component-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      min-width: 60px;
+    }
+
+    .edge-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--bg-hover);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .edge-bar-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .edge-component-value {
+      font-size: 10px;
+      color: var(--text-secondary);
+      min-width: 24px;
+      text-align: right;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    /* Disagreement Warning Banner */
+    .disagreement-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(210, 153, 34, 0.15);
+      border: 1px solid var(--accent-yellow);
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      color: var(--accent-yellow);
+    }
+
+    .disagreement-banner.high {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    .disagreement-banner .icon {
+      font-size: 16px;
+    }
+
+    .disagreement-banner .message {
+      flex: 1;
+    }
+
+    .disagreement-banner .implication {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Evidence Impact Labels */
+    .evidence-summary {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 12px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .evidence-count {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .evidence-count.positive { color: var(--accent-green); }
+    .evidence-count.negative { color: var(--accent-red); }
+    .evidence-count.context { color: var(--text-muted); }
+
+    .evidence-net {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .evidence-net.bullish {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent-green);
+    }
+
+    .evidence-net.bearish {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--accent-red);
+    }
+
+    .evidence-net.neutral {
+      background: rgba(139, 148, 158, 0.15);
+      color: var(--text-muted);
+    }
+
+    .impact-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    .impact-badge.positive {
+      background: rgba(63, 185, 80, 0.2);
+      color: var(--accent-green);
+    }
+
+    .impact-badge.negative {
+      background: rgba(248, 81, 73, 0.2);
+      color: var(--accent-red);
+    }
+
+    .impact-badge.context {
+      background: rgba(139, 148, 158, 0.2);
+      color: var(--text-muted);
+    }
+
+    .impact-badge.major::after {
+      content: '●';
+      margin-left: 2px;
+    }
+
+    /* Next Best Action Footer */
+    .next-action-footer {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      background: var(--bg-dark);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .next-action-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .next-action-btn.set_alert {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .next-action-btn.wait {
+      background: var(--accent-yellow);
+      color: var(--bg-dark);
+    }
+
+    .next-action-btn.avoid {
+      background: var(--accent-red);
+      color: white;
+    }
+
+    .next-action-btn.monitor {
+      background: var(--accent-purple);
+      color: white;
+    }
+
+    .next-action-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .next-action-btn:active {
+      transform: translateY(0);
+    }
+
+    .next-action-dismiss {
+      padding: 12px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .next-action-dismiss:hover {
+      color: var(--text-primary);
+    }
+
+    /* Adjust panel content for sticky footer */
+    .detail-panel .panel-content {
+      padding-bottom: 80px;
+    }
   </style>
 </head>
 <body>
@@ -1222,6 +2341,26 @@
         <button class="refresh-btn" onclick="refreshAll()">⟳ Refresh</button>
       </div>
     </header>
+
+    <!-- Whale Intelligence Section -->
+    <div class="card full-width" id="whale-intel-card" style="margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h2 style="margin-bottom: 0;">Whale Intelligence</h2>
+          <a href="/api/whales/feed" target="_blank" class="rss-link" title="Subscribe to RSS Feed">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="6.18" cy="17.82" r="2.18"/>
+              <path d="M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z"/>
+            </svg>
+            RSS
+          </a>
+        </div>
+        <span id="whale-last-update" class="text-muted" style="font-size: 11px; color: var(--text-muted);">--</span>
+      </div>
+      <div id="whale-intel-content">
+        <div class="loading">Loading whale data...</div>
+      </div>
+    </div>
 
     <div class="grid">
       <div class="card">
@@ -1341,6 +2480,91 @@
     <div class="panel-content">
       <!-- Overview Tab -->
       <div id="tab-overview" class="tab-pane active">
+        <!-- Disagreement Warnings (shown when applicable) -->
+        <div id="disagreement-banners"></div>
+
+        <!-- Trade Framing Box -->
+        <div id="trade-frame-container" class="trade-frame-box" style="display: none;">
+          <div class="trade-frame-header">
+            <div class="ai-lean">
+              <span class="ai-lean-label">AI LEAN:</span>
+              <span id="ai-lean-direction" class="ai-lean-direction">--</span>
+              <span id="ai-lean-confidence" class="ai-lean-confidence"></span>
+            </div>
+            <div id="ai-lean-reasoning" class="ai-lean-reasoning"></div>
+          </div>
+          <div class="trade-frame-body">
+            <div class="priced-grid">
+              <div class="priced-column in">
+                <h5>Priced In</h5>
+                <ul id="priced-in-list"></ul>
+              </div>
+              <div class="priced-column out">
+                <h5>Not Priced In</h5>
+                <ul id="not-priced-in-list"></ul>
+              </div>
+            </div>
+            <div id="swing-events-container" class="swing-events">
+              <h5>Key Swing Events</h5>
+              <div id="swing-events-list"></div>
+            </div>
+            <div id="trade-ideas-container" class="trade-ideas">
+              <h5>Trade Ideas</h5>
+              <div id="trade-ideas-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edge Score -->
+        <div id="edge-score-container" class="edge-score-container" style="display: none;">
+          <div class="edge-score-header">
+            <h4>Edge Score</h4>
+            <div class="edge-score-total">
+              <span id="edge-score-value" class="edge-score-value">--</span>
+              <span id="edge-assessment" class="edge-assessment">--</span>
+            </div>
+          </div>
+          <div class="edge-components">
+            <div class="edge-component">
+              <span class="edge-component-label">Info</span>
+              <div class="edge-bar"><div id="edge-info-bar" class="edge-bar-fill" style="width: 0;"></div></div>
+              <span id="edge-info-value" class="edge-component-value">0</span>
+            </div>
+            <div class="edge-component">
+              <span class="edge-component-label">Pricing</span>
+              <div class="edge-bar"><div id="edge-pricing-bar" class="edge-bar-fill" style="width: 0;"></div></div>
+              <span id="edge-pricing-value" class="edge-component-value">0</span>
+            </div>
+            <div class="edge-component">
+              <span class="edge-component-label">Timing</span>
+              <div class="edge-bar"><div id="edge-timing-bar" class="edge-bar-fill" style="width: 0;"></div></div>
+              <span id="edge-timing-value" class="edge-component-value">0</span>
+            </div>
+            <div class="edge-component">
+              <span class="edge-component-label">Liquidity</span>
+              <div class="edge-bar"><div id="edge-liquidity-bar" class="edge-bar-fill" style="width: 0;"></div></div>
+              <span id="edge-liquidity-value" class="edge-component-value">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price Zones -->
+        <div id="price-zones-container" class="price-zones-container" style="display: none;">
+          <h4>Price Zones</h4>
+          <div class="price-zones-bar" id="price-zones-bar">
+            <div class="zone attractive" style="width: 35%;">Attractive</div>
+            <div class="zone fair" style="width: 30%;">Fair</div>
+            <div class="zone crowded" style="width: 35%;">Crowded</div>
+          </div>
+          <div id="price-marker" class="price-marker" data-price="--%" style="left: 50%;"></div>
+          <div class="price-zones-labels">
+            <span>0%</span>
+            <span id="zone-attractive-max">35%</span>
+            <span id="zone-crowded-min">65%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
         <div class="price-chart-container">
           <div class="price-chart-header">
             <h4>Price History</h4>
@@ -1421,6 +2645,13 @@
 
       <!-- Evidence Tab -->
       <div id="tab-evidence" class="tab-pane">
+        <!-- Evidence Summary -->
+        <div id="evidence-summary" class="evidence-summary" style="display: none;">
+          <span class="evidence-count positive" id="evidence-positive">▲ 0</span>
+          <span class="evidence-count negative" id="evidence-negative">▼ 0</span>
+          <span class="evidence-count context" id="evidence-context">◇ 0</span>
+          <span id="evidence-net" class="evidence-net neutral">Net: Neutral</span>
+        </div>
         <div id="evidence-container">
           <div class="loading">Loading events...</div>
         </div>
@@ -1438,6 +2669,14 @@
         <textarea id="notes-textarea" class="notes-textarea" placeholder="Add your notes about this market..."></textarea>
         <div class="notes-hint">Notes are saved locally in your browser.</div>
       </div>
+    </div>
+
+    <!-- Next Best Action Footer -->
+    <div id="next-action-footer" class="next-action-footer" style="display: none;">
+      <button id="next-action-btn" class="next-action-btn set_alert" onclick="handleNextAction()">
+        🔔 Set Alert
+      </button>
+      <button class="next-action-dismiss" onclick="dismissNextAction()" title="Dismiss">✕</button>
     </div>
   </div>
 
@@ -1473,6 +2712,167 @@
         badge.className = 'status-badge unhealthy';
         badge.innerHTML = '<span class="status-dot"></span><span>Offline</span>';
       }
+    }
+
+    // Edge Opportunities (including Whale Edge)
+    async function loadEdgeOpportunities() {
+      try {
+        const data = await fetchJSON('/edge');
+        const container = document.getElementById('edge-opportunities');
+        const windowsContainer = document.getElementById('edge-active-windows');
+        const scanTimeEl = document.getElementById('edge-scan-time');
+
+        // Update scan time
+        scanTimeEl.textContent = 'Last scan: ' + new Date(data.timestamp).toLocaleTimeString();
+
+        // Show active windows badges
+        const windowBadges = [];
+        if (data.activeWindows.fomc) {
+          windowBadges.push('<span class="active-window-badge fomc">FOMC Day</span>');
+        }
+        if (data.activeWindows.injuryReport && data.activeWindows.injuryReport.length > 0) {
+          for (const league of data.activeWindows.injuryReport) {
+            windowBadges.push(`<span class="active-window-badge injury">${league} Injury Window</span>`);
+          }
+        }
+        if (data.activeWindows.hurricaneSeason) {
+          windowBadges.push('<span class="active-window-badge hurricane">Hurricane Season</span>');
+        }
+        windowsContainer.innerHTML = windowBadges.join('');
+
+        // Combine truth source and whale opportunities
+        const truthOpps = data.opportunities || [];
+        const whaleOpps = data.whaleOpportunities || [];
+        const hasAnyOpps = truthOpps.length > 0 || whaleOpps.length > 0;
+
+        if (!hasAnyOpps) {
+          container.innerHTML = `
+            <div class="edge-no-opportunities">
+              No edge opportunities detected right now.
+              ${windowBadges.length > 0 ? '<br><small>Active monitoring windows shown above.</small>' : ''}
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+
+        // Render whale opportunities first (smart money > news)
+        if (whaleOpps.length > 0) {
+          html += '<div class="whale-edge-section"><h3 style="color: var(--text-secondary); font-size: 12px; margin-bottom: 12px;">WHALE EDGE</h3>';
+          html += whaleOpps.map(opp => renderWhaleEdgeItem(opp)).join('');
+          html += '</div>';
+        }
+
+        // Render truth source opportunities
+        if (truthOpps.length > 0) {
+          if (whaleOpps.length > 0) {
+            html += '<div style="margin-top: 16px;"><h3 style="color: var(--text-secondary); font-size: 12px; margin-bottom: 12px;">TRUTH SOURCE EDGE</h3>';
+          }
+          html += truthOpps.map(opp => `
+            <div class="edge-item ${opp.urgency}" onclick="openDetailPanel('${opp.marketId}')">
+              <div class="edge-header">
+                <span class="edge-urgency ${opp.urgency}">${opp.urgency.toUpperCase()}</span>
+                <span class="edge-question">${escapeHtml(opp.question.length > 60 ? opp.question.slice(0, 60) + '...' : opp.question)}</span>
+              </div>
+              <div class="edge-prices">
+                <span class="current">${(opp.currentPrice * 100).toFixed(0)}%</span>
+                <span class="arrow">→</span>
+                <span class="target">${(opp.expectedPrice * 100).toFixed(0)}%</span>
+              </div>
+              <div class="edge-reason">${escapeHtml(opp.edge.event)}</div>
+              <button class="edge-action ${opp.action.toLowerCase()}">${opp.action.replace('_', ' ')}</button>
+            </div>
+          `).join('');
+          if (whaleOpps.length > 0) {
+            html += '</div>';
+          }
+        }
+
+        container.innerHTML = html;
+
+      } catch (e) {
+        console.error('Failed to load edge opportunities:', e);
+        document.getElementById('edge-opportunities').innerHTML =
+          '<div class="edge-no-opportunities">Failed to load edge data</div>';
+      }
+    }
+
+    // Render a whale edge opportunity item
+    function renderWhaleEdgeItem(opp) {
+      const signalTypeLabels = {
+        accumulation: 'ACCUMULATION',
+        exit: 'EXIT',
+        consensus: 'CONSENSUS',
+        fade: 'FADE SIGNAL'
+      };
+
+      const signalTypeColors = {
+        accumulation: 'var(--accent-green)',
+        exit: 'var(--accent-red)',
+        consensus: 'var(--accent-purple)',
+        fade: 'var(--accent-yellow)'
+      };
+
+      const actionColors = {
+        COPY: 'var(--accent-green)',
+        FADE: 'var(--accent-red)',
+        WATCH: 'var(--accent-blue)',
+        ALERT: 'var(--accent-yellow)'
+      };
+
+      // Build whale tags
+      const whaleTags = opp.whales.slice(0, 3).map(w => {
+        const name = w.name || w.address.slice(0, 8);
+        const tierClass = w.tier === 'top10' ? 'whale-tier-top10' : w.tier === 'top50' ? 'whale-tier-top50' : 'whale-tier-tracked';
+        const copyable = w.copySuitability >= 60;
+        return `<span class="whale-tag ${tierClass} ${copyable ? 'copyable' : ''}" title="Copy Score: ${w.copySuitability}">${escapeHtml(name)}</span>`;
+      }).join('');
+
+      const moreWhales = opp.whales.length > 3 ? `<span class="whale-tag-more">+${opp.whales.length - 3}</span>` : '';
+
+      // Build action buttons
+      let actionButtons = '';
+      const copyableWhale = opp.whales.find(w => w.copySuitability >= 60);
+      if (opp.action === 'COPY' && copyableWhale) {
+        const copyName = copyableWhale.name || copyableWhale.address.slice(0, 8);
+        actionButtons = `<button class="whale-action-btn copy">COPY ${escapeHtml(copyName)}</button>`;
+      } else if (opp.action === 'FADE') {
+        actionButtons = `<button class="whale-action-btn fade">FADE</button>`;
+      }
+      actionButtons += `<button class="whale-action-btn watch">WATCH</button>`;
+
+      return `
+        <div class="whale-edge-item ${opp.urgency}" onclick="openDetailPanel('${opp.marketId}')">
+          <div class="whale-edge-header">
+            <span class="whale-signal-type" style="background: ${signalTypeColors[opp.signalType]}20; color: ${signalTypeColors[opp.signalType]}">
+              ${signalTypeLabels[opp.signalType] || opp.signalType.toUpperCase()}
+            </span>
+            <span class="edge-urgency ${opp.urgency}">${opp.urgency.toUpperCase()}</span>
+            <span class="whale-edge-direction ${opp.direction.toLowerCase()}">${opp.direction}</span>
+          </div>
+          <div class="whale-edge-question">${escapeHtml(opp.question.length > 55 ? opp.question.slice(0, 55) + '...' : opp.question)}</div>
+          <div class="whale-edge-prices">
+            <span class="current">${(opp.currentPrice * 100).toFixed(0)}%</span>
+            <span class="arrow">→</span>
+            <span class="target">${(opp.expectedPrice * 100).toFixed(0)}%</span>
+            <span class="magnitude">(+${(opp.magnitude * 100).toFixed(0)}%)</span>
+          </div>
+          <div class="whale-edge-whales">
+            ${whaleTags}${moreWhales}
+          </div>
+          <div class="whale-edge-size">$${formatNumber(opp.totalWhaleSize)} in ${opp.timeSinceFirst.toFixed(1)}h</div>
+          <div class="whale-edge-reason">${escapeHtml(opp.reasoning)}</div>
+          <div class="whale-edge-actions">${actionButtons}</div>
+        </div>
+      `;
+    }
+
+    // Format large numbers
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(0) + 'k';
+      return num.toFixed(0);
     }
 
     async function loadStatus() {
@@ -1852,10 +3252,145 @@
       await Promise.all([
         loadHealth(),
         loadStatus(),
+        loadWhaleIntel(),
         loadAlerts(),
         loadMarkets(),
         loadDates(),
       ]);
+    }
+
+    // Whale Intelligence
+    async function loadWhaleIntel() {
+      try {
+        const data = await fetchJSON('/whales');
+        const container = document.getElementById('whale-intel-content');
+        const lastUpdateEl = document.getElementById('whale-last-update');
+
+        lastUpdateEl.textContent = 'Updated: ' + new Date(data.timestamp).toLocaleTimeString();
+
+        const { stats, topWhales, recentTrades, activeAccumulations } = data;
+
+        // Build the whale intel display
+        let html = '<div class="whale-intel-grid">';
+
+        // Stats row
+        html += `
+          <div class="whale-stats-row">
+            <div class="whale-stat">
+              <span class="whale-stat-value">${stats.totalWhales}</span>
+              <span class="whale-stat-label">Tracked Whales</span>
+            </div>
+            <div class="whale-stat">
+              <span class="whale-stat-value">${stats.top10Count}</span>
+              <span class="whale-stat-label">Top 10</span>
+            </div>
+            <div class="whale-stat">
+              <span class="whale-stat-value">${stats.top50Count}</span>
+              <span class="whale-stat-label">Top 50</span>
+            </div>
+            <div class="whale-stat">
+              <span class="whale-stat-value">${stats.cachedTrades}</span>
+              <span class="whale-stat-label">Cached Trades</span>
+            </div>
+          </div>
+        `;
+
+        // Active accumulations (if any)
+        if (activeAccumulations && activeAccumulations.length > 0) {
+          html += '<div class="whale-section"><h4>Active Accumulations</h4>';
+          for (const acc of activeAccumulations) {
+            html += `
+              <div class="whale-accumulation-item" onclick="openDetailPanel('${acc.marketId}')">
+                <span class="whale-signal-badge ${acc.confidence}">${acc.signalType.toUpperCase()}</span>
+                <span class="whale-question">${escapeHtml(acc.question.slice(0, 50))}...</span>
+                <span class="whale-direction ${acc.direction.toLowerCase()}">${acc.direction}</span>
+                <span class="whale-size">$${formatNumber(acc.totalWhaleSize)}</span>
+              </div>
+            `;
+          }
+          html += '</div>';
+        }
+
+        // Top whales list (if any)
+        if (topWhales && topWhales.length > 0) {
+          html += '<div class="whale-section"><h4>Top Whales</h4>';
+          html += '<div class="whale-list">';
+          for (const whale of topWhales.slice(0, 5)) {
+            const tierClass = whale.tier === 'top10' ? 'tier-top10' : whale.tier === 'top50' ? 'tier-top50' : 'tier-tracked';
+            const pnlClass = whale.pnl7d >= 0 ? 'positive' : 'negative';
+            const pnlStr = whale.pnl7d >= 0 ? '+' : '';
+            html += `
+              <div class="whale-row">
+                <span class="whale-tag ${tierClass}">${whale.name || whale.address.slice(0, 8)}...</span>
+                <span class="whale-pnl ${pnlClass}">${pnlStr}$${formatNumber(whale.pnl7d)}</span>
+                <span class="whale-volume">Vol: $${formatNumber(whale.volume7d)}</span>
+                <span class="whale-copy-score">Copy: ${whale.copySuitability}</span>
+              </div>
+            `;
+          }
+          html += '</div></div>';
+        }
+
+        // Recent trades (if any)
+        if (recentTrades && recentTrades.length > 0) {
+          html += '<div class="whale-section"><h4>Recent Whale Trades</h4>';
+          html += '<div class="whale-trades-list">';
+          for (const trade of recentTrades.slice(0, 5)) {
+            const tierClass = trade.whaleTier === 'top10' ? 'tier-top10' : trade.whaleTier === 'top50' ? 'tier-top50' : 'tier-tracked';
+            const sideClass = trade.side === 'BUY' ? 'buy' : 'sell';
+            const timeAgo = formatTimeAgo(trade.timestamp);
+            const marketUrl = trade.marketSlug ? `https://polymarket.com/event/${trade.marketSlug}` : '#';
+            const marketTitle = trade.marketTitle || 'Unknown Market';
+            const shortTitle = marketTitle.length > 50 ? marketTitle.slice(0, 47) + '...' : marketTitle;
+            html += `
+              <div class="whale-trade-card" onclick="window.open('${marketUrl}', '_blank')">
+                <div class="whale-trade-header">
+                  <span class="whale-tag ${tierClass}">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
+                  <span class="whale-trade-side ${sideClass}">${trade.side} ${trade.outcome}</span>
+                  <span class="whale-trade-size">$${formatNumber(trade.sizeUsdc)}</span>
+                  <span class="whale-trade-price">@ ${(trade.price * 100).toFixed(0)}%</span>
+                  <span class="whale-trade-time">${timeAgo}</span>
+                </div>
+                <div class="whale-trade-market">${escapeHtml(shortTitle)}</div>
+              </div>
+            `;
+          }
+          html += '</div></div>';
+        }
+
+        // Empty state
+        if (stats.totalWhales === 0 && (!recentTrades || recentTrades.length === 0)) {
+          html += `
+            <div class="whale-empty-state">
+              <div style="font-size: 32px; margin-bottom: 8px;">🐋</div>
+              <div style="color: var(--text-secondary); font-size: 13px;">
+                Building whale universe from trade data...
+              </div>
+              <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">
+                Whales are identified as trades accumulate. Check back soon.
+              </div>
+            </div>
+          `;
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+
+      } catch (e) {
+        console.error('Failed to load whale intel:', e);
+        document.getElementById('whale-intel-content').innerHTML =
+          '<div style="color: var(--text-muted);">Failed to load whale data</div>';
+      }
+    }
+
+    function formatTimeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - timestamp) / 1000);
+      if (seconds < 60) return seconds + 's ago';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return minutes + 'm ago';
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return hours + 'h ago';
+      return Math.floor(hours / 24) + 'd ago';
     }
 
     // Watchlist functions
@@ -2087,9 +3622,11 @@
 
     let currentPanelMarketId = null;
     let currentPanelData = null;
+    let currentActionableData = null;
 
     async function openDetailPanel(marketId) {
       currentPanelMarketId = marketId;
+      currentActionableData = null;
 
       // Show panel
       document.getElementById('detail-overlay').classList.add('visible');
@@ -2102,24 +3639,43 @@
       document.getElementById('panel-question').textContent = 'Loading...';
       document.getElementById('panel-market-id').textContent = marketId;
 
+      // Hide actionability elements initially
+      document.getElementById('trade-frame-container').style.display = 'none';
+      document.getElementById('edge-score-container').style.display = 'none';
+      document.getElementById('price-zones-container').style.display = 'none';
+      document.getElementById('disagreement-banners').innerHTML = '';
+      document.getElementById('next-action-footer').style.display = 'none';
+
       try {
-        // Fetch market detail
-        const data = await fetchJSON(`/market/${marketId}`);
+        // Fetch actionable market detail (includes base detail + actionability data)
+        const data = await fetchJSON(`/market/${marketId}/actionable`);
         currentPanelData = data;
+        currentActionableData = data;
 
         // Update header
         document.getElementById('panel-question').textContent = data.question;
         document.getElementById('panel-market-id').textContent = `ID: ${marketId.slice(0, 12)}...`;
 
-        // Render Overview tab
+        // Render Overview tab with actionability data
         renderOverviewTab(data);
+        renderActionabilityUI(data);
 
         // Load notes from localStorage
         loadMarketNotes(marketId);
 
       } catch (e) {
-        console.error('Failed to load market detail:', e);
-        document.getElementById('panel-question').textContent = 'Failed to load market';
+        console.error('Failed to load actionable market detail:', e);
+        // Fallback to basic detail
+        try {
+          const basicData = await fetchJSON(`/market/${marketId}`);
+          currentPanelData = basicData;
+          document.getElementById('panel-question').textContent = basicData.question;
+          document.getElementById('panel-market-id').textContent = `ID: ${marketId.slice(0, 12)}...`;
+          renderOverviewTab(basicData);
+          loadMarketNotes(marketId);
+        } catch (e2) {
+          document.getElementById('panel-question').textContent = 'Failed to load market';
+        }
       }
     }
 
@@ -2223,6 +3779,224 @@
       drawPriceChart(data.priceHistory);
     }
 
+    function renderActionabilityUI(data) {
+      if (!data.tradeFrame) return;
+
+      // Render Trade Framing Box
+      renderTradeFrame(data.tradeFrame);
+
+      // Render Edge Score
+      renderEdgeScore(data.edgeScore);
+
+      // Render Price Zones
+      renderPriceZones(data.priceZones);
+
+      // Render Disagreement Banners
+      renderDisagreementBanners(data.disagreementSignals);
+
+      // Render Next Best Action
+      renderNextBestAction(data.nextBestAction);
+    }
+
+    function renderTradeFrame(tradeFrame) {
+      const container = document.getElementById('trade-frame-container');
+      container.style.display = 'block';
+
+      // AI Lean
+      const leanEl = document.getElementById('ai-lean-direction');
+      leanEl.textContent = tradeFrame.lean;
+      leanEl.className = `ai-lean-direction ${tradeFrame.lean}`;
+
+      document.getElementById('ai-lean-confidence').textContent = `(${tradeFrame.confidence}% conf)`;
+      document.getElementById('ai-lean-reasoning').textContent = `"${tradeFrame.reasoning}"`;
+
+      // Priced In list
+      const pricedInList = document.getElementById('priced-in-list');
+      if (tradeFrame.pricedIn.length > 0) {
+        pricedInList.innerHTML = tradeFrame.pricedIn.map(item =>
+          `<li>${escapeHtml(item)}</li>`
+        ).join('');
+      } else {
+        pricedInList.innerHTML = '<li style="color: var(--text-muted);">—</li>';
+      }
+
+      // Not Priced In list
+      const notPricedInList = document.getElementById('not-priced-in-list');
+      if (tradeFrame.notPricedIn.length > 0) {
+        notPricedInList.innerHTML = tradeFrame.notPricedIn.map(item =>
+          `<li>${escapeHtml(item)}</li>`
+        ).join('');
+      } else {
+        notPricedInList.innerHTML = '<li style="color: var(--text-muted);">—</li>';
+      }
+
+      // Swing Events
+      const swingContainer = document.getElementById('swing-events-container');
+      const swingList = document.getElementById('swing-events-list');
+      if (tradeFrame.swingEvents.length > 0) {
+        swingContainer.style.display = 'block';
+        swingList.innerHTML = tradeFrame.swingEvents.map(event => `
+          <div class="swing-event">
+            <span class="direction ${event.direction}">${event.direction === 'up' ? '▲' : '▼'}</span>
+            <span>${escapeHtml(event.description)}</span>
+            ${event.timing ? `<span class="timing">${escapeHtml(event.timing)}</span>` : ''}
+          </div>
+        `).join('');
+      } else {
+        swingContainer.style.display = 'none';
+      }
+
+      // Trade Ideas
+      const ideasList = document.getElementById('trade-ideas-list');
+      if (tradeFrame.tradeIdeas.length > 0) {
+        ideasList.innerHTML = tradeFrame.tradeIdeas.map(idea =>
+          `<div class="trade-idea">${escapeHtml(idea)}</div>`
+        ).join('');
+      } else {
+        ideasList.innerHTML = '<div class="trade-idea" style="color: var(--text-muted);">No specific trade ideas</div>';
+      }
+    }
+
+    function renderEdgeScore(edgeScore) {
+      if (!edgeScore) return;
+
+      const container = document.getElementById('edge-score-container');
+      container.style.display = 'block';
+
+      // Total score
+      const valueEl = document.getElementById('edge-score-value');
+      valueEl.textContent = edgeScore.total;
+      valueEl.className = `edge-score-value ${edgeScore.assessment.toLowerCase()}`;
+
+      const assessmentEl = document.getElementById('edge-assessment');
+      assessmentEl.textContent = edgeScore.assessment;
+      assessmentEl.className = `edge-assessment ${edgeScore.assessment.toLowerCase()}`;
+
+      // Component bars
+      const components = edgeScore.components;
+      document.getElementById('edge-info-bar').style.width = `${(components.information / 25) * 100}%`;
+      document.getElementById('edge-info-value').textContent = components.information;
+
+      document.getElementById('edge-pricing-bar').style.width = `${(components.pricing / 25) * 100}%`;
+      document.getElementById('edge-pricing-value').textContent = components.pricing;
+
+      document.getElementById('edge-timing-bar').style.width = `${(components.timing / 25) * 100}%`;
+      document.getElementById('edge-timing-value').textContent = components.timing;
+
+      document.getElementById('edge-liquidity-bar').style.width = `${(components.liquidity / 25) * 100}%`;
+      document.getElementById('edge-liquidity-value').textContent = components.liquidity;
+    }
+
+    function renderPriceZones(priceZones) {
+      if (!priceZones) return;
+
+      const container = document.getElementById('price-zones-container');
+      container.style.display = 'block';
+
+      // Update zone widths
+      const attractiveWidth = priceZones.attractiveRange.max;
+      const crowdedStart = priceZones.crowdedRange.min;
+      const fairWidth = crowdedStart - attractiveWidth;
+      const crowdedWidth = 100 - crowdedStart;
+
+      const zonesBar = document.getElementById('price-zones-bar');
+      zonesBar.innerHTML = `
+        <div class="zone attractive" style="width: ${attractiveWidth}%;">Attractive</div>
+        <div class="zone fair" style="width: ${fairWidth}%;">Fair</div>
+        <div class="zone crowded" style="width: ${crowdedWidth}%;">Crowded</div>
+      `;
+
+      // Price marker
+      const marker = document.getElementById('price-marker');
+      marker.style.left = `${priceZones.currentPrice}%`;
+      marker.dataset.price = `${priceZones.currentPrice}%`;
+
+      // Zone labels
+      document.getElementById('zone-attractive-max').textContent = `${priceZones.attractiveRange.max}%`;
+      document.getElementById('zone-crowded-min').textContent = `${priceZones.crowdedRange.min}%`;
+    }
+
+    function renderDisagreementBanners(signals) {
+      const container = document.getElementById('disagreement-banners');
+
+      if (!signals || signals.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = signals.map(signal => `
+        <div class="disagreement-banner ${signal.severity}">
+          <span class="icon">⚠️</span>
+          <div>
+            <div class="message">${escapeHtml(signal.description)}</div>
+            <div class="implication">${escapeHtml(signal.implication)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderNextBestAction(nextAction) {
+      if (!nextAction) return;
+
+      const footer = document.getElementById('next-action-footer');
+      const btn = document.getElementById('next-action-btn');
+
+      footer.style.display = 'flex';
+      btn.textContent = nextAction.label;
+      btn.className = `next-action-btn ${nextAction.action}`;
+      btn.title = nextAction.reasoning;
+
+      // Store action data for handler
+      btn.dataset.action = nextAction.action;
+      btn.dataset.targetPrice = nextAction.targetPrice || '';
+      btn.dataset.reasoning = nextAction.reasoning;
+    }
+
+    function handleNextAction() {
+      const btn = document.getElementById('next-action-btn');
+      const action = btn.dataset.action;
+      const targetPrice = btn.dataset.targetPrice;
+      const reasoning = btn.dataset.reasoning;
+
+      // Log intent to localStorage
+      logUserIntent(currentPanelMarketId, action, targetPrice, reasoning);
+
+      // Show feedback
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Intent Logged';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }, 2000);
+
+      // If set_alert, could integrate with actual alert system
+      if (action === 'set_alert' && targetPrice) {
+        console.log(`[Intent] Set alert for ${currentPanelMarketId} at ${targetPrice}`);
+      }
+    }
+
+    function dismissNextAction() {
+      document.getElementById('next-action-footer').style.display = 'none';
+    }
+
+    function logUserIntent(marketId, action, targetPrice, reasoning) {
+      const key = `market_intents_${marketId}`;
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+
+      existing.unshift({
+        action,
+        targetPrice: targetPrice || null,
+        timestamp: Date.now(),
+        notes: reasoning,
+      });
+
+      // Keep last 50
+      const trimmed = existing.slice(0, 50);
+      localStorage.setItem(key, JSON.stringify(trimmed));
+    }
+
     function renderOrderFlowTab(data) {
       // Calculate buy/sell flow from recent trades
       let buyVolume = 0;
@@ -2270,8 +4044,17 @@
 
     async function loadEvidenceTab(marketId) {
       const container = document.getElementById('evidence-container');
+      const summaryEl = document.getElementById('evidence-summary');
       container.innerHTML = '<div class="loading">Loading events...</div>';
+      summaryEl.style.display = 'none';
 
+      // Check if we have labeled evidence from actionable data
+      if (currentActionableData && currentActionableData.labeledEvidence) {
+        renderLabeledEvidence(currentActionableData.labeledEvidence);
+        return;
+      }
+
+      // Fallback to basic events endpoint
       try {
         const data = await fetchJSON(`/market/${marketId}/events`);
 
@@ -2297,6 +4080,50 @@
       } catch (e) {
         container.innerHTML = '<div class="error">Failed to load events</div>';
       }
+    }
+
+    function renderLabeledEvidence(labeledEvidence) {
+      const container = document.getElementById('evidence-container');
+      const summaryEl = document.getElementById('evidence-summary');
+
+      const { events, summary } = labeledEvidence;
+
+      if (events.length === 0) {
+        container.innerHTML = '<div class="no-events">No events recorded for this market yet.</div>';
+        summaryEl.style.display = 'none';
+        return;
+      }
+
+      // Show summary
+      summaryEl.style.display = 'flex';
+      document.getElementById('evidence-positive').textContent = `▲ ${summary.positive}`;
+      document.getElementById('evidence-negative').textContent = `▼ ${summary.negative}`;
+      document.getElementById('evidence-context').textContent = `◇ ${summary.context}`;
+
+      const netEl = document.getElementById('evidence-net');
+      netEl.className = `evidence-net ${summary.netDirection}`;
+      netEl.textContent = `Net: ${summary.netDirection.charAt(0).toUpperCase() + summary.netDirection.slice(1)}`;
+
+      // Render timeline with impact badges
+      const html = `
+        <div class="event-timeline">
+          ${events.map(e => {
+            const impactSymbol = e.impact === 'positive' ? '▲' : e.impact === 'negative' ? '▼' : '◇';
+            const magnitudeClass = e.magnitude === 'major' ? ' major' : '';
+            return `
+              <div class="timeline-item ${e.impact === 'positive' ? 'high' : e.impact === 'negative' ? 'critical' : 'medium'}">
+                <span class="impact-badge ${e.impact}${magnitudeClass}">${impactSymbol} ${e.magnitude}</span>
+                <span class="source-badge">${getSourceIcon(e.source)} ${e.source}</span>
+                <div class="event-title">${escapeHtml(e.title)}</div>
+                <div class="event-body">${escapeHtml(e.body.slice(0, 150))}${e.body.length > 150 ? '...' : ''}</div>
+                ${e.impactReasoning ? `<div class="event-body" style="font-style: italic; margin-top: 4px;">${escapeHtml(e.impactReasoning)}</div>` : ''}
+                <div class="event-time">${new Date(e.timestamp).toLocaleString()}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+      container.innerHTML = html;
     }
 
     async function loadRelatedTab(marketId) {

@@ -18,6 +18,7 @@ import type { SignalDetector } from '../signals/detector.js';
 import type { TruthMarketLinker } from '../signals/truth-change/linker.js';
 import type { AlertEngine } from '../alerts/engine.js';
 import type { WatchlistManager, AddMarketInput, UpdateMarketInput } from '../watchlist/index.js';
+import type { WhaleTracker } from '../ingestion/whales/index.js';
 import { findPlaybook, getAllPlaybooks } from '../playbooks/index.js';
 import type {
   SystemStatus,
@@ -32,7 +33,15 @@ import type {
   MarketEventsResponse,
   RelatedMarketsResponse,
   RelatedMarket,
+  ActionableMarketDetail,
+  WhaleActivityResponse,
+  WhaleInfoResponse,
+  WhaleTradeResponse,
+  WhalePositionResponse,
 } from './types.js';
+import { ActionabilityAnalyzer } from '../analysis/actionability.js';
+import { EdgeDetector } from '../analysis/edge-detector.js';
+import type { EdgeScanResponse } from './types.js';
 
 export interface APIServerConfig {
   port: number;
@@ -49,6 +58,7 @@ export interface APIServerDependencies {
   linker: TruthMarketLinker;
   alertEngine: AlertEngine;
   watchlist?: WatchlistManager;
+  whaleTracker?: WhaleTracker;
 }
 
 export class APIServer {
@@ -58,6 +68,13 @@ export class APIServer {
   private startTime: number = Date.now();
   private recentAlerts: AlertSummary[] = [];
   private maxRecentAlerts = 100;
+  private actionabilityAnalyzer = new ActionabilityAnalyzer();
+  private edgeDetector: EdgeDetector;
+
+  // Edge scan cache (refresh every 60s)
+  private edgeScanCache: EdgeScanResponse | null = null;
+  private lastEdgeScan = 0;
+  private edgeCacheTTL = 60000; // 60 seconds
 
   // Metrics
   private metrics = {
@@ -82,6 +99,17 @@ export class APIServer {
   constructor(config: APIServerConfig, deps: APIServerDependencies) {
     this.config = config;
     this.deps = deps;
+
+    // Initialize edge detector with whale tracker
+    this.edgeDetector = new EdgeDetector({
+      congress: deps.congress,
+      weather: deps.weather,
+      fed: deps.fed,
+      sports: deps.sports,
+      linker: deps.linker,
+      whaleTracker: deps.whaleTracker,
+    });
+
     this.setupListeners();
   }
 
@@ -275,6 +303,25 @@ export class APIServer {
           this.sendJSON(res, this.getPlaybookInfo());
           break;
 
+        case '/api/edge':
+          this.sendJSON(res, this.getEdgeOpportunities());
+          break;
+
+        case '/api/whales':
+          this.sendJSON(res, this.getWhaleActivity());
+          break;
+
+        case '/api/whales/trades':
+          const tradeLimit = parseInt(url.searchParams.get('limit') || '50', 10);
+          this.sendJSON(res, this.getRecentWhaleTrades(tradeLimit));
+          break;
+
+        case '/api/whales/feed':
+        case '/api/whales/feed.xml':
+        case '/feed/whales':
+          this.sendRSS(res, this.getWhaleTradesFeed());
+          break;
+
         case '/api/watchlist':
           if (method === 'GET') {
             this.sendJSON(res, this.getWatchlist());
@@ -324,11 +371,30 @@ export class APIServer {
                 // GET /api/market/:id/related
                 const related = this.getRelatedMarkets(marketId);
                 this.sendJSON(res, related);
+              } else if (subpath === 'actionable') {
+                // GET /api/market/:id/actionable
+                const actionable = await this.getActionableMarketDetail(marketId);
+                if (actionable) {
+                  this.sendJSON(res, actionable);
+                } else {
+                  this.sendError(res, 404, 'Market not found', 'NOT_FOUND');
+                }
               } else {
                 this.sendError(res, 404, 'Endpoint not found', 'NOT_FOUND');
               }
               break;
             }
+          }
+
+          // Check for /api/whales/positions pattern
+          if (path.startsWith('/api/whales/positions')) {
+            const walletParam = url.searchParams.get('wallet');
+            if (walletParam) {
+              this.sendJSON(res, this.getWhalePositions(walletParam));
+            } else {
+              this.sendError(res, 400, 'wallet parameter required', 'INVALID_REQUEST');
+            }
+            break;
           }
 
           // Check for /api/watchlist/:id pattern
@@ -396,6 +462,12 @@ export class APIServer {
     res.end(JSON.stringify(data, null, 2));
   }
 
+  private sendRSS(res: ServerResponse, xml: string): void {
+    res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
+    res.writeHead(200);
+    res.end(xml);
+  }
+
   private sendError(res: ServerResponse, status: number, message: string, code: string): void {
     const error: ErrorResponse = {
       error: message,
@@ -410,7 +482,7 @@ export class APIServer {
   private getAPIInfo(): object {
     return {
       name: 'Polymarket Trading Intelligence API',
-      version: '0.1.0',
+      version: '0.2.0',
       endpoints: [
         { path: '/api/health', description: 'Health check' },
         { path: '/api/status', description: 'System status and metrics' },
@@ -421,7 +493,15 @@ export class APIServer {
         { path: '/api/analysis', description: 'Playbook analysis (use ?market=ID for specific)' },
         { path: '/api/dates', description: 'Upcoming key dates' },
         { path: '/api/playbooks', description: 'Available playbooks' },
+        { path: '/api/edge', description: 'Edge opportunities from truth source and whale analysis' },
+        { path: '/api/whales', description: 'Whale activity overview with top traders and recent trades' },
+        { path: '/api/whales/trades', description: 'Recent whale trades (use ?limit=N)' },
+        { path: '/api/whales/positions', description: 'Whale positions (use ?wallet=ADDRESS)' },
         { path: '/api/watchlist', description: 'Watchlist management (GET, POST)' },
+        { path: '/api/market/:id', description: 'Market detail panel data' },
+        { path: '/api/market/:id/actionable', description: 'Actionable trading decision data' },
+        { path: '/api/market/:id/events', description: 'Market-related alerts/events' },
+        { path: '/api/market/:id/related', description: 'Related markets' },
       ],
     };
   }
@@ -1063,6 +1143,43 @@ export class APIServer {
   }
 
   /**
+   * Get actionable market detail for trading decisions
+   * Combines market data with actionability analysis
+   */
+  private async getActionableMarketDetail(marketId: string): Promise<ActionableMarketDetail | null> {
+    // First get the base market detail
+    const detail = await this.getMarketDetail(marketId);
+    if (!detail) return null;
+
+    // Get market state for analysis
+    const marketState = this.deps.detector.getMarketState(marketId);
+
+    // Get market-related alerts
+    const marketEvents = this.getMarketEvents(marketId);
+
+    // Run actionability analysis
+    const actionability = this.actionabilityAnalyzer.analyze({
+      marketId,
+      question: detail.question,
+      currentPrice: detail.currentPrice,
+      marketState,
+      analysis: detail.analysis,
+      alerts: marketEvents.events,
+    });
+
+    // Combine detail with actionability data
+    return {
+      ...detail,
+      tradeFrame: actionability.tradeFrame,
+      priceZones: actionability.priceZones,
+      edgeScore: actionability.edgeScore,
+      disagreementSignals: actionability.disagreementSignals,
+      labeledEvidence: actionability.labeledEvidence,
+      nextBestAction: actionability.nextBestAction,
+    };
+  }
+
+  /**
    * Get markets related to a specific market
    * Returns markets with same category and/or shared keywords
    */
@@ -1144,5 +1261,243 @@ export class APIServer {
       sameCategory: sameCategory.slice(0, 10),
       sharedKeywords: sharedKeywords.slice(0, 10),
     };
+  }
+
+  /**
+   * Get edge opportunities from truth source analysis
+   * Results are cached for 60 seconds to avoid expensive rescans
+   */
+  private getEdgeOpportunities(): EdgeScanResponse {
+    const now = Date.now();
+
+    // Return cached result if still valid
+    if (this.edgeScanCache && now - this.lastEdgeScan < this.edgeCacheTTL) {
+      return this.edgeScanCache;
+    }
+
+    // Run fresh scan
+    this.edgeScanCache = this.edgeDetector.scan();
+    this.lastEdgeScan = now;
+
+    // Periodically clean up old cache entries
+    if (Math.random() < 0.1) {
+      this.edgeDetector.cleanupCache();
+    }
+
+    return this.edgeScanCache;
+  }
+
+  // ============================================================================
+  // Whale Intelligence API Methods
+  // ============================================================================
+
+  /**
+   * Get whale activity overview
+   */
+  private getWhaleActivity(): WhaleActivityResponse | { enabled: false; message: string } {
+    if (!this.deps.whaleTracker) {
+      return { enabled: false, message: 'Whale tracking not configured' };
+    }
+
+    const whales = this.deps.whaleTracker.getAllWhales();
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(20);
+    const edgeScan = this.getEdgeOpportunities();
+    const stats = this.deps.whaleTracker.getStats();
+
+    // Convert whales to response format
+    const topWhales: WhaleInfoResponse[] = whales
+      .sort((a, b) => b.volume7d - a.volume7d)
+      .slice(0, 20)
+      .map((w) => ({
+        address: w.address,
+        name: w.name,
+        tier: w.tier,
+        pnl7d: w.pnl7d,
+        pnl30d: w.pnl30d,
+        volume7d: w.volume7d,
+        volume30d: w.volume30d,
+        tradeCount7d: w.tradeCount7d,
+        tradeCount30d: w.tradeCount30d,
+        earlyEntryScore: w.earlyEntryScore,
+        copySuitability: w.copySuitability,
+        lastSeen: w.lastSeen,
+      }));
+
+    // Convert trades to response format
+    const trades: WhaleTradeResponse[] = recentTrades.map((ct) => ({
+      whaleAddress: ct.trade.whale.address,
+      whaleName: ct.trade.whale.name,
+      whaleTier: ct.trade.whale.tier,
+      marketId: ct.trade.marketId,
+      marketTitle: ct.trade.marketTitle,
+      marketSlug: ct.trade.marketSlug,
+      side: ct.trade.side,
+      outcome: ct.trade.outcome,
+      price: ct.trade.price,
+      sizeUsdc: ct.trade.sizeUsdc,
+      timestamp: ct.trade.timestamp,
+      isMaker: ct.trade.isMaker,
+    }));
+
+    return {
+      timestamp: Date.now(),
+      topWhales,
+      recentTrades: trades,
+      activeAccumulations: edgeScan.whaleOpportunities || [],
+      stats: {
+        totalWhales: stats.whales.total,
+        top10Count: stats.whales.top10,
+        top50Count: stats.whales.top50,
+        cachedTrades: stats.cachedWhaleTrades,
+      },
+    };
+  }
+
+  /**
+   * Get recent whale trades
+   */
+  private getRecentWhaleTrades(limit: number): WhaleTradeResponse[] | { enabled: false; message: string } {
+    if (!this.deps.whaleTracker) {
+      return { enabled: false, message: 'Whale tracking not configured' };
+    }
+
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(limit);
+
+    return recentTrades.map((ct) => ({
+      whaleAddress: ct.trade.whale.address,
+      whaleName: ct.trade.whale.name,
+      whaleTier: ct.trade.whale.tier,
+      marketId: ct.trade.marketId,
+      marketTitle: ct.trade.marketTitle,
+      marketSlug: ct.trade.marketSlug,
+      side: ct.trade.side,
+      outcome: ct.trade.outcome,
+      price: ct.trade.price,
+      sizeUsdc: ct.trade.sizeUsdc,
+      timestamp: ct.trade.timestamp,
+      isMaker: ct.trade.isMaker,
+    }));
+  }
+
+  /**
+   * Generate RSS feed of whale trades
+   */
+  private getWhaleTradesFeed(): string {
+    if (!this.deps.whaleTracker) {
+      return this.generateEmptyFeed('Whale tracking not configured');
+    }
+
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(50);
+    const now = new Date().toUTCString();
+
+    const items = recentTrades.map((ct) => {
+      const trade = ct.trade;
+      const whale = trade.whale;
+      const whaleName = whale.name || whale.address.slice(0, 10);
+      const tierEmoji = whale.tier === 'top10' ? '🔴' : whale.tier === 'top50' ? '🟡' : '🟢';
+      const sideEmoji = trade.side === 'BUY' ? '📈' : '📉';
+
+      const title = `${tierEmoji} ${whaleName} ${trade.side} ${trade.outcome} @ ${(trade.price * 100).toFixed(0)}%`;
+      const marketTitle = trade.marketTitle || 'Unknown Market';
+      const marketUrl = trade.marketSlug
+        ? `https://polymarket.com/event/${trade.marketSlug}`
+        : `https://polymarket.com`;
+
+      const sizeStr = trade.sizeUsdc >= 1000
+        ? `$${(trade.sizeUsdc / 1000).toFixed(1)}k`
+        : `$${trade.sizeUsdc.toFixed(0)}`;
+
+      const description = `
+<p><strong>${sideEmoji} ${whaleName}</strong> (${whale.tier}) ${trade.side} ${trade.outcome} for <strong>${sizeStr}</strong> at ${(trade.price * 100).toFixed(0)}%</p>
+<p><strong>Market:</strong> <a href="${marketUrl}">${this.escapeXml(marketTitle)}</a></p>
+<p><strong>Whale PnL:</strong> $${(whale.pnl7d / 1000).toFixed(0)}k (7d)</p>
+      `.trim();
+
+      const pubDate = new Date(trade.timestamp).toUTCString();
+      const guid = `${trade.whale.address}-${trade.marketId}-${trade.timestamp}`;
+
+      return `
+    <item>
+      <title>${this.escapeXml(title)}</title>
+      <link>${marketUrl}</link>
+      <description><![CDATA[${description}]]></description>
+      <pubDate>${pubDate}</pubDate>
+      <guid isPermaLink="false">${guid}</guid>
+      <category>${whale.tier}</category>
+      <category>${trade.side}</category>
+      <category>${trade.outcome}</category>
+    </item>`;
+    }).join('\n');
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Polymarket Whale Trades</title>
+    <link>http://localhost:${this.config.port}/</link>
+    <description>Real-time feed of trades from top Polymarket traders</description>
+    <language>en-us</language>
+    <lastBuildDate>${now}</lastBuildDate>
+    <atom:link href="http://localhost:${this.config.port}/api/whales/feed" rel="self" type="application/rss+xml"/>
+    <ttl>1</ttl>
+${items}
+  </channel>
+</rss>`;
+  }
+
+  private generateEmptyFeed(message: string): string {
+    const now = new Date().toUTCString();
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Polymarket Whale Trades</title>
+    <link>http://localhost:${this.config.port}/</link>
+    <description>${message}</description>
+    <lastBuildDate>${now}</lastBuildDate>
+  </channel>
+</rss>`;
+  }
+
+  private escapeXml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Get whale positions for a wallet
+   */
+  private getWhalePositions(wallet: string): WhalePositionResponse[] | { enabled: false; message: string } {
+    if (!this.deps.whaleTracker) {
+      return { enabled: false, message: 'Whale tracking not configured' };
+    }
+
+    // Get all tracked markets
+    const trackedMarkets = this.deps.linker.getTrackedMarkets();
+    const positions: WhalePositionResponse[] = [];
+
+    for (const [marketId] of trackedMarkets) {
+      // Check both YES and NO outcomes
+      for (const outcome of ['YES', 'NO'] as const) {
+        const pos = this.deps.whaleTracker.getWhalePosition(wallet, marketId, outcome);
+        if (pos && pos.netShares !== 0) {
+          const reduction = this.deps.whaleTracker.getPositionReduction(wallet, marketId, outcome);
+          positions.push({
+            wallet: pos.wallet,
+            marketId: pos.marketId,
+            outcome: pos.outcome,
+            netShares: pos.netShares,
+            vwapEntry: pos.vwapEntry,
+            realizedPnl: pos.realizedPnl,
+            peakShares: pos.peakShares,
+            reductionFromPeak: reduction,
+          });
+        }
+      }
+    }
+
+    return positions;
   }
 }
