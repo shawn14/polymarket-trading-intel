@@ -4,6 +4,8 @@
  * Detects truth-changing events before Polymarket prices adjust.
  */
 
+import 'dotenv/config';
+
 import { PolymarketClient, parseMarket } from './ingestion/polymarket/index.js';
 import { CongressClient } from './ingestion/congress/index.js';
 import { WeatherClient } from './ingestion/weather/index.js';
