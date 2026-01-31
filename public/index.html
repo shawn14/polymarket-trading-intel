@@ -1040,7 +1040,7 @@
     /* Bloomberg-style feed with aligned columns - timestamp first */
     .feed-row {
       display: grid;
-      grid-template-columns: 58px auto auto auto auto auto auto auto minmax(200px, 1fr) auto;
+      grid-template-columns: 56px 72px 52px 40px 32px 62px 36px 50px 1fr 85px;
       gap: 8px;
       align-items: center;
       padding: 4px 12px;
@@ -1168,6 +1168,12 @@
       text-transform: uppercase;
       letter-spacing: 0.2px;
       white-space: nowrap;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .behavior-badge.empty {
+      visibility: hidden;
     }
 
     .behavior-badge.tail {
@@ -4959,11 +4965,13 @@
             ? `<span class="col-score ${scoreInfo.status}">${scoreInfo.text}</span>`
             : `<span class="col-score"></span>`;
 
-          // Format behavior badge if available (skip STANDARD)
-          let behaviorHtml = '';
+          // Format behavior badge if available (skip STANDARD), always render span for alignment
+          let behaviorHtml;
           if (trade.behavior && trade.behavior.type !== 'STANDARD') {
             const behaviorClass = trade.behavior.type.toLowerCase();
             behaviorHtml = `<span class="behavior-badge ${behaviorClass}" title="${escapeHtml(trade.behavior.reasoning)}">${trade.behavior.type}</span>`;
+          } else {
+            behaviorHtml = `<span class="behavior-badge empty"></span>`;
           }
 
           feedHtml += `
