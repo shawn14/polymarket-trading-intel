@@ -496,7 +496,7 @@ export interface GameScoreResponse {
 }
 
 // Trade behavior types
-export type TradeBehavior = 'TAIL' | 'LOCK' | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' | 'STANDARD';
+export type TradeBehavior = 'SCOOP' | 'LOCK' | 'TAIL' | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' | 'STANDARD';
 
 // Behavior classification for API response
 export interface BehaviorResponse {

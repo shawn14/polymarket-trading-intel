@@ -14,7 +14,8 @@ import type { WhaleTrade, BehaviorClassification } from './types.js';
 
 // Configurable thresholds
 export const BEHAVIOR_THRESHOLDS = {
-  TAIL_HIGH: 0.97,           // 97% - extreme high price for TAIL detection
+  SCOOP_LOW: 0.01,           // 1% - near-zero for SCOOP detection (buying dust)
+  TAIL_HIGH: 0.97,           // 97% - extreme high price for LOCK/TAIL detection
   TAIL_LOW: 0.03,            // 3% - extreme low price for TAIL detection
   ARB_WINDOW_MS: 300000,     // 5 minutes - window for ARB detection
   SCALP_WINDOW_MS: 3600000,  // 1 hour - window for SCALP detection
@@ -48,10 +49,13 @@ export class BehaviorClassifier {
 
   /**
    * Classify a trade's behavior
-   * Detection priority: LOCK > TAIL > ARB > SCALP > HEDGE > CHASE > STANDARD
+   * Detection priority: SCOOP > LOCK > TAIL > ARB > SCALP > HEDGE > CHASE > STANDARD
    */
   classify(trade: WhaleTrade): BehaviorClassification {
     // Check behaviors in priority order
+    const scoopResult = this.detectScoop(trade);
+    if (scoopResult) return scoopResult;
+
     const lockResult = this.detectLock(trade);
     if (lockResult) return lockResult;
 
@@ -112,6 +116,25 @@ export class BehaviorClassifier {
     const cutoff = Date.now() - this.PRICE_HISTORY_MAX_AGE_MS;
     const filtered = history.filter(p => p.timestamp >= cutoff);
     this.priceHistory.set(marketId, filtered);
+  }
+
+  /**
+   * SCOOP Detection
+   * Buying at near-zero prices (<1%): scooping dust on resolved/dead markets
+   */
+  private detectScoop(trade: WhaleTrade): BehaviorClassification | null {
+    if (trade.side !== 'BUY') return null;
+
+    // BUY at 1% or less = scooping dust/dead shares
+    if (trade.price <= BEHAVIOR_THRESHOLDS.SCOOP_LOW) {
+      return {
+        behavior: 'SCOOP',
+        confidence: 'high',
+        reasoning: `Buying ${trade.outcome} at ${(trade.price * 100).toFixed(1)}% - scooping dust`,
+      };
+    }
+
+    return null;
   }
 
   /**
