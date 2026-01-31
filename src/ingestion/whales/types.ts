@@ -7,6 +7,16 @@
 // Whale tier classification
 export type WhaleTier = 'top10' | 'top50' | 'tracked';
 
+// Trade behavior classification
+export type TradeBehavior = 'TAIL' | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' | 'STANDARD';
+
+// Behavior classification result
+export interface BehaviorClassification {
+  behavior: TradeBehavior;
+  confidence: 'high' | 'medium' | 'low';
+  reasoning: string;
+}
+
 // Whale information
 export interface WhaleInfo {
   address: string;
@@ -69,6 +79,7 @@ export interface WhaleTrade {
   eventSlug?: string;      // Parent event slug for clean URLs
   outcomeLabel?: string;   // Original outcome label (e.g., "Pistons", "Warriors")
   gameScore?: GameScoreSnapshot;  // Live score at time of trade (sports only)
+  behavior?: BehaviorClassification;  // Behavior classification (TAIL, ARB, SCALP, etc.)
 }
 
 // Position tracking

@@ -22,6 +22,7 @@ import { WhaleUniverse } from './whale-universe.js';
 import { PositionLedger } from './position-ledger.js';
 import { WhaleActivityMonitor } from './activity-monitor.js';
 import { ExpertTracker } from './expert-tracker.js';
+import { BehaviorClassifier } from './behavior-classifier.js';
 import { fetchLeaderboard, getBootstrapWhales } from './leaderboard.js';
 
 // Rebuild whale universe every hour
@@ -53,6 +54,7 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
   private positionLedger: PositionLedger;
   private activityMonitor: WhaleActivityMonitor;
   private expertTracker: ExpertTracker;
+  private behaviorClassifier: BehaviorClassifier;
   private cachedWhaleTrades: CachedWhaleTrade[] = [];
 
   private rebuildTimer: NodeJS.Timeout | null = null;
@@ -72,6 +74,7 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
     this.positionLedger = new PositionLedger();
     this.activityMonitor = new WhaleActivityMonitor(this.whaleUniverse);
     this.expertTracker = new ExpertTracker();
+    this.behaviorClassifier = new BehaviorClassifier();
 
     // Setup listeners
     this.setupTradeListener();
@@ -108,6 +111,7 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
     this.cleanupTimer = setInterval(() => {
       this.cleanupCachedTrades();
       this.positionLedger.cleanup();
+      this.behaviorClassifier.cleanup();
     }, CLEANUP_INTERVAL_MS);
 
     console.log('[WhaleTracker] Started');
@@ -182,6 +186,13 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
    */
   private setupActivityMonitor(): void {
     this.activityMonitor.on('whaleTrade', (trade, activity) => {
+      // Classify behavior before processing
+      const behavior = this.behaviorClassifier.classify(trade);
+      trade.behavior = behavior;
+
+      // Record trade for future classification
+      this.behaviorClassifier.recordTrade(trade);
+
       // Get current market price for snapshot
       const currentPrice = this.marketPrices.get(trade.assetId) ?? trade.price;
 
@@ -283,6 +294,8 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
     // Emit whale trade events
     if (makerWhale) {
       const whaleTrade = this.toWhaleTrade(trade, makerWhale, true);
+      whaleTrade.behavior = this.behaviorClassifier.classify(whaleTrade);
+      this.behaviorClassifier.recordTrade(whaleTrade);
       this.cacheWhaleTrade(whaleTrade, currentPrice);
       this.whaleUniverse.updateLastSeen(trade.maker);
       this.emit('whaleTrade', whaleTrade);
@@ -290,6 +303,8 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
 
     if (takerWhale) {
       const whaleTrade = this.toWhaleTrade(trade, takerWhale, false);
+      whaleTrade.behavior = this.behaviorClassifier.classify(whaleTrade);
+      this.behaviorClassifier.recordTrade(whaleTrade);
       this.cacheWhaleTrade(whaleTrade, currentPrice);
       this.whaleUniverse.updateLastSeen(trade.taker);
       this.emit('whaleTrade', whaleTrade);
@@ -451,6 +466,7 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
       cachedWhaleTrades: this.cachedWhaleTrades.length,
       activityMonitor: this.activityMonitor.getStats(),
       experts: this.expertTracker.getStats(),
+      behaviorClassifier: this.behaviorClassifier.getStats(),
     };
   }
 
@@ -509,10 +525,13 @@ export type {
   CategoryStats,
   ExpertProfile,
   ExpertSpecialty,
+  TradeBehavior,
+  BehaviorClassification,
 } from './types.js';
 export { TradeStore } from './trade-store.js';
 export { WhaleUniverse } from './whale-universe.js';
 export { PositionLedger } from './position-ledger.js';
 export { WhaleActivityMonitor } from './activity-monitor.js';
 export { ExpertTracker } from './expert-tracker.js';
+export { BehaviorClassifier, BEHAVIOR_THRESHOLDS } from './behavior-classifier.js';
 export { COPY_THRESHOLD, isCopyable, getCopyRecommendation } from './copy-score.js';

@@ -1158,6 +1158,42 @@
       color: var(--text-secondary);
     }
 
+    /* Behavior badges */
+    .behavior-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 4px;
+      border-radius: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .behavior-badge.tail {
+      background: #ff6b6b;
+      color: #000;
+    }
+
+    .behavior-badge.arb {
+      background: #4ecdc4;
+      color: #000;
+    }
+
+    .behavior-badge.scalp {
+      background: #ffe66d;
+      color: #000;
+    }
+
+    .behavior-badge.hedge {
+      background: #95a5a6;
+      color: #000;
+    }
+
+    .behavior-badge.chase {
+      background: #a29bfe;
+      color: #000;
+    }
+
     .feed-item .trader-label {
       font-size: 8px;
       font-weight: 700;
@@ -4922,10 +4958,18 @@
             ? `<span class="col-score ${scoreInfo.status}">${scoreInfo.text}</span>`
             : `<span class="col-score"></span>`;
 
+          // Format behavior badge if available (skip STANDARD)
+          let behaviorHtml = '';
+          if (trade.behavior && trade.behavior.type !== 'STANDARD') {
+            const behaviorClass = trade.behavior.type.toLowerCase();
+            behaviorHtml = `<span class="behavior-badge ${behaviorClass}" title="${escapeHtml(trade.behavior.reasoning)}">${trade.behavior.type}</span>`;
+          }
+
           feedHtml += `
             <div class="feed-row ${tradeHighlight}">
               <span class="col-trader ${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
               ${labelHtml}
+              ${behaviorHtml}
               <span class="col-side ${betClass}">${betDisplay.action}</span>
               <span class="col-outcome ${betClass}">${betDisplay.display}</span>
               <span class="col-price">${priceStr}</span>

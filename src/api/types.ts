@@ -495,6 +495,16 @@ export interface GameScoreResponse {
   status: 'pregame' | 'live' | 'halftime' | 'final' | 'delayed' | 'postponed';
 }
 
+// Trade behavior types
+export type TradeBehavior = 'TAIL' | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' | 'STANDARD';
+
+// Behavior classification for API response
+export interface BehaviorResponse {
+  type: TradeBehavior;
+  confidence: 'high' | 'medium' | 'low';
+  reasoning: string;
+}
+
 // Whale trade for API responses
 export interface WhaleTradeResponse {
   whaleAddress: string;
@@ -512,6 +522,7 @@ export interface WhaleTradeResponse {
   timestamp: number;
   isMaker: boolean;
   gameScore?: GameScoreResponse;  // Live score at time of trade (sports only)
+  behavior?: BehaviorResponse;    // Behavior classification (TAIL, ARB, SCALP, etc.)
 }
 
 // API response for whale activity

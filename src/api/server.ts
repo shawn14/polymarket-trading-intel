@@ -1453,6 +1453,11 @@ export class APIServer {
         timestamp: ct.trade.timestamp,
         isMaker: ct.trade.isMaker,
         gameScore: ct.trade.gameScore,
+        behavior: ct.trade.behavior ? {
+          type: ct.trade.behavior.behavior,
+          confidence: ct.trade.behavior.confidence,
+          reasoning: ct.trade.behavior.reasoning,
+        } : undefined,
       }))
       .sort((a, b) => b.timestamp - a.timestamp);
 
@@ -1503,6 +1508,11 @@ export class APIServer {
         timestamp: ct.trade.timestamp,
         isMaker: ct.trade.isMaker,
         gameScore: ct.trade.gameScore,
+        behavior: ct.trade.behavior ? {
+          type: ct.trade.behavior.behavior,
+          confidence: ct.trade.behavior.confidence,
+          reasoning: ct.trade.behavior.reasoning,
+        } : undefined,
       }))
       .sort((a, b) => b.timestamp - a.timestamp);
   }
@@ -2178,6 +2188,11 @@ ${items}
       timestamp: ct.trade.timestamp,
       isMaker: ct.trade.isMaker,
       gameScore: ct.trade.gameScore,
+      behavior: ct.trade.behavior ? {
+        type: ct.trade.behavior.behavior,
+        confidence: ct.trade.behavior.confidence,
+        reasoning: ct.trade.behavior.reasoning,
+      } : undefined,
     }));
 
     return {
@@ -2223,6 +2238,11 @@ ${items}
       timestamp: ct.trade.timestamp,
       isMaker: ct.trade.isMaker,
       gameScore: ct.trade.gameScore,
+      behavior: ct.trade.behavior ? {
+        type: ct.trade.behavior.behavior,
+        confidence: ct.trade.behavior.confidence,
+        reasoning: ct.trade.behavior.reasoning,
+      } : undefined,
     }));
 
     // Calculate basic metrics from trades
