@@ -1120,10 +1120,8 @@
 
     .col-market {
       color: var(--text-secondary);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       cursor: pointer;
+      line-height: 1.3;
     }
 
     .col-market:hover {
@@ -4936,7 +4934,7 @@
           const timeAgo = formatTimeAgo(trade.timestamp);
           const marketUrl = getMarketUrl(trade.eventSlug, trade.marketSlug);
           const marketTitle = trade.marketTitle || 'Unknown Market';
-          const shortTitle = marketTitle.length > 55 ? marketTitle.slice(0, 52) + '...' : marketTitle;
+          const shortTitle = marketTitle;
           const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
           const priceStr = trade.price >= 0 ? `${(trade.price * 100).toFixed(0)}¢` : '--';
 
