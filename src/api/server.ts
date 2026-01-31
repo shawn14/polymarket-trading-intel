@@ -113,27 +113,9 @@ export class APIServer {
   // Connection errors
   private errors: Record<string, { message: string; time: number } | undefined> = {};
 
-  // Dynamic minimum trade size based on activity
-  // Adjusts thresholds when market is quiet vs active
+  // Minimum trade size - set to 0 to show all trades
   private getMinTradeSize(): number {
-    if (!this.deps.whaleTracker) return 500;
-
-    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(50);
-    const now = Date.now();
-    const fiveMinAgo = now - 5 * 60 * 1000;
-
-    // Count trades in last 5 minutes
-    const recentCount = recentTrades.filter(t => t.trade.timestamp > fiveMinAgo).length;
-
-    // Dynamic thresholds:
-    // - Very active (20+ trades/5min): $1000 min
-    // - Normal (10-20 trades/5min): $500 min
-    // - Quiet (5-10 trades/5min): $250 min
-    // - Dead (<5 trades/5min): $100 min
-    if (recentCount >= 20) return 1000;
-    if (recentCount >= 10) return 500;
-    if (recentCount >= 5) return 250;
-    return 100;
+    return 0;
   }
 
   constructor(config: APIServerConfig, deps: APIServerDependencies) {
@@ -1462,6 +1444,7 @@ export class APIServer {
         marketId: ct.trade.marketId,
         marketTitle: ct.trade.marketTitle,
         marketSlug: ct.trade.marketSlug,
+        eventSlug: ct.trade.eventSlug,
         side: ct.trade.side,
         outcome: ct.trade.outcome,
         outcomeLabel: ct.trade.outcomeLabel,
@@ -1510,6 +1493,7 @@ export class APIServer {
         marketId: ct.trade.marketId,
         marketTitle: ct.trade.marketTitle,
         marketSlug: ct.trade.marketSlug,
+        eventSlug: ct.trade.eventSlug,
         side: ct.trade.side,
         outcome: ct.trade.outcome,
         outcomeLabel: ct.trade.outcomeLabel,
@@ -2184,6 +2168,7 @@ ${items}
       marketId: ct.trade.marketId,
       marketTitle: ct.trade.marketTitle,
       marketSlug: ct.trade.marketSlug,
+        eventSlug: ct.trade.eventSlug,
       side: ct.trade.side,
       outcome: ct.trade.outcome,
       price: ct.trade.price,
@@ -2227,6 +2212,7 @@ ${items}
       marketId: ct.trade.marketId,
       marketTitle: ct.trade.marketTitle,
       marketSlug: ct.trade.marketSlug,
+        eventSlug: ct.trade.eventSlug,
       side: ct.trade.side,
       outcome: ct.trade.outcome,
       price: ct.trade.price,

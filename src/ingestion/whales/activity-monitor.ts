@@ -36,6 +36,7 @@ interface ActivityEntry {
   outcomeIndex: number;
   title: string;
   slug: string;
+  eventSlug: string;  // Parent event slug for clean URLs
   outcome: string;
   name: string;
   pseudonym: string;
@@ -193,6 +194,7 @@ export class WhaleActivityMonitor extends EventEmitter<WhaleActivityEvents> {
       isMaker: false, // Can't tell from activity API
       marketTitle: activity.title,
       marketSlug: activity.slug,
+      eventSlug: activity.eventSlug, // Parent event for clean URLs
       outcomeLabel: activity.outcome, // Preserve original for display
     };
 

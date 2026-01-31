@@ -489,6 +489,7 @@ export interface WhaleTradeResponse {
   marketId: string;
   marketTitle?: string;
   marketSlug?: string;
+  eventSlug?: string;     // Parent event slug for clean URLs
   side: 'BUY' | 'SELL';
   outcome: 'YES' | 'NO';
   outcomeLabel?: string;  // Original label (e.g., "Pistons", "Warriors")

@@ -919,6 +919,66 @@
       border: 1px solid var(--border);
     }
 
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 8px 12px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .filter-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-right: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-btn {
+      padding: 3px 8px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
+
+    .filter-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-light);
+    }
+
+    .filter-btn.active {
+      background: var(--bb-orange);
+      color: #000;
+      border-color: var(--bb-orange);
+    }
+
+    .filter-btn.filter-clear {
+      margin-left: auto;
+      background: transparent;
+      color: var(--text-muted);
+      border-color: transparent;
+    }
+
+    .filter-btn.filter-clear:hover {
+      color: var(--text-primary);
+    }
+
     /* Live Whale Feed - fills viewport above fixed bottom menu */
     .whale-feed {
       /* Height = viewport - top header - section header - bottom menu - padding */
@@ -977,22 +1037,104 @@
       background: var(--border-light);
     }
 
-    .feed-item {
+    /* Bloomberg-style feed with aligned columns */
+    .feed-row {
       display: grid;
-      grid-template-columns: 70px 70px 28px 100px 38px 50px 1fr 42px;
-      gap: 4px;
+      grid-template-columns: 80px 95px 36px 90px 40px 50px 1fr 45px;
+      gap: 6px;
       align-items: center;
-      padding: 4px 8px;
+      padding: 5px 10px;
       border-bottom: 1px solid var(--border);
-      font-size: 10px;
-      cursor: pointer;
+      font-size: 11px;
       transition: background 0.1s;
     }
 
-    .feed-item .trade-entry-price {
+    .feed-row:hover {
+      background: var(--bg-hover);
+    }
+
+    .feed-row.mega-trade {
+      background: rgba(255, 102, 0, 0.15);
+      border-left: 3px solid var(--bb-orange);
+    }
+
+    .feed-row.large-trade {
+      background: rgba(255, 204, 0, 0.08);
+      border-left: 3px solid var(--bb-yellow);
+    }
+
+    .col-trader {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .col-trader.top10 { color: var(--bb-orange); }
+    .col-trader.top50 { color: var(--bb-cyan); }
+    .col-trader:hover { text-decoration: underline; }
+
+    .col-label {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .col-side {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10px;
       text-align: center;
+    }
+
+    .col-side.buy { color: var(--bb-green); }
+    .col-side.sell { color: var(--bb-red); }
+
+    .col-outcome {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .col-outcome.buy { color: var(--bb-green); }
+    .col-outcome.sell { color: var(--bb-red); }
+
+    .col-price {
+      text-align: right;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .col-size {
+      text-align: right;
       color: var(--bb-cyan);
       font-weight: 600;
+    }
+
+    .col-market {
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .col-market:hover {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+
+    .col-time {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-align: right;
     }
 
     .feed-item .trader-label {
@@ -3648,6 +3790,29 @@
         <span class="section-title">LIVE WHALE ACTIVITY</span>
         <span class="section-meta" id="whale-last-update">--</span>
       </div>
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">TIER:</span>
+          <button class="filter-btn" data-filter="tier" data-value="top10">TOP 10</button>
+          <button class="filter-btn" data-filter="tier" data-value="top50">TOP 50</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">SIZE:</span>
+          <button class="filter-btn" data-filter="size" data-value="1">$1+</button>
+          <button class="filter-btn" data-filter="size" data-value="5">$5+</button>
+          <button class="filter-btn" data-filter="size" data-value="100">$100+</button>
+          <button class="filter-btn" data-filter="size" data-value="1000">$1K+</button>
+          <button class="filter-btn" data-filter="size" data-value="10000">$10K+</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">CATEGORY:</span>
+          <button class="filter-btn" data-filter="category" data-value="sports">SPORTS</button>
+          <button class="filter-btn" data-filter="category" data-value="crypto">CRYPTO</button>
+          <button class="filter-btn" data-filter="category" data-value="politics">POLITICS</button>
+        </div>
+        <button class="filter-btn filter-clear" onclick="clearFilters()">CLEAR</button>
+      </div>
       <div id="whale-feed" class="whale-feed">
         <div class="loading-terminal">Connecting to whale feed...</div>
       </div>
@@ -4448,26 +4613,14 @@
       'sf': '49ers', 'sea': 'Seahawks', 'tb': 'Buccaneers', 'ten': 'Titans',
     };
 
-    function getMarketUrl(slug) {
+    function getMarketUrl(eventSlug, marketSlug) {
+      // Use eventSlug if available (clean parent event URL)
+      const slug = eventSlug || marketSlug;
+      if (!slug) return '#';
+
       const clean = cleanMarketSlug(slug);
       if (!clean) return '#';
 
-      // Detect sports markets by league prefix (e.g., nba-det-gsw-2026-01-30)
-      const sportsMatch = clean.match(/^(nfl|nba|mlb|nhl|ncaaf|ncaab|epl|mls|ufc|boxing)-([a-z0-9]+)-([a-z0-9]+)-/i);
-      if (sportsMatch) {
-        const league = sportsMatch[1].toLowerCase();
-        const team1 = sportsMatch[2].toLowerCase();
-        const team2 = sportsMatch[3].toLowerCase();
-
-        // Build search query from team names (e.g., "Pistons Warriors")
-        const team1Name = teamNames[team1] || team1.toUpperCase();
-        const team2Name = teamNames[team2] || team2.toUpperCase();
-        const searchQuery = `${team1Name} ${team2Name}`;
-
-        return `https://polymarket.com/sports/${league}?search=${encodeURIComponent(searchQuery)}`;
-      }
-
-      // Non-sports markets use /event/
       return `https://polymarket.com/event/${clean}`;
     }
 
@@ -4541,6 +4694,75 @@
       return cat ? { ...cat, rank: info.rank, pnl: info.pnl } : null;
     }
 
+    // ============================================
+    // Trade Filters
+    // ============================================
+
+    // Store raw trades for filtering
+    let allTrades = [];
+
+    // Active filters (null = no filter)
+    const activeFilters = {
+      tier: null,      // 'top10' or 'top50'
+      size: null,      // minimum size in USDC
+      category: null   // 'sports', 'crypto', 'politics'
+    };
+
+    // Initialize filter button click handlers
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filterType = btn.dataset.filter;
+        const filterValue = btn.dataset.value;
+
+        // Toggle filter
+        if (activeFilters[filterType] === filterValue) {
+          activeFilters[filterType] = null;
+          btn.classList.remove('active');
+        } else {
+          // Deactivate other buttons in same group
+          document.querySelectorAll(`.filter-btn[data-filter="${filterType}"]`).forEach(b => {
+            b.classList.remove('active');
+          });
+          activeFilters[filterType] = filterValue;
+          btn.classList.add('active');
+        }
+
+        // Re-render with filters
+        renderTrades();
+      });
+    });
+
+    function clearFilters() {
+      activeFilters.tier = null;
+      activeFilters.size = null;
+      activeFilters.category = null;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      renderTrades();
+    }
+
+    function filterTrades(trades) {
+      return trades.filter(trade => {
+        // Tier filter
+        if (activeFilters.tier) {
+          if (activeFilters.tier === 'top10' && trade.whaleTier !== 'top10') return false;
+          if (activeFilters.tier === 'top50' && trade.whaleTier !== 'top10' && trade.whaleTier !== 'top50') return false;
+        }
+
+        // Size filter
+        if (activeFilters.size) {
+          if (trade.sizeUsdc < parseInt(activeFilters.size)) return false;
+        }
+
+        // Category filter
+        if (activeFilters.category) {
+          const traderInfo = traderCategories.get(trade.whaleAddress?.toLowerCase());
+          if (!traderInfo || traderInfo.category !== activeFilters.category) return false;
+        }
+
+        return true;
+      });
+    }
+
     // Generic panel toggle - closes others, opens clicked one
     function togglePanel(panelId, iconId) {
       const panels = ['whale-leaderboard-section', 'category-panel', 'kalshi-panel'];
@@ -4576,10 +4798,11 @@
     }
 
     // Whale Intelligence
+    let topWalesCache = [];
+
     async function loadWhaleIntel() {
       try {
         const data = await fetchJSON('/whales');
-        const feedContainer = document.getElementById('whale-feed');
         const lastUpdateEl = document.getElementById('whale-last-update');
 
         // Update status bar
@@ -4588,71 +4811,77 @@
 
         lastUpdateEl.textContent = new Date(data.timestamp).toLocaleTimeString();
 
-        const { stats, topWhales, recentTrades } = data;
+        // Store trades for filtering
+        allTrades = data.recentTrades || [];
+        topWalesCache = data.topWhales || [];
 
-        // Render Live Feed
-        if (recentTrades && recentTrades.length > 0) {
-          let feedHtml = '';
-          for (const trade of recentTrades.slice(0, 20)) {
-            const tierClass = trade.whaleTier === 'top10' ? 'top10' : 'top50';
-            const timeAgo = formatTimeAgo(trade.timestamp);
-            const marketUrl = getMarketUrl(trade.marketSlug);
-            const marketTitle = trade.marketTitle || 'Unknown Market';
-            const shortTitle = marketTitle.length > 45 ? marketTitle.slice(0, 42) + '...' : marketTitle;
-            const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
+        // Render with current filters
+        renderTrades();
+        renderLeaderboard();
 
-            // Price from API is the actual entry price
-            const priceStr = trade.price >= 0 ? `${(trade.price * 100).toFixed(0)}¢` : '--';
+      } catch (e) {
+        console.error('Failed to load whale intel:', e);
+        document.getElementById('whale-feed').innerHTML =
+          '<div class="loading-terminal">Error: Failed to load whale data</div>';
+      }
+    }
 
-            // Get clearer bet display - follow Polymarket convention
-            // For sports: show team name directly (e.g., "Pistons" not "Yes Pistons to win")
-            // For YES/NO: show "Yes" or "No"
-            let betDisplay;
-            if (trade.outcomeLabel && trade.outcomeLabel !== 'Yes' && trade.outcomeLabel !== 'No') {
-              // Sports/multi-outcome market - show team name directly
-              // BUY = betting FOR this outcome, SELL = betting AGAINST
-              betDisplay = {
-                action: trade.side,  // Show BUY or SELL
-                display: trade.outcomeLabel,  // Just show "Pistons", "Warriors", etc.
-                isLong: trade.side === 'BUY'
-              };
-            } else {
-              // Standard YES/NO market
-              betDisplay = getBetDisplay(marketTitle, trade.side, trade.outcome);
-            }
+    function renderTrades() {
+      const feedContainer = document.getElementById('whale-feed');
+      const trades = filterTrades(allTrades);
 
-            // Highlight big trades (whale alerts)
-            const isMegaTrade = trade.sizeUsdc >= 50000;
-            const isLargeTrade = trade.sizeUsdc >= 10000;
-            const tradeHighlight = isMegaTrade ? 'mega-trade' : (isLargeTrade ? 'large-trade' : '');
-            const betClass = betDisplay.isLong ? 'buy' : 'sell';
+      if (trades.length > 0) {
+        let feedHtml = '';
+        for (const trade of trades.slice(0, 30)) {
+          const tierClass = trade.whaleTier === 'top10' ? 'top10' : 'top50';
+          const timeAgo = formatTimeAgo(trade.timestamp);
+          const marketUrl = getMarketUrl(trade.eventSlug, trade.marketSlug);
+          const marketTitle = trade.marketTitle || 'Unknown Market';
+          const shortTitle = marketTitle.length > 40 ? marketTitle.slice(0, 37) + '...' : marketTitle;
+          const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
+          const priceStr = trade.price >= 0 ? `${(trade.price * 100).toFixed(0)}¢` : '--';
 
-            // Get trader category label
-            const traderInfo = getTraderLabel(trade.whaleAddress);
-            const labelHtml = traderInfo
-              ? `<span class="trader-label" style="background: ${traderInfo.color}; color: #000;">${traderInfo.label}</span>`
-              : `<span class="trader-label" style="background: #333; color: #888;">WHALE</span>`;
-
-            feedHtml += `
-              <div class="feed-item ${tradeHighlight}">
-                <span class="whale-name ${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
-                ${labelHtml}
-                <span class="trade-side ${betClass}">${betDisplay.action}</span>
-                <span class="trade-outcome" style="color: ${betDisplay.isLong ? 'var(--bb-green)' : 'var(--bb-red)'}; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${betDisplay.display}</span>
-                <span class="trade-entry-price">${priceStr}</span>
-                <span class="trade-size">${sizeStr}</span>
-                <span class="market-title" style="cursor: pointer;" onclick="window.open('${marketUrl}', '_blank')">${escapeHtml(shortTitle)}</span>
-                <span class="trade-time">${timeAgo}</span>
-              </div>
-            `;
+          // Get bet display
+          let betDisplay;
+          if (trade.outcomeLabel && trade.outcomeLabel !== 'Yes' && trade.outcomeLabel !== 'No') {
+            betDisplay = { action: trade.side, display: trade.outcomeLabel, isLong: trade.side === 'BUY' };
+          } else {
+            betDisplay = getBetDisplay(marketTitle, trade.side, trade.outcome);
           }
-          feedContainer.innerHTML = feedHtml;
-        } else {
-          feedContainer.innerHTML = '<div class="loading-terminal">Waiting for whale trades...</div>';
-        }
 
-        // Render Leaderboard Table
+          const isMegaTrade = trade.sizeUsdc >= 50000;
+          const isLargeTrade = trade.sizeUsdc >= 10000;
+          const tradeHighlight = isMegaTrade ? 'mega-trade' : (isLargeTrade ? 'large-trade' : '');
+          const betClass = betDisplay.isLong ? 'buy' : 'sell';
+
+          // Get trader category label
+          const traderInfo = getTraderLabel(trade.whaleAddress);
+          const labelHtml = traderInfo
+            ? `<span class="col-label" style="background: ${traderInfo.color}; color: #000;">${traderInfo.label}</span>`
+            : `<span class="col-label" style="background: #333; color: #888;">WHALE</span>`;
+
+          feedHtml += `
+            <div class="feed-row ${tradeHighlight}">
+              <span class="col-trader ${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
+              ${labelHtml}
+              <span class="col-side ${betClass}">${betDisplay.action}</span>
+              <span class="col-outcome ${betClass}">${betDisplay.display}</span>
+              <span class="col-price">${priceStr}</span>
+              <span class="col-size">${sizeStr}</span>
+              <span class="col-market" onclick="window.open('${marketUrl}', '_blank')">${escapeHtml(shortTitle)}</span>
+              <span class="col-time">${timeAgo}</span>
+            </div>
+          `;
+        }
+        feedContainer.innerHTML = feedHtml;
+      } else {
+        feedContainer.innerHTML = '<div class="loading-terminal">No trades match filters</div>';
+      }
+    }
+
+    function renderLeaderboard() {
         const leaderboardContainer = document.getElementById('whale-leaderboard');
+        const topWhales = topWalesCache;
         if (leaderboardContainer && topWhales && topWhales.length > 0) {
           let tableHtml = `
             <table class="data-table" style="width: 100%;">
@@ -4686,12 +4915,6 @@
           tableHtml += '</tbody></table>';
           leaderboardContainer.innerHTML = tableHtml;
         }
-
-      } catch (e) {
-        console.error('Failed to load whale intel:', e);
-        document.getElementById('whale-feed').innerHTML =
-          '<div class="loading-terminal">Error: Failed to load whale data</div>';
-      }
     }
 
     // ============================================
@@ -5185,7 +5408,7 @@
             <span class="whale-trade-item-side ${t.side.toLowerCase()}">${t.side} ${t.outcome}</span>
             <span class="whale-trade-item-time">${formatTimeAgo(t.timestamp)}</span>
           </div>
-          <div class="whale-trade-item-market" onclick="window.open(getMarketUrl('${t.marketSlug || ''}'), '_blank')">
+          <div class="whale-trade-item-market" onclick="window.open(getMarketUrl('${t.eventSlug || ''}', '${t.marketSlug || ''}'), '_blank')">
             ${escapeHtml((t.marketTitle || t.marketId || 'Unknown Market').slice(0, 70))}
           </div>
           <div class="whale-trade-item-details">
