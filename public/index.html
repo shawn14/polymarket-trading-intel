@@ -4614,14 +4614,18 @@
     };
 
     function getMarketUrl(eventSlug, marketSlug) {
-      // Use eventSlug if available (clean parent event URL)
-      const slug = eventSlug || marketSlug;
-      if (!slug) return '#';
+      // eventSlug from API is already clean - use it directly
+      if (eventSlug) {
+        return `https://polymarket.com/event/${eventSlug}`;
+      }
 
-      const clean = cleanMarketSlug(slug);
-      if (!clean) return '#';
+      // Fallback to marketSlug if no eventSlug (needs cleaning)
+      if (marketSlug) {
+        const clean = cleanMarketSlug(marketSlug);
+        if (clean) return `https://polymarket.com/event/${clean}`;
+      }
 
-      return `https://polymarket.com/event/${clean}`;
+      return '#';
     }
 
     // Parse bet direction for cleaner display (Polymarket-style)
