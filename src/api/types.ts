@@ -496,7 +496,11 @@ export interface GameScoreResponse {
 }
 
 // Trade behavior types
-export type TradeBehavior = 'SCOOP' | 'LOCK' | 'TAIL' | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' | 'STANDARD';
+export type TradeBehavior =
+  | 'SCOOP' | 'LOCK' | 'TAIL'           // Extreme price behaviors
+  | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' // Pattern behaviors
+  | 'DCA' | 'STACK' | 'EXIT' | 'FLIP' | 'FADE'  // Position behaviors
+  | 'STANDARD';
 
 // Behavior classification for API response
 export interface BehaviorResponse {
@@ -523,6 +527,7 @@ export interface WhaleTradeResponse {
   isMaker: boolean;
   gameScore?: GameScoreResponse;  // Live score at time of trade (sports only)
   behavior?: BehaviorResponse;    // Behavior classification (TAIL, ARB, SCALP, etc.)
+  impactBadge?: 'MOVED_MARKET' | 'NO_IMPACT';  // Market impact after 1m/5m/15m
 }
 
 // API response for whale activity
@@ -677,6 +682,9 @@ export interface WhaleProfileResponse {
   realizedWins?: number;      // Count of winning positions
   realizedLosses?: number;    // Count of losing positions
   totalRealizedPnl?: number;  // Total realized P&L in USDC
+
+  // Behavior breakdown (count per behavior type)
+  behaviorBreakdown?: Record<TradeBehavior, number>;
 }
 
 // ============================================================================

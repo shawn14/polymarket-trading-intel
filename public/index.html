@@ -68,13 +68,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 16px;
+      padding: 4px 12px;
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border);
       font-size: 11px;
       position: sticky;
       top: 0;
       z-index: 100;
+      height: 28px;
+      box-sizing: border-box;
     }
 
     .status-bar-left {
@@ -126,7 +128,10 @@
     .container {
       max-width: 2000px;
       margin: 0 auto;
-      padding: 6px 10px 50px 10px; /* Bottom padding for fixed menu */
+      padding: 0 0 36px 0; /* Bottom padding for fixed menu */
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 28px); /* Full viewport minus top bar */
     }
 
     /* Section Headers */
@@ -134,10 +139,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 10px;
+      padding: 3px 10px;
       background: linear-gradient(90deg, var(--bb-orange) 0%, var(--bb-orange) 3px, var(--bg-card) 3px);
       border: 1px solid var(--border);
-      margin-bottom: 1px;
+      border-top: none;
+      margin: 0;
     }
 
     .section-title {
@@ -917,17 +923,39 @@
     .panel-section {
       background: var(--bg-card);
       border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
     }
 
     /* Filter Bar */
-    .filter-bar {
+    .feed-header {
+      display: flex;
+      align-items: center;
+      padding: 4px 10px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .feed-header-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--bb-orange);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      padding-right: 8px;
+      border-right: 1px solid var(--border);
+    }
+
+    .feed-header-filters {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      padding: 8px 12px;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border);
+      gap: 10px;
       align-items: center;
+      flex: 1;
     }
 
     .filter-group {
@@ -962,6 +990,30 @@
       border-color: var(--border-light);
     }
 
+    /* Custom tooltip for filter buttons */
+    .filter-btn[title] {
+      position: relative;
+    }
+
+    .filter-btn[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
     .filter-btn.active {
       background: var(--bb-orange);
       color: #000;
@@ -969,7 +1021,7 @@
     }
 
     .filter-btn.filter-clear {
-      margin-left: auto;
+      margin-left: 8px;
       background: transparent;
       color: var(--text-muted);
       border-color: transparent;
@@ -979,12 +1031,59 @@
       color: var(--text-primary);
     }
 
+    .filter-btn.filter-movers {
+      background: rgba(39, 174, 96, 0.2);
+      color: #27ae60;
+      border-color: #27ae60;
+    }
+
+    .filter-btn.filter-movers:hover {
+      background: rgba(39, 174, 96, 0.3);
+    }
+
+    .filter-btn.filter-movers.active {
+      background: #27ae60;
+      color: #000;
+      border-color: #27ae60;
+    }
+
+    /* Bottom menu movers button highlight */
+    .bottom-menu .movers-btn {
+      background: rgba(39, 174, 96, 0.15);
+    }
+
+    .bottom-menu .movers-btn:hover {
+      background: rgba(39, 174, 96, 0.25);
+    }
+
+    .bottom-menu .movers-btn .section-title {
+      color: #27ae60;
+    }
+
     /* Live Whale Feed - fills viewport above fixed bottom menu */
     .whale-feed {
-      /* Height = viewport - top header - section header - bottom menu - padding */
-      max-height: calc(100vh - 180px);
-      min-height: 300px;
+      /* Fill remaining space above bottom menu */
+      flex: 1;
       overflow-y: auto;
+      min-height: 0;
+    }
+
+    .load-more-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+      color: var(--bb-cyan);
+      font-size: 11px;
+      cursor: pointer;
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+      transition: background 0.15s;
+    }
+
+    .load-more-row:hover {
+      background: var(--bg-hover);
+      color: var(--bb-orange);
     }
 
     /* Fixed bottom menu bar */
@@ -1019,8 +1118,9 @@
       right: 0;
       max-height: 50vh;
       overflow-y: auto;
-      background: var(--bg-base);
-      border-top: 1px solid var(--border);
+      background: var(--bg-terminal);
+      border-top: 2px solid var(--bb-orange);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
       z-index: 99;
       padding: 8px;
     }
@@ -1040,7 +1140,7 @@
     /* Bloomberg-style feed with aligned columns - timestamp first */
     .feed-row {
       display: grid;
-      grid-template-columns: 56px 72px 52px 40px 32px 62px 36px 50px 1fr 85px;
+      grid-template-columns: 56px 72px 52px 40px 45px 32px 62px 36px 50px 1fr 85px;
       gap: 8px;
       align-items: center;
       padding: 4px 12px;
@@ -1168,6 +1268,30 @@
       white-space: nowrap;
       min-width: 32px;
       text-align: center;
+      position: relative;
+      cursor: help;
+    }
+
+    /* Custom tooltip for behavior badges */
+    .behavior-badge[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      text-transform: none;
+      letter-spacing: normal;
     }
 
     .behavior-badge.empty {
@@ -1207,6 +1331,83 @@
     .behavior-badge.chase {
       background: #a29bfe;
       color: #000;
+    }
+
+    .behavior-badge.dca {
+      background: #3498db;
+      color: #fff;
+    }
+
+    .behavior-badge.stack {
+      background: #e67e22;
+      color: #000;
+    }
+
+    .behavior-badge.exit {
+      background: #c0392b;
+      color: #fff;
+    }
+
+    .behavior-badge.flip {
+      background: #1abc9c;
+      color: #000;
+    }
+
+    .behavior-badge.fade {
+      background: #9b59b6;
+      color: #fff;
+    }
+
+    /* Impact badge styles */
+    .impact-badge {
+      font-size: 7px;
+      font-weight: 700;
+      padding: 1px 3px;
+      border-radius: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      min-width: 40px;
+      text-align: center;
+      position: relative;
+      cursor: help;
+    }
+
+    .impact-badge[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .impact-badge.moved {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .impact-badge.none {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .impact-badge.pending {
+      background: transparent;
+      color: var(--text-muted);
+      opacity: 0.5;
     }
 
     .feed-item .trader-label {
@@ -2055,6 +2256,65 @@
       gap: 16px;
       font-size: 11px;
       color: var(--text-secondary);
+    }
+
+    /* Behavior breakdown styles */
+    .behavior-stat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .behavior-stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .behavior-stat-row .behavior-badge {
+      min-width: 50px;
+    }
+
+    .behavior-stat-count {
+      font-size: 12px;
+      color: var(--text-primary);
+      min-width: 30px;
+      text-align: right;
+    }
+
+    .behavior-stat-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--bg-hover);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .behavior-stat-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    /* Bar colors matching badge colors */
+    .behavior-bar-scoop { background: #9b59b6; }
+    .behavior-bar-tail { background: #ff6b6b; }
+    .behavior-bar-lock { background: #2ecc71; }
+    .behavior-bar-arb { background: #4ecdc4; }
+    .behavior-bar-scalp { background: #ffe66d; }
+    .behavior-bar-hedge { background: #95a5a6; }
+    .behavior-bar-chase { background: #a29bfe; }
+    .behavior-bar-dca { background: #3498db; }
+    .behavior-bar-stack { background: #e67e22; }
+    .behavior-bar-exit { background: #c0392b; }
+    .behavior-bar-flip { background: #1abc9c; }
+    .behavior-bar-fade { background: #9b59b6; }
+
+    .behavior-stat-pct {
+      font-size: 11px;
+      color: var(--text-muted);
+      min-width: 35px;
+      text-align: right;
     }
 
     .whale-clickable {
@@ -3855,15 +4115,11 @@
   </div>
 
   <div class="container">
-
     <!-- Main Whale Feed (Full Width) -->
     <div class="panel-section" id="whale-feed-section">
-      <div class="section-header">
-        <span class="section-title">LIVE WHALE ACTIVITY</span>
-        <span class="section-meta" id="whale-last-update">--</span>
-      </div>
-      <!-- Filter Bar -->
-      <div class="filter-bar">
+      <div class="feed-header">
+        <span class="feed-header-title">LIVE WHALE ACTIVITY</span>
+        <div class="feed-header-filters">
         <div class="filter-group">
           <span class="filter-label">TIER:</span>
           <button class="filter-btn" data-filter="tier" data-value="top10">TOP 10</button>
@@ -3883,13 +4139,38 @@
           <button class="filter-btn" data-filter="category" data-value="crypto">CRYPTO</button>
           <button class="filter-btn" data-filter="category" data-value="politics">POLITICS</button>
         </div>
-        <button class="filter-btn filter-clear" onclick="clearFilters()">CLEAR</button>
+        <div class="filter-group">
+          <span class="filter-label">BEHAVIOR:</span>
+          <button class="filter-btn" data-filter="behavior" data-value="SCOOP" title="Buying at <1% - scooping dust/dead shares on resolved markets">SCOOP</button>
+          <button class="filter-btn" data-filter="behavior" data-value="LOCK" title="Buying at 97%+ - locking in a near-certain winner">LOCK</button>
+          <button class="filter-btn" data-filter="behavior" data-value="TAIL" title="Betting on unlikely outcomes (<3%) - tail risk play">TAIL</button>
+          <button class="filter-btn" data-filter="behavior" data-value="DCA" title="Dollar-cost averaging - 3+ buys at similar price over 2+ hours">DCA</button>
+          <button class="filter-btn" data-filter="behavior" data-value="STACK" title="Building position - 3+ buys totaling $1K+ in 24 hours">STACK</button>
+          <button class="filter-btn" data-filter="behavior" data-value="EXIT" title="Exiting position - selling 80%+ of tracked holdings">EXIT</button>
+          <button class="filter-btn" data-filter="behavior" data-value="FLIP" title="Switching sides - sold one outcome, bought opposite within 30min">FLIP</button>
+          <button class="filter-btn" data-filter="behavior" data-value="FADE" title="Contrarian play - buying against a 5%+ recent price move">FADE</button>
+          <button class="filter-btn" data-filter="behavior" data-value="ARB" title="Arbitrage - bought both YES and NO within 5 minutes">ARB</button>
+          <button class="filter-btn" data-filter="behavior" data-value="SCALP" title="Quick flip - exited within 1 hour of entry">SCALP</button>
+          <button class="filter-btn" data-filter="behavior" data-value="CHASE" title="Momentum chasing - buying after 5%+ move in same direction">CHASE</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">IMPACT:</span>
+          <button class="filter-btn filter-movers" data-filter="impact" data-value="MOVED_MARKET" title="Trades that moved the market 3%+ after execution">📈 MOVERS</button>
+        </div>
+        </div>
       </div>
       <div id="whale-feed" class="whale-feed">
         <div class="loading-terminal">Connecting to whale feed...</div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Top Movers Panel (collapsed by default) -->
+  <div class="expandable-panel" id="top-movers-section" style="display: none;">
+    <div id="top-movers" class="data-table-container">
+      <div class="loading-terminal">Loading market movers...</div>
+    </div>
   </div>
 
   <!-- Top Traders Panel (collapsed by default) -->
@@ -3980,6 +4261,10 @@
 
   <!-- Fixed Bottom Menu Bar -->
   <div class="bottom-menu">
+    <div class="section-header collapsible movers-btn" onclick="togglePanel('top-movers-section', 'movers-icon')">
+      <span class="section-title">📈 MOVERS</span>
+      <span class="collapse-icon" id="movers-icon">▶</span>
+    </div>
     <div class="section-header collapsible" onclick="togglePanel('whale-leaderboard-section', 'leaderboard-icon')">
       <span class="section-title">TOP TRADERS</span>
       <span class="collapse-icon" id="leaderboard-icon">▶</span>
@@ -4059,6 +4344,13 @@
           <h4>Top Markets</h4>
           <div id="whale-top-markets">
             <!-- Top markets loaded dynamically -->
+          </div>
+        </div>
+
+        <div class="whale-strategy-section">
+          <h4>Behavior Patterns</h4>
+          <div id="whale-behavior-breakdown">
+            <!-- Behavior breakdown loaded dynamically -->
           </div>
         </div>
       </div>
@@ -4807,12 +5099,32 @@
 
     // Store raw trades for filtering
     let allTrades = [];
+    let displayLimit = 50;  // How many trades to show initially
 
     // Active filters (null = no filter)
     const activeFilters = {
       tier: null,      // 'top10' or 'top50'
       size: null,      // minimum size in USDC
-      category: null   // 'sports', 'crypto', 'politics'
+      category: null,  // 'sports', 'crypto', 'politics'
+      behavior: null,  // 'SCOOP', 'LOCK', 'TAIL', 'DCA', 'STACK', 'EXIT', 'FLIP', 'FADE', 'ARB', 'SCALP', 'CHASE'
+      impact: null     // 'MOVED_MARKET'
+    };
+
+    // Behavior descriptions for tooltips
+    const BEHAVIOR_DESCRIPTIONS = {
+      SCOOP: 'Buying at <1% - scooping dust/dead shares on resolved markets',
+      LOCK: 'Buying at 97%+ - locking in a near-certain winner',
+      TAIL: 'Betting on unlikely outcomes (<3%) - tail risk play',
+      DCA: 'Dollar-cost averaging - 3+ buys at similar price over 2+ hours',
+      STACK: 'Building position - 3+ buys totaling $1K+ in 24 hours',
+      EXIT: 'Exiting position - selling 80%+ of tracked holdings',
+      FLIP: 'Switching sides - sold one outcome, bought opposite within 30min',
+      FADE: 'Contrarian play - buying against a 5%+ recent price move',
+      ARB: 'Arbitrage - bought both YES and NO within 5 minutes',
+      SCALP: 'Quick flip - exited within 1 hour of entry',
+      HEDGE: 'Risk reduction - buying opposite of existing position',
+      CHASE: 'Momentum chasing - buying after 5%+ move in same direction',
+      STANDARD: 'Normal trade activity'
     };
 
     // Initialize filter button click handlers
@@ -4834,6 +5146,9 @@
           btn.classList.add('active');
         }
 
+        // Reset display limit when filters change
+        displayLimit = 50;
+
         // Re-render with filters
         renderTrades();
       });
@@ -4843,6 +5158,9 @@
       activeFilters.tier = null;
       activeFilters.size = null;
       activeFilters.category = null;
+      activeFilters.behavior = null;
+      activeFilters.impact = null;
+      displayLimit = 50;  // Reset to default
       document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
       renderTrades();
     }
@@ -4866,14 +5184,24 @@
           if (!traderInfo || traderInfo.category !== activeFilters.category) return false;
         }
 
+        // Behavior filter
+        if (activeFilters.behavior) {
+          if (!trade.behavior || trade.behavior.type !== activeFilters.behavior) return false;
+        }
+
+        // Impact filter
+        if (activeFilters.impact) {
+          if (trade.impactBadge !== activeFilters.impact) return false;
+        }
+
         return true;
       });
     }
 
     // Generic panel toggle - closes others, opens clicked one
     function togglePanel(panelId, iconId) {
-      const panels = ['whale-leaderboard-section', 'category-panel', 'kalshi-panel'];
-      const icons = ['leaderboard-icon', 'category-icon', 'kalshi-icon'];
+      const panels = ['top-movers-section', 'whale-leaderboard-section', 'category-panel', 'kalshi-panel'];
+      const icons = ['movers-icon', 'leaderboard-icon', 'category-icon', 'kalshi-icon'];
 
       const panel = document.getElementById(panelId);
       const isOpen = panel.style.display !== 'none';
@@ -4892,6 +5220,11 @@
       if (!isOpen) {
         panel.style.display = 'block';
         document.getElementById(iconId).classList.add('expanded');
+
+        // Render movers when panel opens
+        if (panelId === 'top-movers-section') {
+          renderTopMovers();
+        }
       }
     }
 
@@ -4910,13 +5243,10 @@
     async function loadWhaleIntel() {
       try {
         const data = await fetchJSON('/whales');
-        const lastUpdateEl = document.getElementById('whale-last-update');
 
         // Update status bar
         document.getElementById('whale-count').textContent = data.stats.totalWhales;
         document.getElementById('trade-count').textContent = data.stats.cachedTrades;
-
-        lastUpdateEl.textContent = new Date(data.timestamp).toLocaleTimeString();
 
         // Store trades for filtering
         allTrades = data.recentTrades || [];
@@ -4939,7 +5269,8 @@
 
       if (trades.length > 0) {
         let feedHtml = '';
-        for (const trade of trades.slice(0, 30)) {
+        const tradesToShow = trades.slice(0, displayLimit);
+        for (const trade of tradesToShow) {
           const tierClass = trade.whaleTier === 'top10' ? 'top10' : 'top50';
           const timeAgo = formatTimeAgo(trade.timestamp);
           const marketUrl = getMarketUrl(trade.eventSlug, trade.marketSlug);
@@ -4977,9 +5308,20 @@
           let behaviorHtml;
           if (trade.behavior && trade.behavior.type !== 'STANDARD') {
             const behaviorClass = trade.behavior.type.toLowerCase();
-            behaviorHtml = `<span class="behavior-badge ${behaviorClass}" title="${escapeHtml(trade.behavior.reasoning)}">${trade.behavior.type}</span>`;
+            const tooltip = trade.behavior.reasoning || BEHAVIOR_DESCRIPTIONS[trade.behavior.type] || trade.behavior.type;
+            behaviorHtml = `<span class="behavior-badge ${behaviorClass}" title="${escapeHtml(tooltip)}">${trade.behavior.type}</span>`;
           } else {
             behaviorHtml = `<span class="behavior-badge empty"></span>`;
+          }
+
+          // Format impact badge if available
+          let impactHtml;
+          if (trade.impactBadge === 'MOVED_MARKET') {
+            impactHtml = `<span class="impact-badge moved" title="This trade moved the market 3%+ in the direction of the trade">📈 MOVED</span>`;
+          } else if (trade.impactBadge === 'NO_IMPACT') {
+            impactHtml = `<span class="impact-badge none" title="No significant price movement after this trade">—</span>`;
+          } else {
+            impactHtml = `<span class="impact-badge pending" title="Impact pending (computed after 5 min)">...</span>`;
           }
 
           feedHtml += `
@@ -4988,6 +5330,7 @@
               <span class="col-trader ${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
               ${labelHtml}
               ${behaviorHtml}
+              ${impactHtml}
               <span class="col-side ${betClass}">${betDisplay.action}</span>
               <span class="col-outcome ${betClass}">${betDisplay.display}</span>
               <span class="col-price">${priceStr}</span>
@@ -4997,10 +5340,121 @@
             </div>
           `;
         }
+
+        // Add "Load More" button if there are more trades
+        if (trades.length > displayLimit) {
+          const remaining = trades.length - displayLimit;
+          feedHtml += `
+            <div class="load-more-row" onclick="loadMoreTrades()">
+              <span>▼ Load More (${remaining} more trades)</span>
+            </div>
+          `;
+        }
+
         feedContainer.innerHTML = feedHtml;
       } else {
         feedContainer.innerHTML = '<div class="loading-terminal">No trades match filters</div>';
       }
+    }
+
+    async function loadMoreTrades() {
+      const currentCount = allTrades.length;
+
+      // If we need more trades than we have cached, fetch from database
+      if (displayLimit + 50 > currentCount) {
+        try {
+          const response = await fetchJSON(`/whales/trades?limit=50&offset=${currentCount}`);
+          if (response.trades && response.trades.length > 0) {
+            allTrades = [...allTrades, ...response.trades];
+          }
+        } catch (e) {
+          console.error('Failed to load more trades:', e);
+        }
+      }
+
+      displayLimit += 50;
+      renderTrades();
+
+      // Scroll to show new trades
+      const feed = document.getElementById('whale-feed');
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function renderTopMovers() {
+      const container = document.getElementById('top-movers');
+
+      // Filter trades with MOVED_MARKET impact
+      const movers = allTrades.filter(trade => trade.impactBadge === 'MOVED_MARKET');
+
+      if (movers.length === 0) {
+        container.innerHTML = `
+          <div class="loading-terminal" style="padding: 20px; text-align: center;">
+            <div style="color: var(--text-muted); margin-bottom: 8px;">No market movers yet</div>
+            <div style="font-size: 10px; color: var(--text-muted);">
+              Impact is computed 5 minutes after each trade.<br>
+              Trades that move the market 3%+ will appear here.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Sort by timestamp (most recent first)
+      movers.sort((a, b) => b.timestamp - a.timestamp);
+
+      let html = `
+        <table class="data-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th style="width: 70px;">TIME</th>
+              <th style="width: 100px;">TRADER</th>
+              <th style="width: 50px;">SIDE</th>
+              <th style="width: 70px;">OUTCOME</th>
+              <th style="width: 50px;">SIZE</th>
+              <th>MARKET</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      for (const trade of movers.slice(0, 20)) {
+        const tierClass = trade.whaleTier === 'top10' ? 'top10' : 'top50';
+        const timeAgo = formatTimeAgo(trade.timestamp);
+        const sideClass = trade.side === 'BUY' ? 'buy' : 'sell';
+        const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
+        const marketUrl = getMarketUrl(trade.eventSlug, trade.marketSlug);
+        const marketTitle = trade.marketTitle || 'Unknown Market';
+        const shortTitle = marketTitle.length > 50 ? marketTitle.slice(0, 47) + '...' : marketTitle;
+
+        // Get bet display
+        let betDisplay;
+        if (trade.outcomeLabel && trade.outcomeLabel !== 'Yes' && trade.outcomeLabel !== 'No') {
+          betDisplay = { display: trade.outcomeLabel };
+        } else {
+          betDisplay = getBetDisplay(marketTitle, trade.side, trade.outcome);
+        }
+
+        html += `
+          <tr style="cursor: pointer;" onclick="window.open('${marketUrl}', '_blank')">
+            <td class="mono">${timeAgo}</td>
+            <td class="${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</td>
+            <td class="${sideClass}" style="font-weight: 700;">${trade.side}</td>
+            <td class="${sideClass}">${betDisplay.display}</td>
+            <td class="mono">${sizeStr}</td>
+            <td>${escapeHtml(shortTitle)}</td>
+          </tr>
+        `;
+      }
+
+      html += '</tbody></table>';
+
+      if (movers.length > 0) {
+        html += `<div style="padding: 8px; font-size: 10px; color: var(--text-muted); text-align: center;">
+          📈 ${movers.length} trade${movers.length !== 1 ? 's' : ''} moved the market 3%+
+        </div>`;
+      }
+
+      container.innerHTML = html;
     }
 
     function renderLeaderboard() {
@@ -5514,6 +5968,57 @@
           </div>
         `;
       }
+
+      // Render behavior breakdown
+      renderBehaviorBreakdown(profile.behaviorBreakdown);
+    }
+
+    function renderBehaviorBreakdown(behaviorBreakdown) {
+      const container = document.getElementById('whale-behavior-breakdown');
+      if (!container) return;
+
+      if (!behaviorBreakdown) {
+        container.innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px; padding: 12px; background: var(--bg-hover); border-radius: 6px;">
+            No behavior data available yet. Behaviors are tracked as trades are observed.
+          </div>
+        `;
+        return;
+      }
+
+      // Filter out STANDARD and behaviors with 0 count
+      const behaviors = Object.entries(behaviorBreakdown)
+        .filter(([type, count]) => type !== 'STANDARD' && count > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      if (behaviors.length === 0) {
+        container.innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px; padding: 12px; background: var(--bg-hover); border-radius: 6px;">
+            No distinctive behaviors detected yet. Keep tracking to see patterns.
+          </div>
+        `;
+        return;
+      }
+
+      const total = behaviors.reduce((sum, [_, count]) => sum + count, 0);
+
+      const html = behaviors.map(([type, count]) => {
+        const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+        const behaviorClass = type.toLowerCase();
+        const description = BEHAVIOR_DESCRIPTIONS[type] || type;
+        return `
+          <div class="behavior-stat-row">
+            <span class="behavior-badge ${behaviorClass}" title="${description}">${type}</span>
+            <span class="behavior-stat-count">${count}</span>
+            <div class="behavior-stat-bar-bg">
+              <div class="behavior-stat-bar behavior-bar-${behaviorClass}" style="width: ${percentage}%"></div>
+            </div>
+            <span class="behavior-stat-pct">${percentage}%</span>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
     }
 
     function renderWhaleTrades(trades, profile) {

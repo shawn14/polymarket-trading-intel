@@ -10,7 +10,7 @@
  * - STANDARD: No special behavior detected
  */
 
-import type { WhaleTrade, BehaviorClassification } from './types.js';
+import type { WhaleTrade, BehaviorClassification, TradeBehavior } from './types.js';
 
 // Configurable thresholds
 export const BEHAVIOR_THRESHOLDS = {
@@ -22,6 +22,16 @@ export const BEHAVIOR_THRESHOLDS = {
   HEDGE_MIN_REDUCTION: 0.25, // 25% - minimum position reduction for HEDGE
   CHASE_THRESHOLD: 0.05,     // 5% - minimum price move for CHASE detection
   CHASE_LOOKBACK_MS: 1800000, // 30 minutes - lookback window for CHASE
+  // New behavior thresholds
+  DCA_PRICE_TOLERANCE: 0.05, // 5% - price tolerance for DCA detection
+  DCA_MIN_TRADES: 3,         // 3+ trades for DCA
+  DCA_WINDOW_MS: 14400000,   // 4 hours - window for DCA detection
+  STACK_MIN_TRADES: 3,       // 3+ trades for STACK
+  STACK_MIN_TOTAL: 1000,     // $1000 total for STACK
+  STACK_WINDOW_MS: 86400000, // 24 hours - window for STACK detection
+  EXIT_REDUCTION: 0.80,      // 80% - position reduction for EXIT
+  FLIP_WINDOW_MS: 1800000,   // 30 minutes - window for FLIP detection
+  FADE_THRESHOLD: 0.05,      // 5% - price move threshold for FADE detection
 };
 
 // Trade record for history tracking
@@ -43,13 +53,16 @@ export class BehaviorClassifier {
   // Price history by marketId for CHASE detection
   private priceHistory: Map<string, PricePoint[]> = new Map();
 
+  // Behavior counts by wallet for profile stats
+  private behaviorCounts: Map<string, Record<TradeBehavior, number>> = new Map();
+
   // Cleanup intervals
-  private readonly TRADE_HISTORY_MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours
+  private readonly TRADE_HISTORY_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours (increased for STACK detection)
   private readonly PRICE_HISTORY_MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
 
   /**
    * Classify a trade's behavior
-   * Detection priority: SCOOP > LOCK > TAIL > ARB > SCALP > HEDGE > CHASE > STANDARD
+   * Detection priority: SCOOP > LOCK > TAIL > EXIT > FLIP > ARB > SCALP > DCA > STACK > HEDGE > FADE > CHASE > STANDARD
    */
   classify(trade: WhaleTrade): BehaviorClassification {
     // Check behaviors in priority order
@@ -62,14 +75,29 @@ export class BehaviorClassifier {
     const tailResult = this.detectTail(trade);
     if (tailResult) return tailResult;
 
+    const exitResult = this.detectExit(trade);
+    if (exitResult) return exitResult;
+
+    const flipResult = this.detectFlip(trade);
+    if (flipResult) return flipResult;
+
     const arbResult = this.detectArb(trade);
     if (arbResult) return arbResult;
 
     const scalpResult = this.detectScalp(trade);
     if (scalpResult) return scalpResult;
 
+    const dcaResult = this.detectDCA(trade);
+    if (dcaResult) return dcaResult;
+
+    const stackResult = this.detectStack(trade);
+    if (stackResult) return stackResult;
+
     const hedgeResult = this.detectHedge(trade);
     if (hedgeResult) return hedgeResult;
+
+    const fadeResult = this.detectFade(trade);
+    if (fadeResult) return fadeResult;
 
     const chaseResult = this.detectChase(trade);
     if (chaseResult) return chaseResult;
@@ -102,6 +130,44 @@ export class BehaviorClassifier {
 
     // Also update price history
     this.updatePriceHistory(trade.marketId, trade.price, trade.timestamp);
+
+    // Track behavior counts
+    if (trade.behavior) {
+      this.trackBehavior(trade.whale.address, trade.behavior.behavior);
+    }
+  }
+
+  /**
+   * Track behavior count for a wallet
+   */
+  private trackBehavior(wallet: string, behavior: TradeBehavior): void {
+    const walletKey = wallet.toLowerCase();
+    let counts = this.behaviorCounts.get(walletKey);
+
+    if (!counts) {
+      counts = {
+        SCOOP: 0, LOCK: 0, TAIL: 0,
+        ARB: 0, SCALP: 0, HEDGE: 0, CHASE: 0,
+        DCA: 0, STACK: 0, EXIT: 0, FLIP: 0, FADE: 0,
+        STANDARD: 0,
+      };
+      this.behaviorCounts.set(walletKey, counts);
+    }
+
+    counts[behavior]++;
+  }
+
+  /**
+   * Get behavior breakdown for a wallet
+   */
+  getBehaviorBreakdown(wallet: string): Record<TradeBehavior, number> {
+    const walletKey = wallet.toLowerCase();
+    return this.behaviorCounts.get(walletKey) || {
+      SCOOP: 0, LOCK: 0, TAIL: 0,
+      ARB: 0, SCALP: 0, HEDGE: 0, CHASE: 0,
+      DCA: 0, STACK: 0, EXIT: 0, FLIP: 0, FADE: 0,
+      STANDARD: 0,
+    };
   }
 
   /**
@@ -380,6 +446,195 @@ export class BehaviorClassifier {
         behavior: 'CHASE',
         confidence: priceMoveAbs >= 0.10 ? 'high' : 'medium',
         reasoning: `Buying NO after ${(Math.abs(priceMove) * 100).toFixed(0)}% down move`,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * EXIT Detection
+   * Selling 80%+ of tracked position
+   */
+  private detectExit(trade: WhaleTrade): BehaviorClassification | null {
+    if (trade.side !== 'SELL') return null;
+
+    const key = this.getTradeKey(trade.whale.address, trade.marketId);
+    const records = this.recentTrades.get(key) || [];
+
+    if (records.length === 0) return null;
+
+    // Calculate total position in this outcome
+    let totalPosition = 0;
+    for (const record of records) {
+      if (record.trade.outcome === trade.outcome) {
+        if (record.trade.side === 'BUY') {
+          totalPosition += record.trade.size;
+        } else {
+          totalPosition -= record.trade.size;
+        }
+      }
+    }
+
+    // Only detect EXIT if they had a meaningful position
+    if (totalPosition <= 0) return null;
+
+    const reductionRatio = trade.size / totalPosition;
+    if (reductionRatio >= BEHAVIOR_THRESHOLDS.EXIT_REDUCTION) {
+      return {
+        behavior: 'EXIT',
+        confidence: reductionRatio >= 0.95 ? 'high' : 'medium',
+        reasoning: `Exiting ${(reductionRatio * 100).toFixed(0)}% of position`,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * FLIP Detection
+   * Selling one outcome then buying opposite within 30 minutes
+   */
+  private detectFlip(trade: WhaleTrade): BehaviorClassification | null {
+    if (trade.side !== 'BUY') return null;
+
+    const key = this.getTradeKey(trade.whale.address, trade.marketId);
+    const records = this.recentTrades.get(key) || [];
+    const cutoff = Date.now() - BEHAVIOR_THRESHOLDS.FLIP_WINDOW_MS;
+
+    // Look for a SELL of opposite outcome within window
+    const oppositeOutcome = trade.outcome === 'YES' ? 'NO' : 'YES';
+    const recentOppositeSell = records.find(r =>
+      r.timestamp >= cutoff &&
+      r.trade.side === 'SELL' &&
+      r.trade.outcome === oppositeOutcome
+    );
+
+    if (recentOppositeSell) {
+      const timeDiff = Math.abs(trade.timestamp - recentOppositeSell.trade.timestamp);
+      const minutes = Math.round(timeDiff / 60000);
+      return {
+        behavior: 'FLIP',
+        confidence: 'high',
+        reasoning: `Flipped from ${oppositeOutcome} to ${trade.outcome} in ${minutes}m`,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * DCA Detection
+   * Multiple buys at similar price (±5%) over 2+ hours within 4hr window
+   */
+  private detectDCA(trade: WhaleTrade): BehaviorClassification | null {
+    if (trade.side !== 'BUY') return null;
+
+    const key = this.getTradeKey(trade.whale.address, trade.marketId);
+    const records = this.recentTrades.get(key) || [];
+    const cutoff = Date.now() - BEHAVIOR_THRESHOLDS.DCA_WINDOW_MS;
+
+    // Find recent BUYs of same outcome within price tolerance
+    const similarBuys = records.filter(r =>
+      r.timestamp >= cutoff &&
+      r.trade.side === 'BUY' &&
+      r.trade.outcome === trade.outcome &&
+      Math.abs(r.trade.price - trade.price) / trade.price <= BEHAVIOR_THRESHOLDS.DCA_PRICE_TOLERANCE
+    );
+
+    // Need 3+ trades including current one
+    if (similarBuys.length >= BEHAVIOR_THRESHOLDS.DCA_MIN_TRADES - 1) {
+      // Check time spread - should be at least 2 hours between first and current
+      const timestamps = similarBuys.map(r => r.trade.timestamp);
+      const oldest = Math.min(...timestamps);
+      const timeSpread = trade.timestamp - oldest;
+
+      if (timeSpread >= 2 * 60 * 60 * 1000) { // 2 hours
+        const avgPrice = (similarBuys.reduce((s, r) => s + r.trade.price, 0) + trade.price) / (similarBuys.length + 1);
+        return {
+          behavior: 'DCA',
+          confidence: similarBuys.length >= 4 ? 'high' : 'medium',
+          reasoning: `${similarBuys.length + 1} buys at avg ${(avgPrice * 100).toFixed(0)}%`,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * STACK Detection
+   * Building position across 3+ trades in 24hrs with total > $1000
+   */
+  private detectStack(trade: WhaleTrade): BehaviorClassification | null {
+    if (trade.side !== 'BUY') return null;
+
+    const key = this.getTradeKey(trade.whale.address, trade.marketId);
+    const records = this.recentTrades.get(key) || [];
+    const cutoff = Date.now() - BEHAVIOR_THRESHOLDS.STACK_WINDOW_MS;
+
+    // Find recent BUYs of same outcome
+    const recentBuys = records.filter(r =>
+      r.timestamp >= cutoff &&
+      r.trade.side === 'BUY' &&
+      r.trade.outcome === trade.outcome
+    );
+
+    // Need 3+ trades including current one
+    if (recentBuys.length >= BEHAVIOR_THRESHOLDS.STACK_MIN_TRADES - 1) {
+      const totalSize = recentBuys.reduce((s, r) => s + r.trade.sizeUsdc, 0) + trade.sizeUsdc;
+
+      if (totalSize >= BEHAVIOR_THRESHOLDS.STACK_MIN_TOTAL) {
+        const sizeStr = totalSize >= 1000 ? `$${(totalSize / 1000).toFixed(1)}K` : `$${totalSize.toFixed(0)}`;
+        return {
+          behavior: 'STACK',
+          confidence: recentBuys.length >= 4 || totalSize >= 5000 ? 'high' : 'medium',
+          reasoning: `Building ${trade.outcome} position: ${recentBuys.length + 1} trades, ${sizeStr}`,
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * FADE Detection
+   * Buying against recent trend (contrarian)
+   */
+  private detectFade(trade: WhaleTrade): BehaviorClassification | null {
+    if (trade.side !== 'BUY') return null;
+
+    const history = this.priceHistory.get(trade.marketId) || [];
+    if (history.length < 2) return null;
+
+    const cutoff = Date.now() - BEHAVIOR_THRESHOLDS.CHASE_LOOKBACK_MS;
+    const recentHistory = history.filter(p => p.timestamp >= cutoff);
+
+    if (recentHistory.length < 2) return null;
+
+    // Get oldest price in window
+    const oldestPrice = recentHistory[0].price;
+    const currentPrice = trade.price;
+    const priceMove = currentPrice - oldestPrice;
+    const priceMoveAbs = Math.abs(priceMove);
+
+    if (priceMoveAbs < BEHAVIOR_THRESHOLDS.FADE_THRESHOLD) return null;
+
+    // BUY YES after price went DOWN = fading the downtrend (contrarian)
+    if (trade.outcome === 'YES' && priceMove < 0) {
+      return {
+        behavior: 'FADE',
+        confidence: priceMoveAbs >= 0.10 ? 'high' : 'medium',
+        reasoning: `Buying YES after ${(Math.abs(priceMove) * 100).toFixed(0)}% down - contrarian`,
+      };
+    }
+
+    // BUY NO after price went UP = fading the uptrend (contrarian)
+    if (trade.outcome === 'NO' && priceMove > 0) {
+      return {
+        behavior: 'FADE',
+        confidence: priceMoveAbs >= 0.10 ? 'high' : 'medium',
+        reasoning: `Buying NO after ${(priceMove * 100).toFixed(0)}% up - contrarian`,
       };
     }
 

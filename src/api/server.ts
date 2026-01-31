@@ -20,6 +20,7 @@ import type { AlertEngine } from '../alerts/engine.js';
 import type { WatchlistManager, AddMarketInput, UpdateMarketInput } from '../watchlist/index.js';
 import type { WhaleTracker } from '../ingestion/whales/index.js';
 import type { KalshiClient } from '../ingestion/kalshi/index.js';
+import type { TradeRecorder } from '../db/trade-recorder.js';
 import { findPlaybook, getAllPlaybooks } from '../playbooks/index.js';
 import type {
   SystemStatus,
@@ -76,6 +77,7 @@ export interface APIServerDependencies {
   watchlist?: WatchlistManager;
   whaleTracker?: WhaleTracker;
   kalshi?: KalshiClient;
+  tradeRecorder?: TradeRecorder;
 }
 
 export class APIServer {
@@ -341,7 +343,13 @@ export class APIServer {
 
         case '/api/whales/trades':
           const tradeLimit = parseInt(url.searchParams.get('limit') || '50', 10);
-          this.sendJSON(res, this.getRecentWhaleTrades(tradeLimit));
+          const tradeOffset = parseInt(url.searchParams.get('offset') || '0', 10);
+          // If offset > 0, use database for historical trades
+          if (tradeOffset > 0 && this.deps.tradeRecorder) {
+            this.sendJSON(res, this.getPaginatedTrades(tradeLimit, tradeOffset));
+          } else {
+            this.sendJSON(res, this.getRecentWhaleTrades(tradeLimit));
+          }
           break;
 
         case '/api/whales/leaderboard':
@@ -1407,7 +1415,7 @@ export class APIServer {
 
     const whales = this.deps.whaleTracker.getAllWhales();
     // Fetch more trades to account for filtering
-    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(100);
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(500);
     const edgeScan = this.getEdgeOpportunities();
     const stats = this.deps.whaleTracker.getStats();
 
@@ -1436,7 +1444,7 @@ export class APIServer {
     // Convert trades to response format, filter by min size, sort by timestamp descending
     const trades: WhaleTradeResponse[] = recentTrades
       .filter((ct) => ct.trade.sizeUsdc >= minTradeSize)
-      .slice(0, 20)
+      .slice(0, 200)
       .map((ct) => ({
         whaleAddress: ct.trade.whale.address,
         whaleName: ct.trade.whale.name,
@@ -1492,29 +1500,80 @@ export class APIServer {
     return recentTrades
       .filter((ct) => ct.trade.sizeUsdc >= minTradeSize)
       .slice(0, limit)
-      .map((ct) => ({
-        whaleAddress: ct.trade.whale.address,
-        whaleName: ct.trade.whale.name,
-        whaleTier: ct.trade.whale.tier,
-        marketId: ct.trade.marketId,
-        marketTitle: ct.trade.marketTitle,
-        marketSlug: ct.trade.marketSlug,
-        eventSlug: ct.trade.eventSlug,
-        side: ct.trade.side,
-        outcome: ct.trade.outcome,
-        outcomeLabel: ct.trade.outcomeLabel,
-        price: ct.trade.price,
-        sizeUsdc: ct.trade.sizeUsdc,
-        timestamp: ct.trade.timestamp,
-        isMaker: ct.trade.isMaker,
-        gameScore: ct.trade.gameScore,
-        behavior: ct.trade.behavior ? {
-          type: ct.trade.behavior.behavior,
-          confidence: ct.trade.behavior.confidence,
-          reasoning: ct.trade.behavior.reasoning,
-        } : undefined,
-      }))
+      .map((ct) => {
+        // Look up impact badge if trade recorder is available
+        const impactBadge = this.deps.tradeRecorder?.getImpactBadgeByProps(
+          ct.trade.whale.address,
+          ct.trade.marketId,
+          ct.trade.timestamp
+        ) ?? undefined;
+
+        return {
+          whaleAddress: ct.trade.whale.address,
+          whaleName: ct.trade.whale.name,
+          whaleTier: ct.trade.whale.tier,
+          marketId: ct.trade.marketId,
+          marketTitle: ct.trade.marketTitle,
+          marketSlug: ct.trade.marketSlug,
+          eventSlug: ct.trade.eventSlug,
+          side: ct.trade.side,
+          outcome: ct.trade.outcome,
+          outcomeLabel: ct.trade.outcomeLabel,
+          price: ct.trade.price,
+          sizeUsdc: ct.trade.sizeUsdc,
+          timestamp: ct.trade.timestamp,
+          isMaker: ct.trade.isMaker,
+          gameScore: ct.trade.gameScore,
+          behavior: ct.trade.behavior ? {
+            type: ct.trade.behavior.behavior,
+            confidence: ct.trade.behavior.confidence,
+            reasoning: ct.trade.behavior.reasoning,
+          } : undefined,
+          impactBadge,
+        };
+      })
       .sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  /**
+   * Get paginated trades from database (for historical data)
+   */
+  private getPaginatedTrades(limit: number, offset: number): {
+    trades: WhaleTradeResponse[];
+    total: number;
+    hasMore: boolean;
+  } {
+    if (!this.deps.tradeRecorder) {
+      return { trades: [], total: 0, hasMore: false };
+    }
+
+    const result = this.deps.tradeRecorder.getTrades({ limit, offset });
+
+    // Convert RawTrade to WhaleTradeResponse format
+    const trades: WhaleTradeResponse[] = result.trades.map((t) => {
+      const impactBadge = this.deps.tradeRecorder?.getImpactBadge(t.trade_id) ?? undefined;
+
+      return {
+        whaleAddress: t.trader_id,
+        whaleName: undefined,  // Not stored in raw_trades
+        whaleTier: 'tracked' as const,
+        marketId: t.market_id,
+        marketTitle: undefined,  // Not stored in raw_trades
+        side: t.side as 'BUY' | 'SELL',
+        outcome: t.outcome as 'YES' | 'NO',
+        price: t.price_cents / 100,
+        sizeUsdc: t.notional_cents / 100,
+        timestamp: t.ts,
+        isMaker: false,
+        impactBadge,
+      };
+    });
+
+    return {
+      trades,
+      total: result.total,
+      hasMore: result.hasMore,
+    };
   }
 
   /**
@@ -2215,6 +2274,7 @@ ${items}
       positions: profilePositions,
       strategy,
       specialties: specialties.length > 0 ? specialties : undefined,
+      behaviorBreakdown: this.deps.whaleTracker.getBehaviorBreakdown(address),
       profileGeneratedAt: Date.now(),
     };
   }
@@ -2288,6 +2348,7 @@ ${items}
         topMarkets: this.getTopMarketsFromTrades(trades),
         traits: [],
       },
+      behaviorBreakdown: this.deps.whaleTracker?.getBehaviorBreakdown(address),
       profileGeneratedAt: Date.now(),
     };
   }

@@ -14,6 +14,8 @@ import { AlertEngine } from './alerts/index.js';
 import { APIServer } from './api/index.js';
 import { ExplainMoveEngine, ArbDetector } from './analysis/index.js';
 import { WatchlistManager } from './watchlist/index.js';
+import { TradeRecorder } from './db/trade-recorder.js';
+import { ImpactWorker } from './db/impact-worker.js';
 import type { ChannelConfig } from './alerts/index.js';
 
 async function main() {
@@ -149,6 +151,37 @@ async function main() {
   await whaleTracker.start();
   console.log('[System] Whale tracking enabled');
 
+  // Initialize Trade Database & Impact Tracking
+  const priceProvider = {
+    getMarketMid: (marketId: string) => detector.getMarketState(marketId)?.currentPrice,
+    getMarketBid: (marketId: string) => detector.getMarketState(marketId)?.bestBid,
+    getMarketAsk: (marketId: string) => detector.getMarketState(marketId)?.bestAsk,
+    getActiveMarkets: () => [...detector.getAllMarketStates().keys()],
+  };
+
+  const tradeRecorder = new TradeRecorder(priceProvider);
+  const impactWorker = new ImpactWorker(priceProvider);
+
+  // Record whale trades to database
+  whaleTracker.on('whaleTrade', (trade) => {
+    tradeRecorder.recordWhaleTrade(trade);
+  });
+
+  // Start impact worker
+  impactWorker.start();
+
+  impactWorker.on('jobsProcessed', (count) => {
+    if (count > 0) {
+      console.log(`[ImpactWorker] Processed ${count} impact jobs`);
+    }
+  });
+
+  impactWorker.on('error', (error) => {
+    console.error('[ImpactWorker] Error:', error.message);
+  });
+
+  console.log('[System] Trade database & impact tracking enabled');
+
   // Initialize Kalshi Client for cross-platform intelligence
   const kalshiClient = new KalshiClient({
     pollIntervalMs: 5 * 60 * 1000, // 5 minutes
@@ -215,6 +248,7 @@ async function main() {
       linker,
       alertEngine,
       watchlist: watchlistManager,
+      tradeRecorder,
     }
   );
 

@@ -97,6 +97,10 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
     // Start activity monitor (polls for whale trades)
     this.activityMonitor.start();
 
+    // Backfill behaviors for any cached trades that may not have them
+    // (useful if trades were loaded from storage without classification)
+    this.backfillBehaviors();
+
     // Start periodic rebuild
     this.rebuildTimer = setInterval(async () => {
       try {
@@ -511,6 +515,45 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
    */
   async forceRebuild(): Promise<void> {
     await this.whaleUniverse.forceRebuild();
+  }
+
+  /**
+   * Get behavior breakdown for a wallet
+   */
+  getBehaviorBreakdown(address: string): Record<import('./types.js').TradeBehavior, number> {
+    return this.behaviorClassifier.getBehaviorBreakdown(address);
+  }
+
+  /**
+   * Backfill behaviors for cached trades that don't have them
+   * Useful when loading trades from storage or for re-classification
+   */
+  private backfillBehaviors(): void {
+    let backfilled = 0;
+
+    // Sort by timestamp to process in order (important for pattern detection)
+    const sortedTrades = [...this.cachedWhaleTrades].sort(
+      (a, b) => a.trade.timestamp - b.trade.timestamp
+    );
+
+    for (const cachedTrade of sortedTrades) {
+      // Skip if already has a non-STANDARD behavior
+      if (cachedTrade.trade.behavior && cachedTrade.trade.behavior.behavior !== 'STANDARD') {
+        // Still record for behavior counts
+        this.behaviorClassifier.recordTrade(cachedTrade.trade);
+        continue;
+      }
+
+      // Classify and update
+      const behavior = this.behaviorClassifier.classify(cachedTrade.trade);
+      cachedTrade.trade.behavior = behavior;
+      this.behaviorClassifier.recordTrade(cachedTrade.trade);
+      backfilled++;
+    }
+
+    if (backfilled > 0) {
+      console.log(`[WhaleTracker] Backfilled behaviors for ${backfilled} trades`);
+    }
   }
 }
 
