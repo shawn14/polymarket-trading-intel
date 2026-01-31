@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "markets": [
+    {
+      "marketId": "14674998089599426430798643144876991030862916030846624175346599220961981166155",
+      "conditionId": "",
+      "question": "Will Toyota run an Ad during Super Bowl LX?",
+      "truthSources": [
+        "sports"
+      ],
+      "keywords": [
+        "win",
+        "championship",
+        "playoffs",
+        "series",
+        "toyota",
+        "during",
+        "super"
+      ],
+      "minConfidence": "medium",
+      "addedAt": 1769779453277
+    }
+  ],
+  "createdAt": 1738166400000,
+  "updatedAt": 1769779453277
+}

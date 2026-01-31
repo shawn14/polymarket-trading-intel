@@ -852,10 +852,26 @@
     /* Trading Panel Layout */
     .trading-panel {
       display: grid;
-      grid-template-columns: 1fr 350px;
+      grid-template-columns: 1fr 320px;
       gap: 1px;
       background: var(--border);
       margin-bottom: 6px;
+      border: 1px solid var(--border);
+    }
+
+    #whale-leaderboard-section {
+      overflow: hidden;
+    }
+
+    #whale-leaderboard-section .data-table {
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    #whale-leaderboard-section .data-table td:last-child,
+    #whale-leaderboard-section .data-table th:last-child {
+      text-align: right;
+      padding-right: 12px;
     }
 
     @media (max-width: 1200px) {
@@ -866,6 +882,7 @@
 
     .panel-section {
       background: var(--bg-card);
+      border: 1px solid var(--border);
     }
 
     /* Live Whale Feed */
@@ -888,7 +905,7 @@
 
     .feed-item {
       display: grid;
-      grid-template-columns: 75px 75px 40px 30px 40px 1fr 50px 45px;
+      grid-template-columns: 75px 75px 40px 30px 40px 50px 1fr 45px;
       gap: 5px;
       align-items: center;
       padding: 4px 8px;
@@ -3121,6 +3138,7 @@
       gap: 1px;
       background: var(--border);
       margin-bottom: 8px;
+      border: 1px solid var(--border);
     }
 
     @media (max-width: 1400px) {
@@ -4358,8 +4376,8 @@
                 <span class="trade-side ${sideClass}">${trade.side}</span>
                 <span class="trade-outcome ${outcomeClass}">${trade.outcome}</span>
                 <span class="trade-entry-price">${priceStr}</span>
-                <span class="market-title" style="cursor: pointer;" onclick="window.open('${marketUrl}', '_blank')">${escapeHtml(shortTitle)}</span>
                 <span class="trade-size">${sizeStr}</span>
+                <span class="market-title" style="cursor: pointer;" onclick="window.open('${marketUrl}', '_blank')">${escapeHtml(shortTitle)}</span>
                 <span class="trade-time">${timeAgo}</span>
               </div>
             `;
@@ -4372,13 +4390,17 @@
         // Render Leaderboard Table
         if (topWhales && topWhales.length > 0) {
           let tableHtml = `
-            <table class="data-table">
+            <table class="data-table" style="table-layout: fixed; width: 100%;">
+              <colgroup>
+                <col style="width: 25px;">
+                <col style="width: auto;">
+                <col style="width: 70px;">
+              </colgroup>
               <thead>
                 <tr>
                   <th>#</th>
                   <th>TRADER</th>
                   <th class="right">P&L</th>
-                  <th class="right">SCORE</th>
                 </tr>
               </thead>
               <tbody>
@@ -4395,9 +4417,8 @@
             tableHtml += `
               <tr style="cursor: pointer;" onclick="openWhaleProfile('${whale.address}')">
                 <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
-                <td class="whale-clickable">${whale.name || whale.address.slice(0, 10)}</td>
+                <td class="whale-clickable" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${whale.name || whale.address.slice(0, 10)}</td>
                 <td class="right mono ${pnlClass}">${pnlStr}</td>
-                <td class="right muted">${whale.copySuitability}</td>
               </tr>
             `;
           }
