@@ -53,7 +53,7 @@ import type {
   CategoryLeaderboardResponse,
 } from './types.js';
 import { getRank, fetchCategoryLeaderboard, getCachedLeaderboard, type LeaderboardCategory } from '../ingestion/whales/leaderboard.js';
-import { fetchPositions, fetchActivity, getCachedUserInfo } from '../ingestion/whales/data-api.js';
+import { fetchPositions, fetchActivity, getCachedUserInfo, calculateWinRate } from '../ingestion/whales/data-api.js';
 import { analyzeStrategy, getStrategyLabel, generateStrategyReport, type StrategyProfile } from '../ingestion/whales/strategy-analyzer.js';
 import { ActionabilityAnalyzer } from '../analysis/actionability.js';
 import { EdgeDetector } from '../analysis/edge-detector.js';
@@ -112,6 +112,29 @@ export class APIServer {
 
   // Connection errors
   private errors: Record<string, { message: string; time: number } | undefined> = {};
+
+  // Dynamic minimum trade size based on activity
+  // Adjusts thresholds when market is quiet vs active
+  private getMinTradeSize(): number {
+    if (!this.deps.whaleTracker) return 500;
+
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(50);
+    const now = Date.now();
+    const fiveMinAgo = now - 5 * 60 * 1000;
+
+    // Count trades in last 5 minutes
+    const recentCount = recentTrades.filter(t => t.trade.timestamp > fiveMinAgo).length;
+
+    // Dynamic thresholds:
+    // - Very active (20+ trades/5min): $1000 min
+    // - Normal (10-20 trades/5min): $500 min
+    // - Quiet (5-10 trades/5min): $250 min
+    // - Dead (<5 trades/5min): $100 min
+    if (recentCount >= 20) return 1000;
+    if (recentCount >= 10) return 500;
+    if (recentCount >= 5) return 250;
+    return 100;
+  }
 
   constructor(config: APIServerConfig, deps: APIServerDependencies) {
     this.config = config;
@@ -1408,8 +1431,8 @@ export class APIServer {
     const edgeScan = this.getEdgeOpportunities();
     const stats = this.deps.whaleTracker.getStats();
 
-    // Minimum $500 trade size filter
-    const MIN_TRADE_SIZE = 500;
+    // Dynamic minimum trade size (adjusts based on activity)
+    const minTradeSize = this.getMinTradeSize();
 
     // Convert whales to response format
     const topWhales: WhaleInfoResponse[] = whales
@@ -1432,7 +1455,7 @@ export class APIServer {
 
     // Convert trades to response format, filter by min size, sort by timestamp descending
     const trades: WhaleTradeResponse[] = recentTrades
-      .filter((ct) => ct.trade.sizeUsdc >= MIN_TRADE_SIZE)
+      .filter((ct) => ct.trade.sizeUsdc >= minTradeSize)
       .slice(0, 20)
       .map((ct) => ({
         whaleAddress: ct.trade.whale.address,
@@ -1475,11 +1498,11 @@ export class APIServer {
     // Fetch more trades to account for filtering
     const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(limit * 5);
 
-    // Minimum $500 trade size filter
-    const MIN_TRADE_SIZE = 500;
+    // Dynamic minimum trade size filter
+    const minTradeSize = this.getMinTradeSize();
 
     return recentTrades
-      .filter((ct) => ct.trade.sizeUsdc >= MIN_TRADE_SIZE)
+      .filter((ct) => ct.trade.sizeUsdc >= minTradeSize)
       .slice(0, limit)
       .map((ct) => ({
         whaleAddress: ct.trade.whale.address,
@@ -1509,10 +1532,10 @@ export class APIServer {
     const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(250);
     const now = new Date().toUTCString();
 
-    // Minimum $500 trade size filter, then sort by timestamp descending
-    const MIN_TRADE_SIZE = 500;
+    // Dynamic minimum trade size filter, then sort by timestamp descending
+    const minTradeSize = this.getMinTradeSize();
     const sortedTrades = [...recentTrades]
-      .filter((ct) => ct.trade.sizeUsdc >= MIN_TRADE_SIZE)
+      .filter((ct) => ct.trade.sizeUsdc >= minTradeSize)
       .sort((a, b) => b.trade.timestamp - a.trade.timestamp)
       .slice(0, 50);
 
@@ -1949,12 +1972,32 @@ ${items}
 
       // Only use local data if we have actual trades (not just leaderboard entry)
       if (whale && trades.length > 0) {
-        return this.getWhaleProfileLocal(address, whale);
+        // Fetch positions from data API for win rate calculation
+        const positions = await fetchPositions(address);
+        const winRateStats = calculateWinRate(positions);
+        const localProfile = this.getWhaleProfileLocal(address, whale);
+        return {
+          ...localProfile,
+          winRate: winRateStats.winRate,
+          realizedWins: winRateStats.wins,
+          realizedLosses: winRateStats.losses,
+          totalRealizedPnl: winRateStats.totalRealizedPnl,
+        };
       }
 
       // If we have trades but no whale entry, use trades
       if (trades.length > 0) {
-        return this.buildProfileFromTrades(address, trades);
+        // Fetch positions from data API for win rate calculation
+        const positions = await fetchPositions(address);
+        const winRateStats = calculateWinRate(positions);
+        const tradesProfile = this.buildProfileFromTrades(address, trades);
+        return {
+          ...tradesProfile,
+          winRate: winRateStats.winRate,
+          realizedWins: winRateStats.wins,
+          realizedLosses: winRateStats.losses,
+          totalRealizedPnl: winRateStats.totalRealizedPnl,
+        };
       }
     }
 
@@ -1991,6 +2034,9 @@ ${items}
         displayName,
         leaderboardEntry?.pnl
       );
+
+      // Calculate win rate from realized P&L
+      const winRateStats = calculateWinRate(positions);
 
       // Convert positions for response
       const profilePositions: WhaleProfilePosition[] = positions.slice(0, 50).map(p => ({
@@ -2037,6 +2083,10 @@ ${items}
         tradeCount30d: activity.length,
         earlyEntryScore: 50,
         copySuitability: 50,
+        winRate: winRateStats.winRate,
+        realizedWins: winRateStats.wins,
+        realizedLosses: winRateStats.losses,
+        totalRealizedPnl: winRateStats.totalRealizedPnl,
         lastSeen: Date.now(),
         recentTrades,
         positions: profilePositions,

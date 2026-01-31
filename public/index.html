@@ -905,8 +905,8 @@
 
     .feed-item {
       display: grid;
-      grid-template-columns: 75px 75px 40px 30px 40px 50px 1fr 45px;
-      gap: 5px;
+      grid-template-columns: 70px 70px 28px 100px 38px 50px 1fr 42px;
+      gap: 4px;
       align-items: center;
       padding: 4px 8px;
       border-bottom: 1px solid var(--border);
@@ -1162,6 +1162,35 @@
 
     .whale-trade-card:hover {
       background: var(--bg-card);
+    }
+
+    /* Big trade highlights */
+    .feed-item.mega-trade {
+      border-left: 4px solid #ff6b00;
+      background: linear-gradient(90deg, rgba(255, 107, 0, 0.2) 0%, transparent 40%) !important;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .feed-item.large-trade {
+      border-left: 4px solid #ffd700;
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, transparent 40%) !important;
+    }
+
+    .feed-item.mega-trade .trade-size {
+      color: #ff6b00 !important;
+      font-weight: 700;
+      font-size: 14px !important;
+      text-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+    }
+
+    .feed-item.large-trade .trade-size {
+      color: #ffd700 !important;
+      font-weight: 600;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: inset 0 0 10px rgba(255, 107, 0, 0.2); }
+      50% { box-shadow: inset 0 0 20px rgba(255, 107, 0, 0.4); }
     }
 
     .whale-trade-header {
@@ -1456,6 +1485,27 @@
       font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
+    }
+
+    .whale-stat-box.highlight-winrate {
+      background: linear-gradient(135deg, rgba(0, 200, 83, 0.15) 0%, rgba(0, 200, 83, 0.05) 100%);
+      border: 1px solid rgba(0, 200, 83, 0.4);
+      border-radius: 6px;
+      position: relative;
+    }
+
+    .whale-stat-box.highlight-winrate.losing {
+      background: linear-gradient(135deg, rgba(255, 82, 82, 0.15) 0%, rgba(255, 82, 82, 0.05) 100%);
+      border-color: rgba(255, 82, 82, 0.4);
+    }
+
+    .whale-stat-box.highlight-winrate .value {
+      font-size: 22px;
+    }
+
+    .whale-stat-box.highlight-winrate .label {
+      color: var(--text-secondary);
+      font-weight: 600;
       margin-top: 4px;
     }
 
@@ -3665,9 +3715,9 @@
         <div class="value" id="whale-profile-volume">--</div>
         <div class="label">30D Volume</div>
       </div>
-      <div class="whale-stat-box">
-        <div class="value" id="whale-profile-copy-score">--</div>
-        <div class="label">Copy Score</div>
+      <div class="whale-stat-box highlight-winrate" id="whale-winrate-box">
+        <div class="value" id="whale-profile-winrate">--</div>
+        <div class="label">Win Rate</div>
       </div>
     </div>
 
@@ -4291,17 +4341,115 @@
       return div.innerHTML;
     }
 
-    // Clean market slug - remove trailing number sequences that break Polymarket URLs
+    // Clean market slug - remove market-specific suffixes to get event slug
     function cleanMarketSlug(slug) {
       if (!slug) return '';
-      // If slug ends with 4+ groups of 3-digit numbers (like -242-933-289-312-673-611-155-294), strip it
-      // This pattern matches: -NNN-NNN-NNN-NNN... where N is a digit, at least 4 groups
-      return slug.replace(/(-\d{3}){4,}$/, '');
+      let clean = slug;
+
+      // Strip long number sequences: -NNN-NNN-NNN-NNN... (4+ groups of 3-digit numbers)
+      clean = clean.replace(/(-\d{3}){4,}$/, '');
+
+      // Strip trailing 3-digit numbers (like -314) but preserve dates
+      clean = clean.replace(/-\d{3}$/, '');
+
+      // For sports markets, strip spread/total/prop suffixes to get base event
+      // Examples: -spread-away-4pt5, -total-over-215pt5, -moneyline
+      clean = clean.replace(/-(spread|total|moneyline|over|under|away|home|prop).*$/i, '');
+
+      return clean;
     }
+
+    // Team abbreviation to full name mapping for search
+    const teamNames = {
+      // NBA
+      'atl': 'Hawks', 'bos': 'Celtics', 'bkn': 'Nets', 'cha': 'Hornets', 'chi': 'Bulls',
+      'cle': 'Cavaliers', 'dal': 'Mavericks', 'den': 'Nuggets', 'det': 'Pistons', 'gsw': 'Warriors',
+      'hou': 'Rockets', 'ind': 'Pacers', 'lac': 'Clippers', 'lal': 'Lakers', 'mem': 'Grizzlies',
+      'mia': 'Heat', 'mil': 'Bucks', 'min': 'Timberwolves', 'nop': 'Pelicans', 'nyk': 'Knicks',
+      'okc': 'Thunder', 'orl': 'Magic', 'phi': '76ers', 'phx': 'Suns', 'por': 'Blazers',
+      'sac': 'Kings', 'sas': 'Spurs', 'tor': 'Raptors', 'uta': 'Jazz', 'was': 'Wizards',
+      // NFL
+      'ari': 'Cardinals', 'bal': 'Ravens', 'buf': 'Bills', 'car': 'Panthers',
+      'cin': 'Bengals', 'dal': 'Cowboys', 'gb': 'Packers', 'jax': 'Jaguars',
+      'kc': 'Chiefs', 'lv': 'Raiders', 'lar': 'Rams', 'ne': 'Patriots',
+      'no': 'Saints', 'nyg': 'Giants', 'nyj': 'Jets', 'pit': 'Steelers',
+      'sf': '49ers', 'sea': 'Seahawks', 'tb': 'Buccaneers', 'ten': 'Titans',
+    };
 
     function getMarketUrl(slug) {
       const clean = cleanMarketSlug(slug);
-      return clean ? `https://polymarket.com/event/${clean}` : '#';
+      if (!clean) return '#';
+
+      // Detect sports markets by league prefix (e.g., nba-det-gsw-2026-01-30)
+      const sportsMatch = clean.match(/^(nfl|nba|mlb|nhl|ncaaf|ncaab|epl|mls|ufc|boxing)-([a-z0-9]+)-([a-z0-9]+)-/i);
+      if (sportsMatch) {
+        const league = sportsMatch[1].toLowerCase();
+        const team1 = sportsMatch[2].toLowerCase();
+        const team2 = sportsMatch[3].toLowerCase();
+
+        // Build search query from team names (e.g., "Pistons Warriors")
+        const team1Name = teamNames[team1] || team1.toUpperCase();
+        const team2Name = teamNames[team2] || team2.toUpperCase();
+        const searchQuery = `${team1Name} ${team2Name}`;
+
+        return `https://polymarket.com/sports/${league}?search=${encodeURIComponent(searchQuery)}`;
+      }
+
+      // Non-sports markets use /event/
+      return `https://polymarket.com/event/${clean}`;
+    }
+
+    // Parse bet direction for clearer display (Kalshi-style)
+    function getBetDisplay(marketTitle, side, outcome) {
+      const title = marketTitle || '';
+      const isBuying = (side || '').toUpperCase() === 'BUY';
+      const isYes = (outcome || '').toUpperCase() === 'YES';
+
+      // Pattern 1: "Will the [Team A] beat [Team B]..." or "Will [Team A] win..."
+      // YES = Team A wins
+      const willBeatMatch = title.match(/will\s+(?:the\s+)?(.+?)\s+(?:beat|defeat|win(?:\s+against)?)\s+(?:the\s+)?(.+?)(?:\s+by|\s+in|\s+on|\?|$)/i);
+      if (willBeatMatch) {
+        const team1 = willBeatMatch[1].trim();
+        const team2 = willBeatMatch[2].trim();
+
+        // YES = team1 wins, NO = team1 loses (team2 wins)
+        const bettingOnTeam1 = (isBuying && isYes) || (!isBuying && !isYes);
+        const targetTeam = bettingOnTeam1 ? team1 : team2;
+        const shortTeam = targetTeam.length > 15 ? targetTeam.slice(0, 12) + '..' : targetTeam;
+
+        return {
+          action: isBuying ? 'Yes' : 'No',
+          target: shortTeam,
+          isLong: isBuying,
+          display: `${shortTeam} to win`
+        };
+      }
+
+      // Pattern 2: "X vs. Y" or "X vs Y" (legacy/simple format)
+      const vsMatch = title.match(/^(.+?)\s+vs\.?\s+(.+?)$/i);
+      if (vsMatch) {
+        const team1 = vsMatch[1].trim();
+        const team2 = vsMatch[2].trim();
+
+        const bettingOnTeam1 = (isBuying && isYes) || (!isBuying && !isYes);
+        const targetTeam = bettingOnTeam1 ? team1 : team2;
+        const shortTeam = targetTeam.length > 15 ? targetTeam.slice(0, 12) + '..' : targetTeam;
+
+        return {
+          action: isBuying ? 'Yes' : 'No',
+          target: shortTeam,
+          isLong: isBuying,
+          display: `${shortTeam} to win`
+        };
+      }
+
+      // For non-sports markets, show YES/NO
+      return {
+        action: isBuying ? 'Yes' : 'No',
+        target: isYes ? 'YES' : 'NO',
+        isLong: isBuying,
+        display: isYes ? 'Yes' : 'No'
+      };
     }
 
     // Trader category tracking - maps address to category info
@@ -4354,14 +4502,23 @@
           let feedHtml = '';
           for (const trade of recentTrades.slice(0, 20)) {
             const tierClass = trade.whaleTier === 'top10' ? 'top10' : 'top50';
-            const sideClass = trade.side.toLowerCase();
-            const outcomeClass = trade.outcome.toLowerCase();
             const timeAgo = formatTimeAgo(trade.timestamp);
             const marketUrl = getMarketUrl(trade.marketSlug);
             const marketTitle = trade.marketTitle || 'Unknown Market';
-            const shortTitle = marketTitle.length > 50 ? marketTitle.slice(0, 47) + '...' : marketTitle;
+            const shortTitle = marketTitle.length > 45 ? marketTitle.slice(0, 42) + '...' : marketTitle;
             const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
+
+            // Price is already the entry cost from server
             const priceStr = trade.price ? `${(trade.price * 100).toFixed(0)}¢` : '--';
+
+            // Get clearer bet display
+            const betDisplay = getBetDisplay(marketTitle, trade.side, trade.outcome);
+
+            // Highlight big trades (whale alerts)
+            const isMegaTrade = trade.sizeUsdc >= 50000;
+            const isLargeTrade = trade.sizeUsdc >= 10000;
+            const tradeHighlight = isMegaTrade ? 'mega-trade' : (isLargeTrade ? 'large-trade' : '');
+            const betClass = betDisplay.isLong ? 'buy' : 'sell';
 
             // Get trader category label
             const traderInfo = getTraderLabel(trade.whaleAddress);
@@ -4370,11 +4527,11 @@
               : `<span class="trader-label" style="background: #333; color: #888;">WHALE</span>`;
 
             feedHtml += `
-              <div class="feed-item">
+              <div class="feed-item ${tradeHighlight}">
                 <span class="whale-name ${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
                 ${labelHtml}
-                <span class="trade-side ${sideClass}">${trade.side}</span>
-                <span class="trade-outcome ${outcomeClass}">${trade.outcome}</span>
+                <span class="trade-side ${betClass}">${betDisplay.action}</span>
+                <span class="trade-outcome" style="color: ${betDisplay.isLong ? 'var(--bb-green)' : 'var(--bb-red)'}; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${betDisplay.display}</span>
                 <span class="trade-entry-price">${priceStr}</span>
                 <span class="trade-size">${sizeStr}</span>
                 <span class="market-title" style="cursor: pointer;" onclick="window.open('${marketUrl}', '_blank')">${escapeHtml(shortTitle)}</span>
@@ -4677,7 +4834,21 @@
         updateStatBox('whale-profile-pnl7d', profile.pnl7d);
         updateStatBox('whale-profile-pnl30d', profile.pnl30d);
         document.getElementById('whale-profile-volume').textContent = formatPnL(profile.volume30d);
-        document.getElementById('whale-profile-copy-score').textContent = profile.copySuitability;
+
+        // Win rate display
+        const winRateEl = document.getElementById('whale-profile-winrate');
+        const winRateBox = document.getElementById('whale-winrate-box');
+        if (profile.winRate !== undefined && profile.winRate !== null) {
+          const wins = profile.realizedWins || 0;
+          const losses = profile.realizedLosses || 0;
+          winRateEl.innerHTML = `${profile.winRate}%<br><span style="font-size:11px;opacity:0.8">${wins}W - ${losses}L</span>`;
+          winRateEl.style.color = profile.winRate >= 50 ? 'var(--profit)' : 'var(--loss)';
+          winRateBox.classList.toggle('losing', profile.winRate < 50);
+        } else {
+          winRateEl.textContent = '--';
+          winRateEl.style.color = '';
+          winRateBox.classList.remove('losing');
+        }
 
         // Render specialties badges
         renderWhaleSpecialties(profile.specialties);

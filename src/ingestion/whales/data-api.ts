@@ -205,6 +205,38 @@ export async function fetchTraderData(address: string): Promise<{
 }
 
 /**
+ * Win rate stats calculated from realized P&L
+ */
+export interface WinRateStats {
+  totalPositions: number;
+  realizedPositions: number;  // Positions with realized P&L
+  wins: number;               // Positions with positive realized P&L
+  losses: number;             // Positions with negative realized P&L
+  winRate: number;            // 0-100 percentage
+  totalRealizedPnl: number;   // Total realized P&L in USDC
+}
+
+/**
+ * Calculate win rate from positions
+ * Based on realized P&L (closed/partially closed positions)
+ */
+export function calculateWinRate(positions: TraderPosition[]): WinRateStats {
+  const realized = positions.filter(p => p.realizedPnl !== null && p.realizedPnl !== 0);
+  const wins = realized.filter(p => p.realizedPnl > 0).length;
+  const losses = realized.filter(p => p.realizedPnl < 0).length;
+  const totalRealizedPnl = realized.reduce((sum, p) => sum + (p.realizedPnl || 0), 0);
+
+  return {
+    totalPositions: positions.length,
+    realizedPositions: realized.length,
+    wins,
+    losses,
+    winRate: realized.length > 0 ? Math.round((wins / realized.length) * 100) : 0,
+    totalRealizedPnl,
+  };
+}
+
+/**
  * Clear cache for a specific address or all
  */
 export function clearCache(address?: string): void {

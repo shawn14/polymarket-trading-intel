@@ -643,6 +643,12 @@ export interface WhaleProfileResponse {
 
   // Expert specialties (if tracked)
   specialties?: ExpertSpecialtyResponse[];
+
+  // Win rate stats (from realized P&L)
+  winRate?: number;           // 0-100 percentage
+  realizedWins?: number;      // Count of winning positions
+  realizedLosses?: number;    // Count of losing positions
+  totalRealizedPnl?: number;  // Total realized P&L in USDC
 }
 
 // ============================================================================

@@ -209,7 +209,8 @@ export class KalshiClient extends EventEmitter<KalshiClientEvents> {
       openInterest: m.open_interest ?? 0,
       closeTime: m.close_time,
       category: m.category,
-      url: `https://kalshi.com/markets/${m.event_ticker}`,
+      // Kalshi URL: use event ticker base (lowercase, strip date suffix)
+      url: `https://kalshi.com/markets/${m.event_ticker.split('-')[0].toLowerCase()}`,
     };
   }
 
