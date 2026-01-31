@@ -48,10 +48,13 @@ export class BehaviorClassifier {
 
   /**
    * Classify a trade's behavior
-   * Detection priority: TAIL > ARB > SCALP > HEDGE > CHASE > STANDARD
+   * Detection priority: LOCK > TAIL > ARB > SCALP > HEDGE > CHASE > STANDARD
    */
   classify(trade: WhaleTrade): BehaviorClassification {
     // Check behaviors in priority order
+    const lockResult = this.detectLock(trade);
+    if (lockResult) return lockResult;
+
     const tailResult = this.detectTail(trade);
     if (tailResult) return tailResult;
 
@@ -112,20 +115,40 @@ export class BehaviorClassifier {
   }
 
   /**
-   * TAIL Detection
-   * Extreme conviction bets: Sell NO at 97%+ or Buy YES at 3%-
+   * LOCK Detection
+   * Buying near-certain outcomes: Buy YES at 97%+ or Buy NO at 97%+
+   * This is locking in a winner on a resolved/certain market
    */
-  private detectTail(trade: WhaleTrade): BehaviorClassification | null {
-    // SELL NO at 97%+ = betting market resolves YES (tail bet on YES)
-    if (trade.side === 'SELL' && trade.outcome === 'NO' && trade.price >= BEHAVIOR_THRESHOLDS.TAIL_HIGH) {
+  private detectLock(trade: WhaleTrade): BehaviorClassification | null {
+    if (trade.side !== 'BUY') return null;
+
+    // BUY YES at 97%+ = locking in certain YES
+    if (trade.outcome === 'YES' && trade.price >= BEHAVIOR_THRESHOLDS.TAIL_HIGH) {
       return {
-        behavior: 'TAIL',
+        behavior: 'LOCK',
         confidence: 'high',
-        reasoning: `Selling NO at ${(trade.price * 100).toFixed(0)}% - extreme conviction YES`,
+        reasoning: `Buying YES at ${(trade.price * 100).toFixed(0)}% - locking winner`,
       };
     }
 
-    // BUY YES at 3%- = extreme cheap entry on unlikely outcome
+    // BUY NO at 97%+ = locking in certain NO
+    if (trade.outcome === 'NO' && trade.price >= BEHAVIOR_THRESHOLDS.TAIL_HIGH) {
+      return {
+        behavior: 'LOCK',
+        confidence: 'high',
+        reasoning: `Buying NO at ${(trade.price * 100).toFixed(0)}% - locking winner`,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * TAIL Detection
+   * Betting on unlikely outcomes: Buy YES at 3%- or Buy NO at 3%-
+   */
+  private detectTail(trade: WhaleTrade): BehaviorClassification | null {
+    // BUY YES at 3%- = betting on unlikely YES
     if (trade.side === 'BUY' && trade.outcome === 'YES' && trade.price <= BEHAVIOR_THRESHOLDS.TAIL_LOW) {
       return {
         behavior: 'TAIL',
@@ -134,21 +157,30 @@ export class BehaviorClassifier {
       };
     }
 
-    // BUY NO at 97%+ = betting market resolves NO (tail bet on NO)
-    if (trade.side === 'BUY' && trade.outcome === 'NO' && trade.price >= BEHAVIOR_THRESHOLDS.TAIL_HIGH) {
+    // BUY NO at 3%- = betting on unlikely NO
+    if (trade.side === 'BUY' && trade.outcome === 'NO' && trade.price <= BEHAVIOR_THRESHOLDS.TAIL_LOW) {
       return {
         behavior: 'TAIL',
         confidence: 'high',
-        reasoning: `Buying NO at ${(trade.price * 100).toFixed(0)}% - extreme conviction NO`,
+        reasoning: `Buying NO at ${(trade.price * 100).toFixed(0)}% - tail risk play`,
       };
     }
 
-    // SELL YES at 3%- = extreme cheap entry via selling
-    if (trade.side === 'SELL' && trade.outcome === 'YES' && trade.price <= BEHAVIOR_THRESHOLDS.TAIL_LOW) {
+    // SELL YES at 97%+ = selling likely winner (contrarian/exit)
+    if (trade.side === 'SELL' && trade.outcome === 'YES' && trade.price >= BEHAVIOR_THRESHOLDS.TAIL_HIGH) {
       return {
         behavior: 'TAIL',
         confidence: 'high',
-        reasoning: `Selling YES at ${(trade.price * 100).toFixed(0)}% - tail risk exit`,
+        reasoning: `Selling YES at ${(trade.price * 100).toFixed(0)}% - contrarian exit`,
+      };
+    }
+
+    // SELL NO at 97%+ = selling likely winner (contrarian/exit)
+    if (trade.side === 'SELL' && trade.outcome === 'NO' && trade.price >= BEHAVIOR_THRESHOLDS.TAIL_HIGH) {
+      return {
+        behavior: 'TAIL',
+        confidence: 'high',
+        reasoning: `Selling NO at ${(trade.price * 100).toFixed(0)}% - contrarian exit`,
       };
     }
 

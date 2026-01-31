@@ -8,7 +8,7 @@
 export type WhaleTier = 'top10' | 'top50' | 'tracked';
 
 // Trade behavior classification
-export type TradeBehavior = 'TAIL' | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' | 'STANDARD';
+export type TradeBehavior = 'TAIL' | 'LOCK' | 'ARB' | 'SCALP' | 'HEDGE' | 'CHASE' | 'STANDARD';
 
 // Behavior classification result
 export interface BehaviorClassification {
