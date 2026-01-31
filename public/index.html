@@ -1040,7 +1040,7 @@
     /* Bloomberg-style feed with aligned columns */
     .feed-row {
       display: grid;
-      grid-template-columns: auto auto auto auto auto auto auto 1fr auto auto;
+      grid-template-columns: auto auto auto auto auto auto auto minmax(280px, 1fr) auto auto;
       gap: 10px;
       align-items: center;
       padding: 4px 12px;
@@ -4929,7 +4929,7 @@
           const timeAgo = formatTimeAgo(trade.timestamp);
           const marketUrl = getMarketUrl(trade.eventSlug, trade.marketSlug);
           const marketTitle = trade.marketTitle || 'Unknown Market';
-          const shortTitle = marketTitle.length > 40 ? marketTitle.slice(0, 37) + '...' : marketTitle;
+          const shortTitle = marketTitle.length > 55 ? marketTitle.slice(0, 52) + '...' : marketTitle;
           const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
           const priceStr = trade.price >= 0 ? `${(trade.price * 100).toFixed(0)}¢` : '--';
 
