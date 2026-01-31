@@ -8,6 +8,7 @@ import 'dotenv/config';
 
 import { PolymarketClient, parseMarket } from './ingestion/polymarket/index.js';
 import { WhaleTracker } from './ingestion/whales/index.js';
+import { KalshiClient } from './ingestion/kalshi/index.js';
 import { SignalDetector, TruthMarketLinker } from './signals/index.js';
 import { AlertEngine } from './alerts/index.js';
 import { APIServer } from './api/index.js';
@@ -148,6 +149,22 @@ async function main() {
   await whaleTracker.start();
   console.log('[System] Whale tracking enabled');
 
+  // Initialize Kalshi Client for cross-platform intelligence
+  const kalshiClient = new KalshiClient({
+    pollIntervalMs: 5 * 60 * 1000, // 5 minutes
+    autoStart: true,
+  });
+
+  kalshiClient.on('update', (markets) => {
+    console.log(`[Kalshi] Updated: ${markets.length} markets cached`);
+  });
+
+  kalshiClient.on('error', (error) => {
+    console.error('[Kalshi] Error:', error.message);
+  });
+
+  console.log('[System] Kalshi cross-platform intel enabled');
+
   // Initialize Watchlist Manager
   const watchlistPath = process.env.WATCHLIST_PATH || './watchlist.json';
   const watchlistOnly = process.env.WATCHLIST_ONLY === 'true';
@@ -193,6 +210,7 @@ async function main() {
       fed: null,
       sports: null,
       whaleTracker,
+      kalshi: kalshiClient,
       detector,
       linker,
       alertEngine,
@@ -281,6 +299,7 @@ async function main() {
       console.log('\n[System] Shutting down...');
       clearInterval(statusInterval);
       arbDetector.stop();
+      kalshiClient.stop();
       await apiServer.stop();
       linker.stop();
       whaleTracker.stop();

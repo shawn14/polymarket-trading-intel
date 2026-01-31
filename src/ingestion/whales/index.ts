@@ -14,11 +14,14 @@ import type {
   StoredTrade,
   CachedWhaleTrade,
   WhaleEdgeSignal,
+  MarketCategory,
+  ExpertProfile,
 } from './types.js';
 import { TradeStore } from './trade-store.js';
 import { WhaleUniverse } from './whale-universe.js';
 import { PositionLedger } from './position-ledger.js';
 import { WhaleActivityMonitor } from './activity-monitor.js';
+import { ExpertTracker } from './expert-tracker.js';
 import { fetchLeaderboard, getBootstrapWhales } from './leaderboard.js';
 
 // Rebuild whale universe every hour
@@ -49,6 +52,7 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
   private whaleUniverse: WhaleUniverse;
   private positionLedger: PositionLedger;
   private activityMonitor: WhaleActivityMonitor;
+  private expertTracker: ExpertTracker;
   private cachedWhaleTrades: CachedWhaleTrade[] = [];
 
   private rebuildTimer: NodeJS.Timeout | null = null;
@@ -67,6 +71,7 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
     this.whaleUniverse = new WhaleUniverse(this.tradeStore);
     this.positionLedger = new PositionLedger();
     this.activityMonitor = new WhaleActivityMonitor(this.whaleUniverse);
+    this.expertTracker = new ExpertTracker();
 
     // Setup listeners
     this.setupTradeListener();
@@ -130,8 +135,8 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
    */
   private async bootstrapFromLeaderboard(): Promise<void> {
     try {
-      // Try to fetch leaderboard (top 50 traders)
-      let entries = await fetchLeaderboard(50);
+      // Try to fetch leaderboard (top 200 traders for expert detection)
+      let entries = await fetchLeaderboard(200);
 
       // If fetch fails, use known whales
       if (entries.length === 0) {
@@ -197,6 +202,9 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
         sizeUsdc: trade.sizeUsdc,
         timestamp: trade.timestamp,
       }, trade.whale.address);
+
+      // Track in expert tracker for category analysis
+      this.expertTracker.recordTrade(trade);
 
       // Update last seen
       this.whaleUniverse.updateLastSeen(trade.whale.address);
@@ -394,6 +402,31 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
   }
 
   /**
+   * Get all trades for a specific whale address
+   */
+  getWhaleTradesByAddress(address: string, limit: number = 100): CachedWhaleTrade[] {
+    const addrLower = address.toLowerCase();
+    return this.cachedWhaleTrades
+      .filter(ct => ct.trade.whale.address.toLowerCase() === addrLower)
+      .slice(-limit)
+      .reverse();
+  }
+
+  /**
+   * Get all positions for a specific whale
+   */
+  getWhalePositions(address: string): import('./types.js').Position[] {
+    return this.positionLedger.getWalletPositions(address);
+  }
+
+  /**
+   * Get total realized PnL for a whale from tracked positions
+   */
+  getWhaleRealizedPnL(address: string): number {
+    return this.positionLedger.getTotalRealizedPnL(address);
+  }
+
+  /**
    * Get position for a whale
    */
   getWhalePosition(address: string, marketId: string, outcome: 'YES' | 'NO') {
@@ -417,7 +450,44 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
       positions: this.positionLedger.getStats(),
       cachedWhaleTrades: this.cachedWhaleTrades.length,
       activityMonitor: this.activityMonitor.getStats(),
+      experts: this.expertTracker.getStats(),
     };
+  }
+
+  /**
+   * Get experts by category
+   */
+  getExpertsByCategory(category: MarketCategory): ExpertProfile[] {
+    return this.expertTracker.getExpertsByCategory(category, (addr) => {
+      const whale = this.whaleUniverse.getWhale(addr);
+      if (!whale) return undefined;
+      return { name: whale.name, tier: whale.tier, pnl30d: whale.pnl30d };
+    });
+  }
+
+  /**
+   * Get all tracked experts
+   */
+  getAllExperts(limit: number = 50): ExpertProfile[] {
+    return this.expertTracker.getAllExperts((addr) => {
+      const whale = this.whaleUniverse.getWhale(addr);
+      if (!whale) return undefined;
+      return { name: whale.name, tier: whale.tier, pnl30d: whale.pnl30d };
+    }, limit);
+  }
+
+  /**
+   * Get specialties for a specific trader
+   */
+  getTraderSpecialties(address: string) {
+    return this.expertTracker.getSpecialties(address);
+  }
+
+  /**
+   * Detect market category from title
+   */
+  detectMarketCategory(title: string): MarketCategory {
+    return this.expertTracker.detectCategory(title);
   }
 
   /**
@@ -429,9 +499,20 @@ export class WhaleTracker extends EventEmitter<WhaleTrackerEvents> {
 }
 
 // Re-export types and modules
-export type { WhaleInfo, WhaleTrade, StoredTrade, CachedWhaleTrade, WhaleEdgeSignal } from './types.js';
+export type {
+  WhaleInfo,
+  WhaleTrade,
+  StoredTrade,
+  CachedWhaleTrade,
+  WhaleEdgeSignal,
+  MarketCategory,
+  CategoryStats,
+  ExpertProfile,
+  ExpertSpecialty,
+} from './types.js';
 export { TradeStore } from './trade-store.js';
 export { WhaleUniverse } from './whale-universe.js';
 export { PositionLedger } from './position-ledger.js';
 export { WhaleActivityMonitor } from './activity-monitor.js';
+export { ExpertTracker } from './expert-tracker.js';
 export { COPY_THRESHOLD, isCopyable, getCopyRecommendation } from './copy-score.js';

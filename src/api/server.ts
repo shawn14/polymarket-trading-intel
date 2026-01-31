@@ -19,6 +19,7 @@ import type { TruthMarketLinker } from '../signals/truth-change/linker.js';
 import type { AlertEngine } from '../alerts/engine.js';
 import type { WatchlistManager, AddMarketInput, UpdateMarketInput } from '../watchlist/index.js';
 import type { WhaleTracker } from '../ingestion/whales/index.js';
+import type { KalshiClient } from '../ingestion/kalshi/index.js';
 import { findPlaybook, getAllPlaybooks } from '../playbooks/index.js';
 import type {
   SystemStatus,
@@ -38,7 +39,22 @@ import type {
   WhaleInfoResponse,
   WhaleTradeResponse,
   WhalePositionResponse,
+  WhaleProfileResponse,
+  WhaleProfilePosition,
+  WhaleStrategyAnalysis,
+  ExpertsListResponse,
+  ExpertProfileResponse,
+  ExpertSpecialtyResponse,
+  MarketCategory,
+  KalshiMarketsListResponse,
+  KalshiStatsResponse,
+  StrategyProfileResponse,
+  StrategyComparisonResponse,
+  CategoryLeaderboardResponse,
 } from './types.js';
+import { getRank, fetchCategoryLeaderboard, getCachedLeaderboard, type LeaderboardCategory } from '../ingestion/whales/leaderboard.js';
+import { fetchPositions, fetchActivity, getCachedUserInfo } from '../ingestion/whales/data-api.js';
+import { analyzeStrategy, getStrategyLabel, generateStrategyReport, type StrategyProfile } from '../ingestion/whales/strategy-analyzer.js';
 import { ActionabilityAnalyzer } from '../analysis/actionability.js';
 import { EdgeDetector } from '../analysis/edge-detector.js';
 import type { EdgeScanResponse } from './types.js';
@@ -59,6 +75,7 @@ export interface APIServerDependencies {
   alertEngine: AlertEngine;
   watchlist?: WatchlistManager;
   whaleTracker?: WhaleTracker;
+  kalshi?: KalshiClient;
 }
 
 export class APIServer {
@@ -322,6 +339,40 @@ export class APIServer {
           this.sendJSON(res, this.getRecentWhaleTrades(tradeLimit));
           break;
 
+        case '/api/whales/leaderboard':
+          this.sendJSON(res, this.getWhaleLeaderboard());
+          break;
+
+        case '/api/experts':
+          const expertCategory = url.searchParams.get('category') as MarketCategory | null;
+          const expertLimit = parseInt(url.searchParams.get('limit') || '50', 10);
+          this.sendJSON(res, this.getExperts(expertCategory, expertLimit));
+          break;
+
+        // Strategy Analyzer endpoints
+        case '/api/strategy/analyze':
+          const analyzeAddress = url.searchParams.get('address');
+          if (!analyzeAddress) {
+            this.sendError(res, 400, 'Address required', 'MISSING_ADDRESS');
+          } else {
+            const profile = await this.analyzeTraderStrategy(analyzeAddress);
+            this.sendJSON(res, profile);
+          }
+          break;
+
+        case '/api/strategy/compare':
+          const compareLimit = parseInt(url.searchParams.get('limit') || '20', 10);
+          const comparison = await this.getStrategyComparison(compareLimit);
+          this.sendJSON(res, comparison);
+          break;
+
+        case '/api/leaderboard/category':
+          const lbCategory = (url.searchParams.get('category') || 'all') as LeaderboardCategory;
+          const lbLimit = parseInt(url.searchParams.get('limit') || '50', 10);
+          const categoryLb = await this.getCategoryLeaderboard(lbCategory, lbLimit);
+          this.sendJSON(res, categoryLb);
+          break;
+
         case '/api/whales/feed':
         case '/api/whales/feed.xml':
         case '/feed/whales':
@@ -351,6 +402,31 @@ export class APIServer {
         case '/api/watchlist/suggest':
           const q = url.searchParams.get('q') || '';
           this.sendJSON(res, this.suggestWatchlistConfig(q));
+          break;
+
+        // Kalshi cross-platform intelligence endpoints
+        case '/api/kalshi/movers':
+          const moversLimit = parseInt(url.searchParams.get('limit') || '20', 10);
+          this.sendJSON(res, this.getKalshiMarkets('movers', moversLimit));
+          break;
+
+        case '/api/kalshi/trending':
+          const trendingLimit = parseInt(url.searchParams.get('limit') || '20', 10);
+          this.sendJSON(res, this.getKalshiMarkets('trending', trendingLimit));
+          break;
+
+        case '/api/kalshi/newest':
+          const newestLimit = parseInt(url.searchParams.get('limit') || '20', 10);
+          this.sendJSON(res, this.getKalshiMarkets('newest', newestLimit));
+          break;
+
+        case '/api/kalshi/volume':
+          const volumeLimit = parseInt(url.searchParams.get('limit') || '20', 10);
+          this.sendJSON(res, this.getKalshiMarkets('volume', volumeLimit));
+          break;
+
+        case '/api/kalshi/stats':
+          this.sendJSON(res, this.getKalshiStats());
           break;
 
         default:
@@ -401,6 +477,16 @@ export class APIServer {
               this.sendError(res, 400, 'wallet parameter required', 'INVALID_REQUEST');
             }
             break;
+          }
+
+          // Check for /api/whale/:address pattern (whale profile)
+          if (path.startsWith('/api/whale/')) {
+            const whaleAddress = path.slice('/api/whale/'.length);
+            if (whaleAddress && whaleAddress.length > 0) {
+              const profile = await this.getWhaleProfileAsync(whaleAddress);
+              this.sendJSON(res, profile);
+              break;
+            }
           }
 
           // Check for /api/watchlist/:id pattern
@@ -503,11 +589,22 @@ export class APIServer {
         { path: '/api/whales', description: 'Whale activity overview with top traders and recent trades' },
         { path: '/api/whales/trades', description: 'Recent whale trades (use ?limit=N)' },
         { path: '/api/whales/positions', description: 'Whale positions (use ?wallet=ADDRESS)' },
+        { path: '/api/whales/leaderboard', description: 'Top 50 whales by PnL' },
+        { path: '/api/whale/:address', description: 'Detailed whale profile with strategy analysis' },
+        { path: '/api/experts', description: 'Specialized traders by category (use ?category=sports&limit=N)' },
+        { path: '/api/strategy/analyze', description: 'Analyze trader strategy with positions data (use ?address=0x...)' },
+        { path: '/api/strategy/compare', description: 'Compare strategies across top traders (use ?limit=N)' },
+        { path: '/api/leaderboard/category', description: 'Category-specific leaderboard (use ?category=crypto&limit=N)' },
         { path: '/api/watchlist', description: 'Watchlist management (GET, POST)' },
         { path: '/api/market/:id', description: 'Market detail panel data' },
         { path: '/api/market/:id/actionable', description: 'Actionable trading decision data' },
         { path: '/api/market/:id/events', description: 'Market-related alerts/events' },
         { path: '/api/market/:id/related', description: 'Related markets' },
+        { path: '/api/kalshi/movers', description: 'Kalshi markets with biggest price changes (use ?limit=N)' },
+        { path: '/api/kalshi/trending', description: 'Kalshi trending markets by 24h volume (use ?limit=N)' },
+        { path: '/api/kalshi/newest', description: 'Newest Kalshi markets (use ?limit=N)' },
+        { path: '/api/kalshi/volume', description: 'Kalshi markets by total volume (use ?limit=N)' },
+        { path: '/api/kalshi/stats', description: 'Kalshi cache statistics' },
       ],
     };
   }
@@ -1306,9 +1403,13 @@ export class APIServer {
     }
 
     const whales = this.deps.whaleTracker.getAllWhales();
-    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(20);
+    // Fetch more trades to account for filtering
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(100);
     const edgeScan = this.getEdgeOpportunities();
     const stats = this.deps.whaleTracker.getStats();
+
+    // Minimum $500 trade size filter
+    const MIN_TRADE_SIZE = 500;
 
     // Convert whales to response format
     const topWhales: WhaleInfoResponse[] = whales
@@ -1329,8 +1430,10 @@ export class APIServer {
         lastSeen: w.lastSeen,
       }));
 
-    // Convert trades to response format and sort by timestamp descending (most recent first)
+    // Convert trades to response format, filter by min size, sort by timestamp descending
     const trades: WhaleTradeResponse[] = recentTrades
+      .filter((ct) => ct.trade.sizeUsdc >= MIN_TRADE_SIZE)
+      .slice(0, 20)
       .map((ct) => ({
         whaleAddress: ct.trade.whale.address,
         whaleName: ct.trade.whale.name,
@@ -1369,9 +1472,15 @@ export class APIServer {
       return { enabled: false, message: 'Whale tracking not configured' };
     }
 
-    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(limit);
+    // Fetch more trades to account for filtering
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(limit * 5);
+
+    // Minimum $500 trade size filter
+    const MIN_TRADE_SIZE = 500;
 
     return recentTrades
+      .filter((ct) => ct.trade.sizeUsdc >= MIN_TRADE_SIZE)
+      .slice(0, limit)
       .map((ct) => ({
         whaleAddress: ct.trade.whale.address,
         whaleName: ct.trade.whale.name,
@@ -1397,11 +1506,15 @@ export class APIServer {
       return this.generateEmptyFeed('Whale tracking not configured');
     }
 
-    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(50);
+    const recentTrades = this.deps.whaleTracker.getRecentWhaleTrades(250);
     const now = new Date().toUTCString();
 
-    // Sort by timestamp descending (most recent first)
-    const sortedTrades = [...recentTrades].sort((a, b) => b.trade.timestamp - a.trade.timestamp);
+    // Minimum $500 trade size filter, then sort by timestamp descending
+    const MIN_TRADE_SIZE = 500;
+    const sortedTrades = [...recentTrades]
+      .filter((ct) => ct.trade.sizeUsdc >= MIN_TRADE_SIZE)
+      .sort((a, b) => b.trade.timestamp - a.trade.timestamp)
+      .slice(0, 50);
 
     const items = sortedTrades.map((ct) => {
       const trade = ct.trade;
@@ -1512,5 +1625,768 @@ ${items}
     }
 
     return positions;
+  }
+
+  /**
+   * Get whale leaderboard
+   */
+  private getWhaleLeaderboard(): WhaleInfoResponse[] | { enabled: false; message: string } {
+    if (!this.deps.whaleTracker) {
+      return { enabled: false, message: 'Whale tracking not configured' };
+    }
+
+    const whales = this.deps.whaleTracker.getAllWhales();
+    return whales
+      .sort((a, b) => b.pnl30d - a.pnl30d)
+      .slice(0, 50)
+      .map((w) => ({
+        address: w.address,
+        name: w.name,
+        tier: w.tier,
+        pnl7d: w.pnl7d,
+        pnl30d: w.pnl30d,
+        volume7d: w.volume7d,
+        volume30d: w.volume30d,
+        tradeCount7d: w.tradeCount7d,
+        tradeCount30d: w.tradeCount30d,
+        earlyEntryScore: w.earlyEntryScore,
+        copySuitability: w.copySuitability,
+        lastSeen: w.lastSeen,
+      }));
+  }
+
+  /**
+   * Get experts (specialized traders by category)
+   */
+  private getExperts(
+    category: MarketCategory | null,
+    limit: number
+  ): ExpertsListResponse | { enabled: false; message: string } {
+    if (!this.deps.whaleTracker) {
+      return { enabled: false, message: 'Whale tracking not configured' };
+    }
+
+    let experts: ExpertProfileResponse[];
+
+    if (category) {
+      // Get experts for specific category
+      const categoryExperts = this.deps.whaleTracker.getExpertsByCategory(category);
+      experts = categoryExperts.slice(0, limit).map((e) => ({
+        address: e.address,
+        name: e.name,
+        tier: e.tier,
+        pnl30d: e.pnl30d,
+        specialties: e.specialties.map((s) => ({
+          category: s.category,
+          winRate: s.winRate,
+          tradeCount: s.tradeCount,
+          totalVolume: s.totalVolume,
+          confidence: s.confidence,
+          profitability: s.profitability,
+        })),
+        overallWinRate: e.overallWinRate,
+        totalTrackedTrades: e.totalTrackedTrades,
+        primaryCategory: category,
+      }));
+    } else {
+      // Get all experts
+      const allExperts = this.deps.whaleTracker.getAllExperts(limit);
+      experts = allExperts.map((e) => ({
+        address: e.address,
+        name: e.name,
+        tier: e.tier,
+        pnl30d: e.pnl30d,
+        specialties: e.specialties.map((s) => ({
+          category: s.category,
+          winRate: s.winRate,
+          tradeCount: s.tradeCount,
+          totalVolume: s.totalVolume,
+          confidence: s.confidence,
+          profitability: s.profitability,
+        })),
+        overallWinRate: e.overallWinRate,
+        totalTrackedTrades: e.totalTrackedTrades,
+        primaryCategory: e.specialties[0]?.category,
+      }));
+    }
+
+    // Count experts by category
+    const byCategory: Record<MarketCategory, number> = {
+      sports: 0,
+      crypto: 0,
+      politics: 0,
+      weather: 0,
+      entertainment: 0,
+      finance: 0,
+      science: 0,
+      other: 0,
+    };
+
+    for (const expert of experts) {
+      if (expert.primaryCategory) {
+        byCategory[expert.primaryCategory]++;
+      }
+    }
+
+    const stats = this.deps.whaleTracker.getStats();
+
+    return {
+      timestamp: Date.now(),
+      experts,
+      byCategory,
+      totalTrackedTrades: stats.experts.totalTrades,
+    };
+  }
+
+  /**
+   * Analyze a single trader's strategy using positions API
+   */
+  private async analyzeTraderStrategy(address: string): Promise<StrategyProfileResponse | { error: string }> {
+    try {
+      // Fetch positions and activity from data API
+      const [positions, activity] = await Promise.all([
+        fetchPositions(address),
+        fetchActivity(address),
+      ]);
+
+      if (positions.length === 0 && activity.length === 0) {
+        return { error: 'No position or activity data found for this trader' };
+      }
+
+      // Get username if available
+      const whale = this.deps.whaleTracker?.getWhale(address);
+      const username = whale?.name;
+      const leaderboardPnl = whale?.pnl30d;
+
+      // Analyze strategy
+      const profile = analyzeStrategy(address, positions, activity, username, leaderboardPnl);
+
+      // Get top 10 positions for response
+      const topPositions = positions
+        .sort((a, b) => b.currentValue - a.currentValue)
+        .slice(0, 10)
+        .map(p => ({
+          conditionId: p.conditionId,
+          title: p.title,
+          slug: p.slug,
+          outcome: p.outcome,
+          size: p.size,
+          avgPrice: p.avgPrice,
+          curPrice: p.curPrice,
+          initialValue: p.initialValue,
+          currentValue: p.currentValue,
+          cashPnl: p.cashPnl,
+          percentPnl: p.percentPnl,
+        }));
+
+      return {
+        address: profile.address,
+        username: profile.username,
+        pnl: profile.pnl,
+        volume: profile.volume,
+        strategyType: profile.strategyType,
+        strategyLabel: getStrategyLabel(profile.strategyType),
+        strategyConfidence: profile.strategyConfidence,
+        marketFocus: profile.marketFocus.map(mf => ({
+          type: mf.type,
+          count: mf.count,
+          pnl: mf.pnl,
+          volume: mf.volume,
+          winRate: mf.winRate,
+        })),
+        primaryMarket: profile.primaryMarket,
+        winRate: profile.winRate,
+        avgPositionSize: profile.avgPositionSize,
+        directionalBias: profile.directionalBias,
+        concentration: profile.concentration,
+        totalPositions: profile.totalPositions,
+        openPositions: profile.openPositions,
+        yesPositions: profile.yesPositions,
+        noPositions: profile.noPositions,
+        cryptoSubtypes: profile.cryptoSubtypes,
+        topPositions,
+        analyzedAt: profile.analyzedAt,
+      };
+
+    } catch (error) {
+      console.error('[API] Strategy analysis error:', error);
+      return { error: 'Failed to analyze trader strategy' };
+    }
+  }
+
+  /**
+   * Get strategy comparison across top traders
+   */
+  private async getStrategyComparison(limit: number): Promise<StrategyComparisonResponse | { error: string }> {
+    try {
+      const profiles: StrategyProfile[] = [];
+
+      // Get top traders from leaderboard
+      const topTraders = this.deps.whaleTracker?.getAllWhales().slice(0, limit) || [];
+
+      // Analyze each trader (with rate limiting)
+      for (const whale of topTraders) {
+        try {
+          const positions = await fetchPositions(whale.address);
+          const activity = await fetchActivity(whale.address);
+
+          if (positions.length > 0) {
+            const profile = analyzeStrategy(
+              whale.address,
+              positions,
+              activity,
+              whale.name,
+              whale.pnl30d
+            );
+            profiles.push(profile);
+          }
+
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } catch {
+          // Skip failed traders
+          continue;
+        }
+      }
+
+      // Group by strategy type
+      const byStrategy = new Map<string, StrategyProfile[]>();
+      for (const p of profiles) {
+        const existing = byStrategy.get(p.strategyType) || [];
+        existing.push(p);
+        byStrategy.set(p.strategyType, existing);
+      }
+
+      // Build response
+      const strategies = [...byStrategy.entries()]
+        .map(([type, profs]) => ({
+          type: type as StrategyProfileResponse['strategyType'],
+          label: getStrategyLabel(type as StrategyProfileResponse['strategyType']),
+          traderCount: profs.length,
+          totalPnl: profs.reduce((sum, p) => sum + p.pnl, 0),
+          avgWinRate: profs.reduce((sum, p) => sum + p.winRate, 0) / profs.length,
+          topTraders: profs
+            .sort((a, b) => b.pnl - a.pnl)
+            .slice(0, 3)
+            .map(p => ({
+              address: p.address,
+              username: p.username,
+              pnl: p.pnl,
+              winRate: p.winRate,
+            })),
+        }))
+        .sort((a, b) => b.totalPnl - a.totalPnl);
+
+      return {
+        timestamp: Date.now(),
+        strategies,
+        totalTradersAnalyzed: profiles.length,
+      };
+
+    } catch (error) {
+      console.error('[API] Strategy comparison error:', error);
+      return { error: 'Failed to compare strategies' };
+    }
+  }
+
+  /**
+   * Get category-specific leaderboard
+   */
+  private async getCategoryLeaderboard(
+    category: LeaderboardCategory,
+    limit: number
+  ): Promise<CategoryLeaderboardResponse | { error: string }> {
+    try {
+      const entries = await fetchCategoryLeaderboard(category, 'all', limit);
+
+      // Map category to default strategy
+      const categoryStrategyMap: Record<string, { type: StrategyProfileResponse['strategyType']; label: string }> = {
+        'sports': { type: 'sports_bettor', label: 'Sports Bettor' },
+        'crypto': { type: 'crypto_directional', label: 'Crypto Trader' },
+        'politics': { type: 'political_trader', label: 'Political Trader' },
+        'finance': { type: 'diversified', label: 'Finance Trader' },
+        'climate': { type: 'diversified', label: 'Climate Trader' },
+        'culture': { type: 'diversified', label: 'Culture Trader' },
+        'economy': { type: 'diversified', label: 'Economy Trader' },
+        'tech': { type: 'diversified', label: 'Tech Trader' },
+        'world': { type: 'political_trader', label: 'World Events Trader' },
+        'geopolitics': { type: 'political_trader', label: 'Geopolitics Trader' },
+      };
+
+      const defaultStrategy = categoryStrategyMap[category] || { type: 'unknown' as const, label: 'Trader' };
+
+      // Build trader list with category-based strategy (no expensive API calls)
+      const traders = entries.slice(0, Math.min(limit, 20)).map((entry) => ({
+        rank: entry.rank,
+        address: entry.address,
+        username: entry.displayName,
+        pnl: entry.pnl,
+        strategyType: defaultStrategy.type,
+        strategyLabel: defaultStrategy.label,
+      }));
+
+      return {
+        timestamp: Date.now(),
+        category,
+        traders,
+      };
+
+    } catch (error) {
+      console.error('[API] Category leaderboard error:', error);
+      return { error: 'Failed to fetch category leaderboard' };
+    }
+  }
+
+  /**
+   * Get detailed whale profile
+   * Now async to support fetching from data API for unknown traders
+   */
+  private async getWhaleProfileAsync(address: string): Promise<WhaleProfileResponse | { enabled: false; message: string }> {
+    // First check if we have meaningful local data
+    if (this.deps.whaleTracker) {
+      const whale = this.deps.whaleTracker.getWhale(address);
+      const trades = this.deps.whaleTracker.getWhaleTradesByAddress(address, 100);
+
+      // Only use local data if we have actual trades (not just leaderboard entry)
+      if (whale && trades.length > 0) {
+        return this.getWhaleProfileLocal(address, whale);
+      }
+
+      // If we have trades but no whale entry, use trades
+      if (trades.length > 0) {
+        return this.buildProfileFromTrades(address, trades);
+      }
+    }
+
+    // No meaningful local data - fetch from Polymarket data API
+    try {
+      const [positions, activity] = await Promise.all([
+        fetchPositions(address),
+        fetchActivity(address),
+      ]);
+
+      if (positions.length === 0 && activity.length === 0) {
+        return { enabled: false, message: 'No data found for this trader' };
+      }
+
+      // Get leaderboard info if available
+      const leaderboardEntry = getCachedLeaderboard().find(
+        e => e.address.toLowerCase() === address.toLowerCase()
+      );
+
+      // Get user info from activity data (Polymarket returns username in activity response)
+      const userInfo = getCachedUserInfo(address);
+
+      // Determine display name: prefer leaderboard name, then activity name, then pseudonym
+      const displayName = leaderboardEntry?.displayName ||
+        userInfo?.name ||
+        userInfo?.pseudonym ||
+        undefined;
+
+      // Build profile from data API
+      const profile = analyzeStrategy(
+        address,
+        positions,
+        activity,
+        displayName,
+        leaderboardEntry?.pnl
+      );
+
+      // Convert positions for response
+      const profilePositions: WhaleProfilePosition[] = positions.slice(0, 50).map(p => ({
+        marketId: p.conditionId,
+        marketTitle: p.title,
+        outcome: p.outcome === 'Yes' ? 'YES' : 'NO',
+        netShares: p.size,
+        vwapEntry: p.avgPrice,
+        currentPrice: p.curPrice,
+        unrealizedPnl: p.cashPnl,
+        realizedPnl: p.realizedPnl,
+        peakShares: p.size,
+        reductionFromPeak: 0,
+      }));
+
+      // Convert activity for response
+      const recentTrades: WhaleTradeResponse[] = activity.slice(0, 50).map(a => ({
+        whaleAddress: address,
+        whaleName: displayName,
+        whaleTier: 'tracked' as const,
+        marketId: a.conditionId,
+        marketTitle: a.title,
+        marketSlug: a.slug,
+        side: a.side,
+        outcome: a.outcome === 'Yes' ? 'YES' : 'NO',
+        price: a.price,
+        sizeUsdc: a.usdcSize,
+        timestamp: new Date(a.createdAt).getTime(),
+        isMaker: false,
+      }));
+
+      return {
+        address,
+        name: displayName,
+        tier: 'tracked',
+        rank: leaderboardEntry?.rank,
+        pnl7d: profile.pnl,
+        pnl30d: profile.pnl,
+        pnlAllTime: profile.pnl,
+        estimatedAccountValue: profile.volume,
+        volume7d: profile.volume,
+        volume30d: profile.volume,
+        tradeCount7d: activity.length,
+        tradeCount30d: activity.length,
+        earlyEntryScore: 50,
+        copySuitability: 50,
+        lastSeen: Date.now(),
+        recentTrades,
+        positions: profilePositions,
+        strategy: {
+          avgTradeSize: profile.avgPositionSize,
+          preferredOutcome: profile.directionalBias === 'bullish' ? 'YES' : profile.directionalBias === 'bearish' ? 'NO' : 'balanced',
+          makerVsTaker: 'mixed',
+          avgHoldingPeriod: 'unknown',
+          topMarkets: profile.marketFocus.slice(0, 5).map(mf => ({
+            marketId: mf.type,
+            marketTitle: mf.type,
+            tradeCount: mf.count,
+            totalVolume: mf.volume,
+          })),
+          traits: [profile.strategyType],
+        },
+        profileGeneratedAt: Date.now(),
+      };
+
+    } catch (error) {
+      console.error('[API] Failed to fetch trader from data API:', error);
+      return { enabled: false, message: 'Failed to fetch trader data' };
+    }
+  }
+
+  /**
+   * Get whale profile from local tracker data
+   */
+  private getWhaleProfileLocal(address: string, whale: import('../ingestion/whales/index.js').WhaleInfo): WhaleProfileResponse {
+    if (!this.deps.whaleTracker) {
+      throw new Error('Whale tracker not configured');
+    }
+
+    // Get all data for this whale
+    const trades = this.deps.whaleTracker.getWhaleTradesByAddress(address, 100);
+    const positions = this.deps.whaleTracker.getWhalePositions(address);
+    const realizedPnl = this.deps.whaleTracker.getWhaleRealizedPnL(address);
+    const rank = getRank(address);
+
+    // Build position list with market context
+    const profilePositions: WhaleProfilePosition[] = positions.map(pos => {
+      // Try to get current price from detector
+      const marketState = this.deps.detector.getMarketState(pos.marketId);
+      const currentPrice = marketState?.currentPrice;
+      const unrealizedPnl = currentPrice !== undefined
+        ? (currentPrice - pos.vwapEntry) * pos.netShares * (pos.outcome === 'YES' ? 1 : -1)
+        : undefined;
+
+      // Try to get market title
+      const marketTitle = this.deps.detector.getMarketQuestion(pos.marketId);
+
+      return {
+        marketId: pos.marketId,
+        marketTitle,
+        outcome: pos.outcome,
+        netShares: pos.netShares,
+        vwapEntry: pos.vwapEntry,
+        currentPrice,
+        unrealizedPnl,
+        realizedPnl: pos.realizedPnl,
+        peakShares: pos.peakShares,
+        reductionFromPeak: pos.peakShares > 0 ? 1 - (Math.abs(pos.netShares) / pos.peakShares) : 0,
+      };
+    });
+
+    // Calculate estimated account value
+    let estimatedAccountValue = realizedPnl;
+    for (const pos of profilePositions) {
+      if (pos.currentPrice !== undefined) {
+        // Rough value: shares * price for YES, shares * (1-price) for NO
+        const value = pos.netShares * (pos.outcome === 'YES' ? pos.currentPrice : (1 - pos.currentPrice));
+        estimatedAccountValue += value;
+      }
+    }
+
+    // Build strategy analysis
+    const strategy = this.analyzeWhaleStrategy(trades, positions);
+
+    // Get expert specialties
+    const rawSpecialties = this.deps.whaleTracker.getTraderSpecialties(address);
+    const specialties: ExpertSpecialtyResponse[] = rawSpecialties.map(s => ({
+      category: s.category,
+      winRate: s.winRate,
+      tradeCount: s.tradeCount,
+      totalVolume: s.totalVolume,
+      confidence: s.confidence,
+      profitability: s.profitability,
+    }));
+
+    // Convert trades for response
+    const recentTrades: WhaleTradeResponse[] = trades.map(ct => ({
+      whaleAddress: ct.trade.whale.address,
+      whaleName: ct.trade.whale.name,
+      whaleTier: ct.trade.whale.tier,
+      marketId: ct.trade.marketId,
+      marketTitle: ct.trade.marketTitle,
+      marketSlug: ct.trade.marketSlug,
+      side: ct.trade.side,
+      outcome: ct.trade.outcome,
+      price: ct.trade.price,
+      sizeUsdc: ct.trade.sizeUsdc,
+      timestamp: ct.trade.timestamp,
+      isMaker: ct.trade.isMaker,
+    }));
+
+    return {
+      address: whale.address,
+      name: whale.name,
+      tier: whale.tier,
+      rank,
+      pnl7d: whale.pnl7d,
+      pnl30d: whale.pnl30d,
+      pnlAllTime: rank ? whale.pnl30d * 12 : undefined, // Rough estimate
+      estimatedAccountValue: estimatedAccountValue > 0 ? estimatedAccountValue : undefined,
+      volume7d: whale.volume7d,
+      volume30d: whale.volume30d,
+      tradeCount7d: whale.tradeCount7d,
+      tradeCount30d: whale.tradeCount30d,
+      earlyEntryScore: whale.earlyEntryScore,
+      copySuitability: whale.copySuitability,
+      lastSeen: whale.lastSeen,
+      recentTrades,
+      positions: profilePositions,
+      strategy,
+      specialties: specialties.length > 0 ? specialties : undefined,
+      profileGeneratedAt: Date.now(),
+    };
+  }
+
+  /**
+   * Build minimal profile from trades only
+   */
+  private buildProfileFromTrades(address: string, trades: import('../ingestion/whales/index.js').CachedWhaleTrade[]): WhaleProfileResponse {
+    const recentTrades: WhaleTradeResponse[] = trades.map(ct => ({
+      whaleAddress: ct.trade.whale.address,
+      whaleName: ct.trade.whale.name,
+      whaleTier: ct.trade.whale.tier,
+      marketId: ct.trade.marketId,
+      marketTitle: ct.trade.marketTitle,
+      marketSlug: ct.trade.marketSlug,
+      side: ct.trade.side,
+      outcome: ct.trade.outcome,
+      price: ct.trade.price,
+      sizeUsdc: ct.trade.sizeUsdc,
+      timestamp: ct.trade.timestamp,
+      isMaker: ct.trade.isMaker,
+    }));
+
+    // Calculate basic metrics from trades
+    const totalVolume = trades.reduce((sum, t) => sum + t.trade.sizeUsdc, 0);
+    const tradeCount = trades.length;
+    const avgTradeSize = tradeCount > 0 ? totalVolume / tradeCount : 0;
+
+    // Determine preferred outcome
+    const yesTrades = trades.filter(t => t.trade.outcome === 'YES').length;
+    const noTrades = trades.filter(t => t.trade.outcome === 'NO').length;
+    const preferredOutcome = yesTrades > noTrades * 1.5 ? 'YES' :
+      noTrades > yesTrades * 1.5 ? 'NO' : 'balanced';
+
+    // Determine maker vs taker
+    const makerTrades = trades.filter(t => t.trade.isMaker).length;
+    const makerRatio = tradeCount > 0 ? makerTrades / tradeCount : 0.5;
+    const makerVsTaker = makerRatio > 0.6 ? 'maker' : makerRatio < 0.4 ? 'taker' : 'mixed';
+
+    // Get first whale info for tier
+    const firstWhale = trades[0]?.trade.whale;
+
+    return {
+      address,
+      name: firstWhale?.name,
+      tier: firstWhale?.tier || 'tracked',
+      rank: getRank(address),
+      pnl7d: 0,
+      pnl30d: 0,
+      volume7d: totalVolume,
+      volume30d: totalVolume,
+      tradeCount7d: tradeCount,
+      tradeCount30d: tradeCount,
+      earlyEntryScore: 0,
+      copySuitability: 0,
+      lastSeen: trades[0]?.trade.timestamp || Date.now(),
+      recentTrades,
+      positions: [],
+      strategy: {
+        avgTradeSize,
+        preferredOutcome,
+        makerVsTaker,
+        avgHoldingPeriod: 'unknown',
+        topMarkets: this.getTopMarketsFromTrades(trades),
+        traits: [],
+      },
+      profileGeneratedAt: Date.now(),
+    };
+  }
+
+  /**
+   * Analyze whale strategy from trades and positions
+   */
+  private analyzeWhaleStrategy(
+    trades: import('../ingestion/whales/index.js').CachedWhaleTrade[],
+    positions: import('../ingestion/whales/types.js').Position[]
+  ): WhaleStrategyAnalysis {
+    // Calculate avg trade size
+    const totalVolume = trades.reduce((sum, t) => sum + t.trade.sizeUsdc, 0);
+    const tradeCount = trades.length;
+    const avgTradeSize = tradeCount > 0 ? totalVolume / tradeCount : 0;
+
+    // Determine preferred outcome
+    const yesTrades = trades.filter(t => t.trade.outcome === 'YES').length;
+    const noTrades = trades.filter(t => t.trade.outcome === 'NO').length;
+    const preferredOutcome = yesTrades > noTrades * 1.5 ? 'YES' :
+      noTrades > yesTrades * 1.5 ? 'NO' : 'balanced';
+
+    // Determine maker vs taker
+    const makerTrades = trades.filter(t => t.trade.isMaker).length;
+    const makerRatio = tradeCount > 0 ? makerTrades / tradeCount : 0.5;
+    const makerVsTaker = makerRatio > 0.6 ? 'maker' : makerRatio < 0.4 ? 'taker' : 'mixed';
+
+    // Estimate holding period from position age
+    let avgHoldingPeriod = 'medium';
+    if (positions.length > 0) {
+      const avgAge = positions.reduce((sum, p) => sum + (Date.now() - p.updatedAt), 0) / positions.length;
+      const hours = avgAge / (1000 * 60 * 60);
+      avgHoldingPeriod = hours < 24 ? 'short' : hours > 168 ? 'long' : 'medium';
+    }
+
+    // Get top markets
+    const topMarkets = this.getTopMarketsFromTrades(trades);
+
+    // Determine traits
+    const traits: string[] = [];
+
+    // High conviction: large average trade size
+    if (avgTradeSize > 5000) traits.push('high_conviction');
+    if (avgTradeSize > 10000) traits.push('whale_sized');
+
+    // Early mover: trades when price is far from 0.5
+    const extremePriceTrades = trades.filter(t =>
+      t.trade.price < 0.2 || t.trade.price > 0.8
+    ).length;
+    if (extremePriceTrades / tradeCount > 0.3) traits.push('early_mover');
+
+    // Contrarian: buys when price is low, sells when high
+    const contrarianBuys = trades.filter(t =>
+      t.trade.side === 'BUY' && t.trade.price < 0.35
+    ).length;
+    if (contrarianBuys / tradeCount > 0.2) traits.push('contrarian');
+
+    // Active trader
+    if (tradeCount > 20) traits.push('active_trader');
+
+    // Maker/liquidity provider
+    if (makerRatio > 0.7) traits.push('liquidity_provider');
+
+    return {
+      avgTradeSize,
+      preferredOutcome,
+      makerVsTaker,
+      avgHoldingPeriod,
+      topMarkets,
+      traits,
+    };
+  }
+
+  /**
+   * Get top markets by trade volume
+   */
+  private getTopMarketsFromTrades(trades: import('../ingestion/whales/index.js').CachedWhaleTrade[]): Array<{
+    marketId: string;
+    marketTitle?: string;
+    tradeCount: number;
+    totalVolume: number;
+  }> {
+    const marketMap = new Map<string, { tradeCount: number; totalVolume: number; title?: string }>();
+
+    for (const t of trades) {
+      const existing = marketMap.get(t.trade.marketId) || { tradeCount: 0, totalVolume: 0, title: t.trade.marketTitle };
+      existing.tradeCount++;
+      existing.totalVolume += t.trade.sizeUsdc;
+      if (t.trade.marketTitle) existing.title = t.trade.marketTitle;
+      marketMap.set(t.trade.marketId, existing);
+    }
+
+    return Array.from(marketMap.entries())
+      .map(([marketId, data]) => ({
+        marketId,
+        marketTitle: data.title,
+        tradeCount: data.tradeCount,
+        totalVolume: data.totalVolume,
+      }))
+      .sort((a, b) => b.totalVolume - a.totalVolume)
+      .slice(0, 5);
+  }
+
+  // ============================================================================
+  // Kalshi Cross-Platform Intelligence API Methods
+  // ============================================================================
+
+  /**
+   * Get Kalshi markets sorted by type
+   */
+  private getKalshiMarkets(
+    sortType: 'movers' | 'trending' | 'newest' | 'volume',
+    limit: number
+  ): KalshiMarketsListResponse | { enabled: false; message: string } {
+    if (!this.deps.kalshi) {
+      return { enabled: false, message: 'Kalshi integration not configured' };
+    }
+
+    const markets = this.deps.kalshi.getMarkets(sortType, limit);
+    const stats = this.deps.kalshi.getStats();
+
+    return {
+      timestamp: Date.now(),
+      markets: markets.map((m) => ({
+        ticker: m.ticker,
+        eventTicker: m.eventTicker,
+        title: m.title,
+        subtitle: m.subtitle,
+        yesPrice: m.yesPrice,
+        noPrice: m.noPrice,
+        lastPrice: m.lastPrice,
+        priceChange24h: m.priceChange24h,
+        volume24h: m.volume24h,
+        totalVolume: m.totalVolume,
+        liquidity: m.liquidity,
+        openInterest: m.openInterest,
+        closeTime: m.closeTime,
+        category: m.category,
+        url: m.url,
+      })),
+      sortType,
+      count: markets.length,
+    };
+  }
+
+  /**
+   * Get Kalshi cache stats
+   */
+  private getKalshiStats(): KalshiStatsResponse | { enabled: false; message: string } {
+    if (!this.deps.kalshi) {
+      return { enabled: false, message: 'Kalshi integration not configured' };
+    }
+
+    const stats = this.deps.kalshi.getStats();
+    return {
+      cachedMarkets: stats.cachedMarkets,
+      lastFetch: stats.lastFetch,
+      cacheAgeMs: stats.cacheAgeMs,
+      isStale: this.deps.kalshi.isCacheStale(),
+    };
   }
 }

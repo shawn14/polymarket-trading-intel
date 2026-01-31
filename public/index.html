@@ -124,9 +124,9 @@
     }
 
     .container {
-      max-width: 1800px;
+      max-width: 2000px;
       margin: 0 auto;
-      padding: 12px;
+      padding: 6px 10px;
     }
 
     /* Section Headers */
@@ -134,14 +134,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 12px;
-      background: linear-gradient(90deg, var(--bb-orange) 0%, var(--bb-orange) 4px, var(--bg-card) 4px);
+      padding: 4px 10px;
+      background: linear-gradient(90deg, var(--bb-orange) 0%, var(--bb-orange) 3px, var(--bg-card) 3px);
       border: 1px solid var(--border);
       margin-bottom: 1px;
     }
 
     .section-title {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--text-primary);
       text-transform: uppercase;
@@ -149,7 +149,7 @@
     }
 
     .section-meta {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-muted);
     }
 
@@ -852,10 +852,10 @@
     /* Trading Panel Layout */
     .trading-panel {
       display: grid;
-      grid-template-columns: 1fr 400px;
+      grid-template-columns: 1fr 350px;
       gap: 1px;
       background: var(--border);
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
     @media (max-width: 1200px) {
@@ -870,7 +870,7 @@
 
     /* Live Whale Feed */
     .whale-feed {
-      max-height: 500px;
+      max-height: 200px;
       overflow-y: auto;
     }
 
@@ -888,14 +888,32 @@
 
     .feed-item {
       display: grid;
-      grid-template-columns: 80px 60px 50px 1fr 80px 60px;
-      gap: 12px;
+      grid-template-columns: 75px 75px 40px 30px 40px 1fr 50px 45px;
+      gap: 5px;
       align-items: center;
-      padding: 8px 12px;
+      padding: 4px 8px;
       border-bottom: 1px solid var(--border);
-      font-size: 11px;
+      font-size: 10px;
       cursor: pointer;
       transition: background 0.1s;
+    }
+
+    .feed-item .trade-entry-price {
+      text-align: center;
+      color: var(--bb-cyan);
+      font-weight: 600;
+    }
+
+    .feed-item .trader-label {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .feed-item:hover {
@@ -969,19 +987,19 @@
 
     /* Data Table */
     .data-table-container {
-      max-height: 500px;
+      max-height: 200px;
       overflow-y: auto;
     }
 
     .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .data-table th {
       text-align: left;
-      padding: 6px 10px;
+      padding: 3px 8px;
       background: var(--bg-panel);
       color: var(--text-muted);
       font-weight: 600;
@@ -998,7 +1016,7 @@
     }
 
     .data-table td {
-      padding: 8px 10px;
+      padding: 4px 8px;
       border-bottom: 1px solid var(--border);
       color: var(--text-primary);
     }
@@ -1276,6 +1294,422 @@
       justify-content: center;
       padding: 32px;
       text-align: center;
+    }
+
+    /* Whale Profile Panel Styles */
+    .whale-profile-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1999;
+    }
+
+    .whale-profile-overlay.visible {
+      display: block;
+    }
+
+    .whale-profile-panel {
+      position: fixed;
+      top: 0;
+      right: -560px;
+      width: 540px;
+      max-width: 100vw;
+      height: 100vh;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border);
+      z-index: 2000;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .whale-profile-panel.visible {
+      right: 0;
+    }
+
+    .whale-profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+
+    .whale-profile-info {
+      flex: 1;
+    }
+
+    .whale-profile-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .whale-profile-tier {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .whale-profile-tier.top10 {
+      background: var(--bb-red);
+      color: #fff;
+    }
+
+    .whale-profile-tier.top50 {
+      background: var(--bb-yellow);
+      color: #000;
+    }
+
+    .whale-profile-tier.tracked {
+      background: var(--bb-green);
+      color: #000;
+    }
+
+    .whale-profile-address {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 4px;
+    }
+
+    .whale-profile-address a {
+      color: var(--bb-blue);
+      text-decoration: none;
+    }
+
+    .whale-profile-address a:hover {
+      text-decoration: underline;
+    }
+
+    .whale-profile-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 28px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .whale-profile-close:hover {
+      color: var(--text-primary);
+    }
+
+    .whale-profile-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .whale-stat-box {
+      background: var(--bg-panel);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .whale-stat-box .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .whale-stat-box .value.positive {
+      color: var(--positive);
+    }
+
+    .whale-stat-box .value.negative {
+      color: var(--negative);
+    }
+
+    .whale-stat-box .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .whale-specialties {
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      min-height: 20px;
+    }
+
+    .whale-specialties:empty {
+      display: none;
+    }
+
+    .specialty-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .specialty-badge .specialty-category {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .specialty-badge .specialty-stat {
+      color: var(--text-muted);
+    }
+
+    .specialty-badge .specialty-win-rate {
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .specialty-badge .specialty-win-rate.high {
+      background: rgba(0, 200, 83, 0.2);
+      color: var(--positive);
+    }
+
+    .specialty-badge .specialty-win-rate.medium {
+      background: rgba(255, 193, 7, 0.2);
+      color: var(--warning);
+    }
+
+    .specialty-badge .specialty-win-rate.low {
+      background: rgba(128, 128, 128, 0.2);
+      color: var(--text-muted);
+    }
+
+    .whale-profile-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+
+    .whale-profile-tab {
+      flex: 1;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .whale-profile-tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .whale-profile-tab.active {
+      color: var(--bb-orange);
+      border-bottom-color: var(--bb-orange);
+    }
+
+    .whale-profile-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .whale-tab-pane {
+      display: none;
+    }
+
+    .whale-tab-pane.active {
+      display: block;
+    }
+
+    .whale-strategy-traits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .whale-trait-badge {
+      padding: 4px 10px;
+      background: var(--bg-highlight);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--bb-cyan);
+      text-transform: uppercase;
+    }
+
+    .whale-strategy-section {
+      margin-bottom: 20px;
+    }
+
+    .whale-strategy-section h4 {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .whale-strategy-metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .whale-strategy-metric .metric-label {
+      color: var(--text-secondary);
+    }
+
+    .whale-strategy-metric .metric-value {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .whale-trade-item {
+      padding: 12px;
+      background: var(--bg-highlight);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .whale-trade-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .whale-trade-item-side {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+
+    .whale-trade-item-side.buy {
+      background: var(--positive);
+      color: #000;
+    }
+
+    .whale-trade-item-side.sell {
+      background: var(--negative);
+      color: #fff;
+    }
+
+    .whale-trade-item-time {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .whale-trade-item-market {
+      font-size: 12px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+
+    .whale-trade-item-market:hover {
+      color: var(--bb-blue);
+    }
+
+    .whale-trade-item-details {
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .whale-position-item {
+      padding: 12px;
+      background: var(--bg-highlight);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .whale-position-market {
+      font-size: 12px;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .whale-position-details {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .whale-position-detail {
+      text-align: center;
+    }
+
+    .whale-position-detail .value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .whale-position-detail .label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .whale-top-market {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: var(--bg-hover);
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+
+    .whale-top-market-title {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-primary);
+      margin-right: 12px;
+    }
+
+    .whale-top-market-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .whale-clickable {
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .whale-clickable:hover {
+      color: var(--bb-orange) !important;
+      text-decoration: underline;
     }
 
     .watchlist-item {
@@ -2676,6 +3110,364 @@
     .detail-panel .panel-content {
       padding-bottom: 80px;
     }
+
+    /* ============================================= */
+    /* Category Experts Styles                      */
+    /* ============================================= */
+
+    .experts-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 1400px) {
+      .experts-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .experts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .expert-panel {
+      background: var(--bg-card);
+      min-height: 120px;
+      max-height: 180px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .expert-panel h2 {
+      flex-shrink: 0;
+    }
+
+    .expert-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .expert-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .expert-list::-webkit-scrollbar-track {
+      background: var(--bg-panel);
+    }
+
+    .expert-list::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+    }
+
+    .expert-item {
+      display: flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+      font-size: 10px;
+    }
+
+    .expert-item:hover {
+      background: var(--bg-panel);
+    }
+
+    .expert-item:last-child {
+      border-bottom: none;
+    }
+
+    .expert-rank {
+      font-size: 10px;
+      color: var(--text-muted);
+      width: 20px;
+      flex-shrink: 0;
+    }
+
+    .expert-info {
+      flex: 1;
+      min-width: 0;
+      margin-right: 8px;
+    }
+
+    .expert-name {
+      font-size: 12px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .expert-trades {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .expert-win-rate {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-align: center;
+    }
+
+    .expert-win-rate.high {
+      background: rgba(0, 200, 83, 0.15);
+      color: var(--positive);
+    }
+
+    .expert-win-rate.medium {
+      background: rgba(255, 193, 7, 0.15);
+      color: var(--warning);
+    }
+
+    .expert-win-rate.low {
+      background: rgba(128, 128, 128, 0.15);
+      color: var(--text-muted);
+    }
+
+    .expert-empty {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .expert-tier {
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 2px;
+      margin-left: 6px;
+    }
+
+    .expert-tier.top10 {
+      background: rgba(255, 215, 0, 0.2);
+      color: var(--whale-top10);
+    }
+
+    .expert-tier.top50 {
+      background: rgba(192, 192, 192, 0.2);
+      color: var(--whale-top50);
+    }
+
+    .expert-strategy {
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .expert-strategy.strategy-premium {
+      color: var(--bb-purple);
+    }
+
+    .expert-strategy.strategy-scalper {
+      color: var(--bb-cyan);
+    }
+
+    .expert-strategy.strategy-directional {
+      color: var(--bb-blue);
+    }
+
+    .expert-strategy.strategy-bettor {
+      color: var(--bb-orange);
+    }
+
+    .expert-strategy.strategy-political {
+      color: var(--bb-red);
+    }
+
+    .expert-strategy.strategy-weather {
+      color: var(--bb-green);
+    }
+
+    .expert-strategy.strategy-diversified {
+      color: var(--bb-yellow);
+    }
+
+    .expert-pnl {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+    }
+
+    .expert-pnl.positive {
+      color: var(--positive);
+    }
+
+    .expert-pnl.negative {
+      color: var(--negative);
+    }
+
+    /* ============================================= */
+    /* Kalshi Cross-Platform Intelligence Styles    */
+    /* ============================================= */
+
+    .kalshi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 1400px) {
+      .kalshi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 800px) {
+      .kalshi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .kalshi-panel {
+      background: var(--bg-card);
+      min-height: 300px;
+      max-height: 400px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kalshi-panel h2 {
+      flex-shrink: 0;
+    }
+
+    .kalshi-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .kalshi-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .kalshi-list::-webkit-scrollbar-track {
+      background: var(--bg-panel);
+    }
+
+    .kalshi-list::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+    }
+
+    .kalshi-item {
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .kalshi-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .kalshi-item:last-child {
+      border-bottom: none;
+    }
+
+    .kalshi-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .kalshi-item-title {
+      font-size: 12px;
+      color: var(--text-primary);
+      flex: 1;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .kalshi-item-price {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .kalshi-item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+    }
+
+    .kalshi-item-change {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .kalshi-item-change.positive {
+      background: rgba(0, 204, 102, 0.15);
+      color: var(--bb-green);
+    }
+
+    .kalshi-item-change.negative {
+      background: rgba(255, 51, 51, 0.15);
+      color: var(--bb-red);
+    }
+
+    .kalshi-item-change.neutral {
+      background: var(--bg-hover);
+      color: var(--text-muted);
+    }
+
+    .kalshi-item-volume {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .kalshi-item-meta {
+      color: var(--text-dim);
+    }
+
+    .kalshi-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .kalshi-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(0, 102, 204, 0.15);
+      color: var(--bb-blue);
+    }
   </style>
 </head>
 <body>
@@ -2733,6 +3525,181 @@
       </div>
     </div>
 
+    <!-- Category Leaderboards Section -->
+    <div class="section-header" style="margin-top: 4px;">
+      <span class="section-title">TOP TRADERS BY CATEGORY</span>
+      <span class="section-meta">STRATEGY ANALYSIS FROM POLYMARKET LEADERBOARD</span>
+    </div>
+
+    <div class="experts-grid">
+      <div class="card expert-panel">
+        <h2>🏈 SPORTS</h2>
+        <div id="experts-sports" class="expert-list">
+          <div class="loading-terminal">Loading leaderboard...</div>
+        </div>
+      </div>
+
+      <div class="card expert-panel">
+        <h2>₿ CRYPTO</h2>
+        <div id="experts-crypto" class="expert-list">
+          <div class="loading-terminal">Loading leaderboard...</div>
+        </div>
+      </div>
+
+      <div class="card expert-panel">
+        <h2>🏛️ POLITICS</h2>
+        <div id="experts-politics" class="expert-list">
+          <div class="loading-terminal">Loading leaderboard...</div>
+        </div>
+      </div>
+
+      <div class="card expert-panel">
+        <h2>🌀 CLIMATE</h2>
+        <div id="experts-weather" class="expert-list">
+          <div class="loading-terminal">Loading leaderboard...</div>
+        </div>
+      </div>
+
+      <div class="card expert-panel">
+        <h2>📈 FINANCE</h2>
+        <div id="experts-finance" class="expert-list">
+          <div class="loading-terminal">Loading leaderboard...</div>
+        </div>
+      </div>
+
+      <div class="card expert-panel">
+        <h2>🎬 CULTURE</h2>
+        <div id="experts-entertainment" class="expert-list">
+          <div class="loading-terminal">Loading leaderboard...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kalshi Cross-Platform Intelligence -->
+    <div class="section-header" style="margin-top: 4px;">
+      <span class="section-title">KALSHI MARKET INTEL</span>
+      <span class="section-meta" id="kalshi-last-update">--</span>
+    </div>
+
+    <div class="kalshi-grid">
+      <!-- Movers Panel -->
+      <div class="card kalshi-panel">
+        <h2>MOVERS</h2>
+        <div id="kalshi-movers" class="kalshi-list">
+          <div class="loading-terminal">Loading movers...</div>
+        </div>
+      </div>
+
+      <!-- Trending Panel -->
+      <div class="card kalshi-panel">
+        <h2>TRENDING</h2>
+        <div id="kalshi-trending" class="kalshi-list">
+          <div class="loading-terminal">Loading trending...</div>
+        </div>
+      </div>
+
+      <!-- Newest Panel -->
+      <div class="card kalshi-panel">
+        <h2>NEW MARKETS</h2>
+        <div id="kalshi-newest" class="kalshi-list">
+          <div class="loading-terminal">Loading new markets...</div>
+        </div>
+      </div>
+
+      <!-- Top Volume Panel -->
+      <div class="card kalshi-panel">
+        <h2>TOP VOLUME</h2>
+        <div id="kalshi-volume" class="kalshi-list">
+          <div class="loading-terminal">Loading volume...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Whale Profile Panel -->
+  <div class="whale-profile-overlay" id="whale-profile-overlay" onclick="closeWhaleProfile()"></div>
+  <div class="whale-profile-panel" id="whale-profile-panel">
+    <div class="whale-profile-header">
+      <div class="whale-profile-info">
+        <div class="whale-profile-name">
+          <span id="whale-profile-display-name">Loading...</span>
+          <span class="whale-profile-tier" id="whale-profile-tier">--</span>
+          <span id="whale-profile-rank" style="font-size: 11px; color: var(--text-muted);"></span>
+        </div>
+        <div class="whale-profile-address">
+          <a id="whale-profile-address-link" href="#" target="_blank">--</a>
+        </div>
+      </div>
+      <button class="whale-profile-close" onclick="closeWhaleProfile()">&times;</button>
+    </div>
+
+    <div class="whale-profile-stats">
+      <div class="whale-stat-box">
+        <div class="value" id="whale-profile-pnl7d">--</div>
+        <div class="label">7D P&L</div>
+      </div>
+      <div class="whale-stat-box">
+        <div class="value" id="whale-profile-pnl30d">--</div>
+        <div class="label">30D P&L</div>
+      </div>
+      <div class="whale-stat-box">
+        <div class="value" id="whale-profile-volume">--</div>
+        <div class="label">30D Volume</div>
+      </div>
+      <div class="whale-stat-box">
+        <div class="value" id="whale-profile-copy-score">--</div>
+        <div class="label">Copy Score</div>
+      </div>
+    </div>
+
+    <!-- Expert Specialties -->
+    <div class="whale-specialties" id="whale-profile-specialties">
+      <!-- Specialty badges loaded dynamically -->
+    </div>
+
+    <div class="whale-profile-tabs">
+      <button class="whale-profile-tab active" onclick="switchWhaleTab('strategy')">Strategy</button>
+      <button class="whale-profile-tab" onclick="switchWhaleTab('trades')">Trades</button>
+      <button class="whale-profile-tab" onclick="switchWhaleTab('positions')">Positions</button>
+    </div>
+
+    <div class="whale-profile-content">
+      <!-- Strategy Tab -->
+      <div class="whale-tab-pane active" id="whale-tab-strategy">
+        <div class="whale-strategy-traits" id="whale-strategy-traits">
+          <!-- Traits badges loaded dynamically -->
+        </div>
+
+        <div class="whale-strategy-section">
+          <h4>Trading Style</h4>
+          <div id="whale-strategy-metrics">
+            <!-- Metrics loaded dynamically -->
+          </div>
+        </div>
+
+        <div class="whale-strategy-section">
+          <h4>Top Markets</h4>
+          <div id="whale-top-markets">
+            <!-- Top markets loaded dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Trades Tab -->
+      <div class="whale-tab-pane" id="whale-tab-trades">
+        <div id="whale-trades-list">
+          <!-- Trades loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Positions Tab -->
+      <div class="whale-tab-pane" id="whale-tab-positions">
+        <div id="whale-positions-list">
+          <!-- Positions loaded dynamically -->
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -3306,10 +4273,45 @@
       return div.innerHTML;
     }
 
+    // Clean market slug - remove trailing number sequences that break Polymarket URLs
+    function cleanMarketSlug(slug) {
+      if (!slug) return '';
+      // If slug ends with 4+ groups of 3-digit numbers (like -242-933-289-312-673-611-155-294), strip it
+      // This pattern matches: -NNN-NNN-NNN-NNN... where N is a digit, at least 4 groups
+      return slug.replace(/(-\d{3}){4,}$/, '');
+    }
+
+    function getMarketUrl(slug) {
+      const clean = cleanMarketSlug(slug);
+      return clean ? `https://polymarket.com/event/${clean}` : '#';
+    }
+
+    // Trader category tracking - maps address to category info
+    const traderCategories = new Map();
+
+    // Category labels for display
+    const categoryLabels = {
+      'sports': { label: 'SPORTS DEGEN', color: '#00cc66', icon: '🏈' },
+      'crypto': { label: 'CRYPTO DEGEN', color: '#ffcc00', icon: '₿' },
+      'politics': { label: 'POLITICS DEGEN', color: '#9966ff', icon: '🏛️' },
+      'climate': { label: 'CLIMATE DEGEN', color: '#00cccc', icon: '🌀' },
+      'finance': { label: 'FINANCE DEGEN', color: '#0099ff', icon: '📈' },
+      'culture': { label: 'CULTURE DEGEN', color: '#ff6699', icon: '🎬' },
+    };
+
+    function getTraderLabel(address) {
+      const info = traderCategories.get(address?.toLowerCase());
+      if (!info) return null;
+      const cat = categoryLabels[info.category];
+      return cat ? { ...cat, rank: info.rank, pnl: info.pnl } : null;
+    }
+
     async function refreshAll() {
       await Promise.all([
         loadHealth(),
         loadWhaleIntel(),
+        loadExperts(),
+        loadKalshiData(),
       ]);
     }
 
@@ -3337,17 +4339,26 @@
             const sideClass = trade.side.toLowerCase();
             const outcomeClass = trade.outcome.toLowerCase();
             const timeAgo = formatTimeAgo(trade.timestamp);
-            const marketUrl = trade.marketSlug ? `https://polymarket.com/event/${trade.marketSlug}` : '#';
+            const marketUrl = getMarketUrl(trade.marketSlug);
             const marketTitle = trade.marketTitle || 'Unknown Market';
-            const shortTitle = marketTitle.length > 60 ? marketTitle.slice(0, 57) + '...' : marketTitle;
+            const shortTitle = marketTitle.length > 50 ? marketTitle.slice(0, 47) + '...' : marketTitle;
             const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
+            const priceStr = trade.price ? `${(trade.price * 100).toFixed(0)}¢` : '--';
+
+            // Get trader category label
+            const traderInfo = getTraderLabel(trade.whaleAddress);
+            const labelHtml = traderInfo
+              ? `<span class="trader-label" style="background: ${traderInfo.color}; color: #000;">${traderInfo.label}</span>`
+              : `<span class="trader-label" style="background: #333; color: #888;">WHALE</span>`;
 
             feedHtml += `
-              <div class="feed-item" onclick="window.open('${marketUrl}', '_blank')">
-                <span class="whale-name ${tierClass}">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
+              <div class="feed-item">
+                <span class="whale-name ${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
+                ${labelHtml}
                 <span class="trade-side ${sideClass}">${trade.side}</span>
                 <span class="trade-outcome ${outcomeClass}">${trade.outcome}</span>
-                <span class="market-title">${escapeHtml(shortTitle)}</span>
+                <span class="trade-entry-price">${priceStr}</span>
+                <span class="market-title" style="cursor: pointer;" onclick="window.open('${marketUrl}', '_blank')">${escapeHtml(shortTitle)}</span>
                 <span class="trade-size">${sizeStr}</span>
                 <span class="trade-time">${timeAgo}</span>
               </div>
@@ -3382,9 +4393,9 @@
               : `$${(whale.pnl7d / 1000).toFixed(0)}K`;
 
             tableHtml += `
-              <tr>
+              <tr style="cursor: pointer;" onclick="openWhaleProfile('${whale.address}')">
                 <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
-                <td>${whale.name || whale.address.slice(0, 10)}</td>
+                <td class="whale-clickable">${whale.name || whale.address.slice(0, 10)}</td>
                 <td class="right mono ${pnlClass}">${pnlStr}</td>
                 <td class="right muted">${whale.copySuitability}</td>
               </tr>
@@ -3404,6 +4415,193 @@
       }
     }
 
+    // ============================================
+    // Category Experts
+    // ============================================
+
+    async function loadExperts() {
+      // Map dashboard categories to Polymarket leaderboard categories
+      const categoryMap = {
+        'sports': 'sports',
+        'crypto': 'crypto',
+        'politics': 'politics',
+        'weather': 'climate',  // Polymarket uses 'climate' not 'weather'
+        'finance': 'finance',
+        'entertainment': 'culture'  // Polymarket uses 'culture'
+      };
+
+      await Promise.all(Object.entries(categoryMap).map(([displayCat, apiCat]) =>
+        loadExpertCategory(displayCat, apiCat)
+      ));
+    }
+
+    async function loadExpertCategory(displayCategory, apiCategory) {
+      const container = document.getElementById(`experts-${displayCategory}`);
+      if (!container) return;
+
+      try {
+        // Use the new category leaderboard endpoint
+        const data = await fetchJSON(`/leaderboard/category?category=${apiCategory}&limit=8`);
+
+        if (!data.traders || data.traders.length === 0) {
+          container.innerHTML = '<div class="expert-empty">No traders found</div>';
+          return;
+        }
+
+        // Populate trader category map for whale feed labels
+        for (const trader of data.traders) {
+          const addr = trader.address?.toLowerCase();
+          if (addr) {
+            // Only add if not already tracked or if this category has higher PnL
+            const existing = traderCategories.get(addr);
+            if (!existing || trader.pnl > existing.pnl) {
+              traderCategories.set(addr, {
+                category: apiCategory,
+                rank: trader.rank,
+                pnl: trader.pnl,
+                username: trader.username,
+              });
+            }
+          }
+        }
+
+        let html = '';
+        for (let i = 0; i < Math.min(data.traders.length, 8); i++) {
+          const trader = data.traders[i];
+
+          // Format PnL
+          const pnl = trader.pnl || 0;
+          const pnlStr = pnl >= 1000000
+            ? `$${(pnl / 1000000).toFixed(1)}M`
+            : pnl >= 1000
+            ? `$${(pnl / 1000).toFixed(0)}K`
+            : `$${pnl.toFixed(0)}`;
+          const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+
+          // Strategy badge
+          const strategyLabel = trader.strategyLabel || '';
+          const strategyClass = getStrategyClass(trader.strategyType);
+
+          html += `
+            <div class="expert-item" onclick="openWhaleProfile('${trader.address}')">
+              <span class="expert-rank">#${trader.rank}</span>
+              <div class="expert-info">
+                <div class="expert-name">
+                  ${escapeHtml(trader.username || trader.address.slice(0, 10))}
+                </div>
+                <div class="expert-strategy ${strategyClass}">${strategyLabel || 'Analyzing...'}</div>
+              </div>
+              <span class="expert-pnl ${pnlClass}">${pnlStr}</span>
+            </div>
+          `;
+        }
+
+        container.innerHTML = html;
+
+      } catch (e) {
+        console.error(`Failed to load ${displayCategory} experts:`, e);
+        container.innerHTML = `<div class="expert-empty">Failed to load</div>`;
+      }
+    }
+
+    function getStrategyClass(strategyType) {
+      if (!strategyType) return '';
+      if (strategyType.includes('premium')) return 'strategy-premium';
+      if (strategyType.includes('scalper')) return 'strategy-scalper';
+      if (strategyType.includes('directional')) return 'strategy-directional';
+      if (strategyType.includes('bettor')) return 'strategy-bettor';
+      if (strategyType.includes('political')) return 'strategy-political';
+      if (strategyType.includes('weather')) return 'strategy-weather';
+      if (strategyType.includes('diversified')) return 'strategy-diversified';
+      return '';
+    }
+
+    // ============================================
+    // Kalshi Cross-Platform Intelligence
+    // ============================================
+
+    async function loadKalshiData() {
+      await Promise.all([
+        loadKalshiPanel('movers', 'kalshi-movers'),
+        loadKalshiPanel('trending', 'kalshi-trending'),
+        loadKalshiPanel('newest', 'kalshi-newest'),
+        loadKalshiPanel('volume', 'kalshi-volume'),
+      ]);
+    }
+
+    async function loadKalshiPanel(type, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      try {
+        const data = await fetchJSON(`/kalshi/${type}?limit=15`);
+
+        // Update last update time (only once)
+        if (type === 'movers') {
+          const lastUpdateEl = document.getElementById('kalshi-last-update');
+          if (lastUpdateEl) {
+            lastUpdateEl.textContent = new Date(data.timestamp).toLocaleTimeString();
+          }
+        }
+
+        if (!data.markets || data.markets.length === 0) {
+          container.innerHTML = '<div class="kalshi-empty">No markets available</div>';
+          return;
+        }
+
+        const html = data.markets.map(m => renderKalshiItem(m, type)).join('');
+        container.innerHTML = html;
+
+      } catch (e) {
+        console.error(`Failed to load Kalshi ${type}:`, e);
+        container.innerHTML = `<div class="kalshi-empty">Failed to load ${type} data</div>`;
+      }
+    }
+
+    function renderKalshiItem(market, sortType) {
+      const pricePercent = (market.yesPrice * 100).toFixed(0);
+      const changeClass = market.priceChange24h > 0.1 ? 'positive' :
+                         market.priceChange24h < -0.1 ? 'negative' : 'neutral';
+      const changePrefix = market.priceChange24h > 0 ? '+' : '';
+      const changeStr = `${changePrefix}${market.priceChange24h.toFixed(1)}pp`;
+
+      // Format volume
+      let volumeStr = '';
+      if (sortType === 'volume') {
+        volumeStr = formatVolume(market.totalVolume);
+      } else if (sortType === 'trending') {
+        volumeStr = formatVolume(market.volume24h) + ' (24h)';
+      } else {
+        volumeStr = formatVolume(market.volume24h) + ' (24h)';
+      }
+
+      // Truncate title
+      const title = market.title.length > 80 ? market.title.slice(0, 77) + '...' : market.title;
+
+      return `
+        <div class="kalshi-item" onclick="window.open('${market.url}', '_blank')">
+          <div class="kalshi-item-header">
+            <span class="kalshi-item-title">${escapeHtml(title)}</span>
+            <span class="kalshi-item-price">${pricePercent}%</span>
+          </div>
+          <div class="kalshi-item-footer">
+            <span class="kalshi-item-change ${changeClass}">${changeStr}</span>
+            <span class="kalshi-item-volume">${volumeStr}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function formatVolume(vol) {
+      if (vol >= 1000000) {
+        return '$' + (vol / 1000000).toFixed(1) + 'M';
+      } else if (vol >= 1000) {
+        return '$' + (vol / 1000).toFixed(0) + 'K';
+      } else {
+        return '$' + vol.toFixed(0);
+      }
+    }
+
     function formatTimeAgo(timestamp) {
       const seconds = Math.floor((Date.now() - timestamp) / 1000);
       if (seconds < 60) return seconds + 's ago';
@@ -3412,6 +4610,342 @@
       const hours = Math.floor(minutes / 60);
       if (hours < 24) return hours + 'h ago';
       return Math.floor(hours / 24) + 'd ago';
+    }
+
+    // ============================================
+    // Whale Profile Functions
+    // ============================================
+
+    let currentWhaleAddress = null;
+
+    async function openWhaleProfile(address) {
+      if (!address) return;
+      currentWhaleAddress = address;
+
+      // Show panel
+      document.getElementById('whale-profile-overlay').classList.add('visible');
+      document.getElementById('whale-profile-panel').classList.add('visible');
+
+      // Reset content
+      document.getElementById('whale-profile-display-name').textContent = 'Loading...';
+      document.getElementById('whale-profile-tier').textContent = '--';
+      document.getElementById('whale-profile-rank').textContent = '';
+      document.getElementById('whale-profile-address-link').textContent = address.slice(0, 10) + '...' + address.slice(-6);
+      document.getElementById('whale-profile-address-link').href = `https://polymarket.com/profile/${address}`;
+
+      try {
+        const profile = await fetchJSON(`/whale/${address}`);
+
+        if (!profile.address) {
+          document.getElementById('whale-profile-display-name').textContent = 'Whale not found';
+          return;
+        }
+
+        // Update header
+        document.getElementById('whale-profile-display-name').textContent = profile.name || address.slice(0, 10);
+
+        const tierEl = document.getElementById('whale-profile-tier');
+        tierEl.textContent = profile.tier.toUpperCase();
+        tierEl.className = `whale-profile-tier ${profile.tier}`;
+
+        if (profile.rank) {
+          document.getElementById('whale-profile-rank').textContent = `#${profile.rank}`;
+        }
+
+        // Update stats
+        updateStatBox('whale-profile-pnl7d', profile.pnl7d);
+        updateStatBox('whale-profile-pnl30d', profile.pnl30d);
+        document.getElementById('whale-profile-volume').textContent = formatPnL(profile.volume30d);
+        document.getElementById('whale-profile-copy-score').textContent = profile.copySuitability;
+
+        // Render specialties badges
+        renderWhaleSpecialties(profile.specialties);
+
+        // Update strategy tab - pass full profile for PnL insights
+        renderWhaleStrategy(profile.strategy, profile);
+
+        // Update trades tab
+        renderWhaleTrades(profile.recentTrades, profile);
+
+        // Update positions tab
+        renderWhalePositions(profile.positions, profile);
+
+      } catch (e) {
+        console.error('Failed to load whale profile:', e);
+        document.getElementById('whale-profile-display-name').textContent = 'Error loading profile';
+      }
+    }
+
+    function closeWhaleProfile() {
+      document.getElementById('whale-profile-overlay').classList.remove('visible');
+      document.getElementById('whale-profile-panel').classList.remove('visible');
+      currentWhaleAddress = null;
+    }
+
+    function switchWhaleTab(tab) {
+      // Update tab buttons
+      document.querySelectorAll('.whale-profile-tab').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase() === tab) {
+          btn.classList.add('active');
+        }
+      });
+
+      // Update tab content
+      document.querySelectorAll('.whale-tab-pane').forEach(pane => {
+        pane.classList.remove('active');
+      });
+      document.getElementById(`whale-tab-${tab}`).classList.add('active');
+    }
+
+    function updateStatBox(id, value) {
+      const el = document.getElementById(id);
+      el.textContent = formatPnL(value);
+      el.className = 'value ' + (value >= 0 ? 'positive' : 'negative');
+    }
+
+    function formatPnL(value) {
+      const absValue = Math.abs(value);
+      const sign = value >= 0 ? '' : '-';
+      if (absValue >= 1000000) {
+        return sign + '$' + (absValue / 1000000).toFixed(1) + 'M';
+      } else if (absValue >= 1000) {
+        return sign + '$' + (absValue / 1000).toFixed(0) + 'K';
+      } else {
+        return sign + '$' + absValue.toFixed(0);
+      }
+    }
+
+    const CATEGORY_ICONS = {
+      sports: '🏈',
+      crypto: '₿',
+      politics: '🏛️',
+      weather: '🌀',
+      finance: '📈',
+      entertainment: '🎬',
+      science: '🔬',
+      other: '📊'
+    };
+
+    function renderWhaleSpecialties(specialties) {
+      const container = document.getElementById('whale-profile-specialties');
+      if (!container) return;
+
+      if (!specialties || specialties.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const html = specialties.map(s => {
+        const icon = CATEGORY_ICONS[s.category] || '📊';
+        const winRate = s.winRate !== undefined ? s.winRate.toFixed(0) : '?';
+        const winClass = s.winRate >= 60 ? 'high' : s.winRate >= 50 ? 'medium' : 'low';
+        const tradeText = s.tradeCount === 1 ? '1 trade' : `${s.tradeCount} trades`;
+
+        return `
+          <div class="specialty-badge">
+            <span class="specialty-category">${icon} ${s.category.toUpperCase()}</span>
+            <span class="specialty-stat">${tradeText}</span>
+            <span class="specialty-win-rate ${winClass}">${winRate}%</span>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    function renderWhaleStrategy(strategy, profile) {
+      if (!strategy) return;
+
+      const hasTradeData = strategy.avgTradeSize > 0 || (strategy.topMarkets && strategy.topMarkets.length > 0);
+
+      // Render traits - add PnL-based traits when we don't have trade data
+      let allTraits = [...(strategy.traits || [])];
+
+      // Add PnL-based traits from profile data
+      if (profile.pnl30d > 10000000) allTraits.push('mega_winner');
+      else if (profile.pnl30d > 1000000) allTraits.push('big_winner');
+      else if (profile.pnl30d > 100000) allTraits.push('profitable');
+
+      if (profile.tier === 'top10') allTraits.push('elite_trader');
+      else if (profile.tier === 'top50') allTraits.push('top_performer');
+
+      if (profile.copySuitability >= 80) allTraits.push('highly_copyable');
+      else if (profile.copySuitability >= 60) allTraits.push('copyable');
+
+      if (profile.earlyEntryScore >= 70) allTraits.push('early_mover');
+
+      // Deduplicate traits
+      allTraits = [...new Set(allTraits)];
+
+      const traitsHtml = allTraits.map(trait => {
+        const label = trait.replace(/_/g, ' ').toUpperCase();
+        return `<span class="whale-trait-badge">${label}</span>`;
+      }).join('');
+
+      document.getElementById('whale-strategy-traits').innerHTML = traitsHtml || '<span style="color: var(--text-muted);">No distinctive traits detected</span>';
+
+      // Render metrics
+      const holdingPeriodLabel = {
+        'short': 'Short-term (< 1 day)',
+        'medium': 'Medium-term (1-7 days)',
+        'long': 'Long-term (> 7 days)',
+        'unknown': 'Unknown'
+      };
+
+      let metricsHtml = '';
+
+      if (hasTradeData) {
+        // Show trade-based metrics
+        metricsHtml = `
+          <div class="whale-strategy-metric">
+            <span class="metric-label">Average Trade Size</span>
+            <span class="metric-value">${formatPnL(strategy.avgTradeSize)}</span>
+          </div>
+          <div class="whale-strategy-metric">
+            <span class="metric-label">Preferred Outcome</span>
+            <span class="metric-value">${strategy.preferredOutcome.toUpperCase()}</span>
+          </div>
+          <div class="whale-strategy-metric">
+            <span class="metric-label">Maker vs Taker</span>
+            <span class="metric-value">${strategy.makerVsTaker.charAt(0).toUpperCase() + strategy.makerVsTaker.slice(1)}</span>
+          </div>
+          <div class="whale-strategy-metric">
+            <span class="metric-label">Holding Period</span>
+            <span class="metric-value">${holdingPeriodLabel[strategy.avgHoldingPeriod] || strategy.avgHoldingPeriod}</span>
+          </div>
+        `;
+      } else {
+        // Show PnL-based insights when no trade data
+        const allTimePnl = profile.pnlAllTime || profile.pnl30d * 12;
+        const winnerStatus = profile.pnl30d > 0 ? 'Profitable' : 'In drawdown';
+        const tradingStyle = profile.copySuitability >= 70 ? 'Consistent, copyable' :
+                            profile.copySuitability >= 40 ? 'Moderate consistency' : 'High variance';
+
+        metricsHtml = `
+          <div style="padding: 12px; background: var(--bg-hover); border-radius: 6px; margin-bottom: 12px;">
+            <div style="color: var(--bb-yellow); font-size: 11px; margin-bottom: 8px;">
+              LIVE TRADE DATA PENDING
+            </div>
+            <div style="color: var(--text-muted); font-size: 11px;">
+              This trader hasn't traded since you started tracking. The metrics below are based on leaderboard data.
+            </div>
+          </div>
+          <div class="whale-strategy-metric">
+            <span class="metric-label">Est. All-Time P&L</span>
+            <span class="metric-value ${allTimePnl >= 0 ? 'positive' : 'negative'}" style="color: ${allTimePnl >= 0 ? 'var(--positive)' : 'var(--negative)'}">${formatPnL(allTimePnl)}</span>
+          </div>
+          <div class="whale-strategy-metric">
+            <span class="metric-label">30-Day Performance</span>
+            <span class="metric-value">${winnerStatus}</span>
+          </div>
+          <div class="whale-strategy-metric">
+            <span class="metric-label">Trading Style</span>
+            <span class="metric-value">${tradingStyle}</span>
+          </div>
+          <div class="whale-strategy-metric">
+            <span class="metric-label">Copy Suitability</span>
+            <span class="metric-value">${profile.copySuitability}/100</span>
+          </div>
+        `;
+      }
+      document.getElementById('whale-strategy-metrics').innerHTML = metricsHtml;
+
+      // Render top markets
+      if (strategy.topMarkets && strategy.topMarkets.length > 0) {
+        const marketsHtml = strategy.topMarkets.map(m => `
+          <div class="whale-top-market">
+            <span class="whale-top-market-title">${escapeHtml((m.marketTitle || m.marketId).slice(0, 50))}${(m.marketTitle || m.marketId).length > 50 ? '...' : ''}</span>
+            <span class="whale-top-market-stats">
+              <span>${m.tradeCount} trades</span>
+              <span>${formatPnL(m.totalVolume)}</span>
+            </span>
+          </div>
+        `).join('');
+        document.getElementById('whale-top-markets').innerHTML = marketsHtml;
+      } else {
+        document.getElementById('whale-top-markets').innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px; padding: 12px; background: var(--bg-hover); border-radius: 6px;">
+            No recent market activity observed. Check back later or view this trader on
+            <a href="https://polymarket.com/profile/${currentWhaleAddress}" target="_blank" style="color: var(--bb-blue);">Polymarket</a>.
+          </div>
+        `;
+      }
+    }
+
+    function renderWhaleTrades(trades, profile) {
+      if (!trades || trades.length === 0) {
+        document.getElementById('whale-trades-list').innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center;">
+            <div style="margin-bottom: 8px;">No trades observed since tracking started.</div>
+            <a href="https://polymarket.com/profile/${profile.address}" target="_blank" style="color: var(--bb-blue); text-decoration: none;">
+              View full trade history on Polymarket →
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      const html = trades.map(t => `
+        <div class="whale-trade-item">
+          <div class="whale-trade-item-header">
+            <span class="whale-trade-item-side ${t.side.toLowerCase()}">${t.side} ${t.outcome}</span>
+            <span class="whale-trade-item-time">${formatTimeAgo(t.timestamp)}</span>
+          </div>
+          <div class="whale-trade-item-market" onclick="window.open(getMarketUrl('${t.marketSlug || ''}'), '_blank')">
+            ${escapeHtml((t.marketTitle || t.marketId || 'Unknown Market').slice(0, 70))}
+          </div>
+          <div class="whale-trade-item-details">
+            <span>@ ${(t.price * 100).toFixed(0)}%</span>
+            <span>${formatPnL(t.sizeUsdc)}</span>
+            <span>${t.isMaker ? 'Maker' : 'Taker'}</span>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('whale-trades-list').innerHTML = html;
+    }
+
+    function renderWhalePositions(positions, profile) {
+      if (!positions || positions.length === 0) {
+        document.getElementById('whale-positions-list').innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center;">
+            <div style="margin-bottom: 8px;">No positions observed since tracking started.</div>
+            <a href="https://polymarket.com/profile/${profile.address}" target="_blank" style="color: var(--bb-blue); text-decoration: none;">
+              View positions on Polymarket →
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      const html = positions.map(p => {
+        const pnlClass = (p.unrealizedPnl || 0) >= 0 ? 'positive' : 'negative';
+        return `
+          <div class="whale-position-item">
+            <div class="whale-position-market">
+              ${escapeHtml((p.marketTitle || p.marketId).slice(0, 60))}
+              <span style="color: var(--bb-${p.outcome === 'YES' ? 'green' : 'red'}); margin-left: 8px;">${p.outcome}</span>
+            </div>
+            <div class="whale-position-details">
+              <div class="whale-position-detail">
+                <div class="value">${p.netShares.toFixed(0)}</div>
+                <div class="label">Shares</div>
+              </div>
+              <div class="whale-position-detail">
+                <div class="value">${(p.vwapEntry * 100).toFixed(0)}%</div>
+                <div class="label">Entry</div>
+              </div>
+              <div class="whale-position-detail">
+                <div class="value ${pnlClass}">${p.unrealizedPnl !== undefined ? formatPnL(p.unrealizedPnl) : '--'}</div>
+                <div class="label">Unrealized</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('whale-positions-list').innerHTML = html;
     }
 
     // Watchlist functions

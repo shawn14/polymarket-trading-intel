@@ -522,3 +522,291 @@ export interface WhalePositionResponse {
   peakShares: number;
   reductionFromPeak: number;
 }
+
+// ============================================================================
+// Kalshi Market Types - Cross-Platform Intelligence
+// ============================================================================
+
+// Kalshi market view for dashboard display
+export interface KalshiMarketResponse {
+  ticker: string;
+  eventTicker: string;
+  title: string;
+  subtitle?: string;
+  yesPrice: number;
+  noPrice: number;
+  lastPrice: number;
+  priceChange24h: number;
+  volume24h: number;
+  totalVolume: number;
+  liquidity: number;
+  openInterest: number;
+  closeTime?: string;
+  category?: string;
+  url: string;
+}
+
+// Kalshi markets list response
+export interface KalshiMarketsListResponse {
+  timestamp: number;
+  markets: KalshiMarketResponse[];
+  sortType: 'movers' | 'trending' | 'newest' | 'volume';
+  count: number;
+}
+
+// Kalshi stats response
+export interface KalshiStatsResponse {
+  cachedMarkets: number;
+  lastFetch: number;
+  cacheAgeMs: number;
+  isStale: boolean;
+}
+
+// ============================================================================
+// Whale Profile Types - Detailed Whale Analysis
+// ============================================================================
+
+// Position with market context for profile display
+export interface WhaleProfilePosition {
+  marketId: string;
+  marketTitle?: string;
+  outcome: 'YES' | 'NO';
+  netShares: number;
+  vwapEntry: number;
+  currentPrice?: number;
+  unrealizedPnl?: number;
+  realizedPnl: number;
+  peakShares: number;
+  reductionFromPeak: number;
+}
+
+// Strategy analysis for a whale
+export interface WhaleStrategyAnalysis {
+  // Trade patterns
+  avgTradeSize: number;      // Average USDC per trade
+  preferredOutcome: 'YES' | 'NO' | 'balanced';  // Do they favor YES or NO?
+  makerVsTaker: 'maker' | 'taker' | 'mixed';  // Mostly providing or taking liquidity?
+  avgHoldingPeriod: string;  // "short" (< 1d), "medium" (1-7d), "long" (> 7d)
+
+  // Market preferences
+  topMarkets: Array<{
+    marketId: string;
+    marketTitle?: string;
+    tradeCount: number;
+    totalVolume: number;
+  }>;
+
+  // Performance metrics
+  winRate?: number;          // Estimated win rate if we have resolved positions
+  avgProfitPerTrade?: number;
+
+  // Behavioral traits
+  traits: string[];          // e.g., ["early_mover", "high_conviction", "contrarian"]
+}
+
+// Complete whale profile response
+export interface WhaleProfileResponse {
+  // Basic info (from WhaleInfo)
+  address: string;
+  name?: string;
+  tier: WhaleTier;
+  rank?: number;             // Leaderboard rank if known
+
+  // PnL metrics
+  pnl7d: number;
+  pnl30d: number;
+  pnlAllTime?: number;       // From leaderboard if available
+  estimatedAccountValue?: number;  // Sum of position values + realized PnL
+
+  // Volume metrics
+  volume7d: number;
+  volume30d: number;
+  tradeCount7d: number;
+  tradeCount30d: number;
+
+  // Scoring
+  earlyEntryScore: number;
+  copySuitability: number;
+  lastSeen: number;
+
+  // Recent trades
+  recentTrades: WhaleTradeResponse[];
+
+  // Current positions
+  positions: WhaleProfilePosition[];
+
+  // Strategy analysis
+  strategy: WhaleStrategyAnalysis;
+
+  // Meta
+  profileGeneratedAt: number;
+
+  // Expert specialties (if tracked)
+  specialties?: ExpertSpecialtyResponse[];
+}
+
+// ============================================================================
+// Expert Tracking Types - Category-Based Expertise
+// ============================================================================
+
+// Market category types
+export type MarketCategory = 'sports' | 'crypto' | 'politics' | 'weather' | 'entertainment' | 'finance' | 'science' | 'other';
+
+// Expert specialty for API response
+export interface ExpertSpecialtyResponse {
+  category: MarketCategory;
+  winRate: number;
+  tradeCount: number;
+  totalVolume: number;
+  confidence: 'high' | 'medium' | 'low';
+  profitability: number;
+}
+
+// Expert profile for API response
+export interface ExpertProfileResponse {
+  address: string;
+  name?: string;
+  tier: WhaleTier;
+  pnl30d: number;
+  specialties: ExpertSpecialtyResponse[];
+  overallWinRate?: number;
+  totalTrackedTrades: number;
+  primaryCategory?: MarketCategory;
+}
+
+// API response for experts list
+export interface ExpertsListResponse {
+  timestamp: number;
+  experts: ExpertProfileResponse[];
+  byCategory: Record<MarketCategory, number>;
+  totalTrackedTrades: number;
+}
+
+// ============================================================================
+// Strategy Analyzer Types - Whale Trading Strategy Classification
+// ============================================================================
+
+// Strategy type classification
+export type StrategyType =
+  | 'crypto_premium_seller'
+  | 'crypto_directional'
+  | 'crypto_scalper'
+  | 'sports_bettor'
+  | 'political_trader'
+  | 'weather_specialist'
+  | 'diversified'
+  | 'unknown';
+
+// Market type for position classification
+export type MarketTypeDetailed =
+  | 'crypto_dip'
+  | 'crypto_reach'
+  | 'crypto_daily'
+  | 'crypto_15m'
+  | 'crypto_other'
+  | 'sports'
+  | 'politics'
+  | 'economics'
+  | 'weather'
+  | 'entertainment'
+  | 'other';
+
+// Market focus breakdown
+export interface MarketFocusResponse {
+  type: MarketTypeDetailed;
+  count: number;
+  pnl: number;
+  volume: number;
+  winRate: number;
+}
+
+// Trader position from data API
+export interface TraderPositionResponse {
+  conditionId: string;
+  title: string;
+  slug: string;
+  outcome: 'Yes' | 'No';
+  size: number;
+  avgPrice: number;
+  curPrice: number;
+  initialValue: number;
+  currentValue: number;
+  cashPnl: number;
+  percentPnl: number;
+}
+
+// Full strategy profile response
+export interface StrategyProfileResponse {
+  address: string;
+  username?: string;
+  pnl: number;
+  volume: number;
+
+  // Strategy classification
+  strategyType: StrategyType;
+  strategyLabel: string;
+  strategyConfidence: 'high' | 'medium' | 'low';
+
+  // Market breakdown
+  marketFocus: MarketFocusResponse[];
+  primaryMarket: MarketTypeDetailed;
+
+  // Trading metrics
+  winRate: number;
+  avgPositionSize: number;
+  directionalBias: 'bullish' | 'bearish' | 'neutral';
+  concentration: number;
+
+  // Position stats
+  totalPositions: number;
+  openPositions: number;
+  yesPositions: number;
+  noPositions: number;
+
+  // Crypto-specific subtypes
+  cryptoSubtypes?: {
+    dip: number;
+    reach: number;
+    daily: number;
+    fifteenMin: number;
+    other: number;
+  };
+
+  // Top positions
+  topPositions?: TraderPositionResponse[];
+
+  analyzedAt: number;
+}
+
+// Strategy comparison for leaderboard
+export interface StrategyComparisonResponse {
+  timestamp: number;
+  strategies: Array<{
+    type: StrategyType;
+    label: string;
+    traderCount: number;
+    totalPnl: number;
+    avgWinRate: number;
+    topTraders: Array<{
+      address: string;
+      username?: string;
+      pnl: number;
+      winRate: number;
+    }>;
+  }>;
+  totalTradersAnalyzed: number;
+}
+
+// Category leaderboard response
+export interface CategoryLeaderboardResponse {
+  timestamp: number;
+  category: string;
+  traders: Array<{
+    rank: number;
+    address: string;
+    username?: string;
+    pnl: number;
+    strategyType?: StrategyType;
+    strategyLabel?: string;
+  }>;
+}

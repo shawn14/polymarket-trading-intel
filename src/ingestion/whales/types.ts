@@ -142,6 +142,7 @@ export interface LeaderboardEntry {
   pnl: number;
   volume: number;
   positions: number;
+  category?: string;  // For category-specific leaderboards
 }
 
 // Trade store query options
@@ -160,4 +161,41 @@ export interface MarketQuality {
   spread: number;
   tradeCount24h: number;
   qualityTier: 'high' | 'medium' | 'low' | 'garbage';
+}
+
+// Market category types
+export type MarketCategory = 'sports' | 'crypto' | 'politics' | 'weather' | 'entertainment' | 'finance' | 'science' | 'other';
+
+// Category stats for a trader
+export interface CategoryStats {
+  category: MarketCategory;
+  tradeCount: number;
+  totalVolume: number;
+  winCount: number;       // Trades that resolved profitably
+  lossCount: number;      // Trades that resolved at a loss
+  pendingCount: number;   // Trades still pending resolution
+  avgEntry: number;       // Average entry price
+  profitEstimate: number; // Estimated profit from resolved trades
+}
+
+// Expert profile for a trader
+export interface ExpertProfile {
+  address: string;
+  name?: string;
+  tier: WhaleTier;
+  pnl30d: number;
+  specialties: ExpertSpecialty[];
+  overallWinRate?: number;
+  totalTrackedTrades: number;
+  lastActive: number;
+}
+
+// Specialty info for a trader
+export interface ExpertSpecialty {
+  category: MarketCategory;
+  winRate: number;        // 0-100
+  tradeCount: number;
+  totalVolume: number;
+  confidence: 'high' | 'medium' | 'low';  // Based on trade count
+  profitability: number;  // Estimated profit in USDC
 }
