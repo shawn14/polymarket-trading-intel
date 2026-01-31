@@ -126,7 +126,7 @@
     .container {
       max-width: 2000px;
       margin: 0 auto;
-      padding: 6px 10px;
+      padding: 6px 10px 50px 10px; /* Bottom padding for fixed menu */
     }
 
     /* Section Headers */
@@ -151,6 +151,25 @@
     .section-meta {
       font-size: 9px;
       color: var(--text-muted);
+    }
+
+    .section-header.collapsible {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-header.collapsible:hover {
+      background: linear-gradient(90deg, var(--bb-orange) 0%, var(--bb-orange) 3px, var(--bg-hover) 3px);
+    }
+
+    .collapse-icon {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .collapse-icon.expanded {
+      transform: rotate(90deg);
     }
 
     h1 {
@@ -834,6 +853,31 @@
       transform: translateY(-1px);
     }
 
+    /* Navigation Links */
+    .nav-link {
+      padding: 4px 12px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+
+    .nav-link:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--bb-orange);
+    }
+
+    .nav-link.active-page {
+      background: var(--bb-orange);
+      color: #000;
+      border-color: var(--bb-orange);
+    }
+
     /* RSS Button */
     .rss-btn {
       padding: 4px 10px;
@@ -849,18 +893,14 @@
       background: #ff8833;
     }
 
-    /* Trading Panel Layout */
-    .trading-panel {
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 1px;
-      background: var(--border);
-      margin-bottom: 6px;
-      border: 1px solid var(--border);
+    /* Whale Feed Section */
+    #whale-feed-section {
+      margin-bottom: 4px;
     }
 
     #whale-leaderboard-section {
       overflow: hidden;
+      margin-bottom: 4px;
     }
 
     #whale-leaderboard-section .data-table {
@@ -874,21 +914,55 @@
       padding-right: 12px;
     }
 
-    @media (max-width: 1200px) {
-      .trading-panel {
-        grid-template-columns: 1fr;
-      }
-    }
-
     .panel-section {
       background: var(--bg-card);
       border: 1px solid var(--border);
     }
 
-    /* Live Whale Feed */
+    /* Live Whale Feed - fills viewport above fixed bottom menu */
     .whale-feed {
-      max-height: 200px;
+      /* Height = viewport - top header - section header - bottom menu - padding */
+      max-height: calc(100vh - 180px);
+      min-height: 300px;
       overflow-y: auto;
+    }
+
+    /* Fixed bottom menu bar */
+    .bottom-menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-base);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      gap: 1px;
+    }
+
+    .bottom-menu .section-header.collapsible {
+      flex: 1;
+      margin: 0;
+      border: none;
+      border-right: 1px solid var(--border);
+    }
+
+    .bottom-menu .section-header.collapsible:last-child {
+      border-right: none;
+    }
+
+    /* Expandable panels slide up from bottom */
+    .expandable-panel {
+      position: fixed !important;
+      bottom: 36px;
+      left: 0;
+      right: 0;
+      max-height: 50vh;
+      overflow-y: auto;
+      background: var(--bg-base);
+      border-top: 1px solid var(--border);
+      z-index: 99;
+      padding: 8px;
     }
 
     .whale-feed::-webkit-scrollbar {
@@ -3568,87 +3642,70 @@
 
   <div class="container">
 
-    <!-- Main Trading Panel -->
-    <div class="trading-panel">
-      <!-- Live Whale Feed -->
-      <div class="panel-section" id="whale-feed-section">
-        <div class="section-header">
-          <span class="section-title">LIVE WHALE ACTIVITY</span>
-          <span class="section-meta" id="whale-last-update">--</span>
-        </div>
-        <div id="whale-feed" class="whale-feed">
-          <div class="loading-terminal">Connecting to whale feed...</div>
-        </div>
+    <!-- Main Whale Feed (Full Width) -->
+    <div class="panel-section" id="whale-feed-section">
+      <div class="section-header">
+        <span class="section-title">LIVE WHALE ACTIVITY</span>
+        <span class="section-meta" id="whale-last-update">--</span>
       </div>
-
-      <!-- Top Whales Leaderboard -->
-      <div class="panel-section" id="whale-leaderboard-section">
-        <div class="section-header">
-          <span class="section-title">TOP TRADERS</span>
-          <span class="section-meta">BY ALL-TIME P&L</span>
-        </div>
-        <div id="whale-leaderboard" class="data-table-container">
-          <div class="loading-terminal">Loading leaderboard...</div>
-        </div>
+      <div id="whale-feed" class="whale-feed">
+        <div class="loading-terminal">Connecting to whale feed...</div>
       </div>
     </div>
 
-    <!-- Category Leaderboards Section -->
-    <div class="section-header" style="margin-top: 4px;">
-      <span class="section-title">TOP TRADERS BY CATEGORY</span>
-      <span class="section-meta">STRATEGY ANALYSIS FROM POLYMARKET LEADERBOARD</span>
-    </div>
+  </div>
 
+  <!-- Top Traders Panel (collapsed by default) -->
+  <div class="expandable-panel" id="whale-leaderboard-section" style="display: none;">
+    <div id="whale-leaderboard" class="data-table-container">
+      <div class="loading-terminal">Loading leaderboard...</div>
+    </div>
+  </div>
+
+  <!-- Category Leaderboards Panel (collapsed by default) -->
+  <div class="expandable-panel" id="category-panel" style="display: none;">
     <div class="experts-grid">
       <div class="card expert-panel">
-        <h2>🏈 SPORTS</h2>
+        <h2>SPORTS</h2>
         <div id="experts-sports" class="expert-list">
-          <div class="loading-terminal">Loading leaderboard...</div>
+          <div class="loading-terminal">Loading...</div>
         </div>
       </div>
-
       <div class="card expert-panel">
-        <h2>₿ CRYPTO</h2>
+        <h2>CRYPTO</h2>
         <div id="experts-crypto" class="expert-list">
-          <div class="loading-terminal">Loading leaderboard...</div>
+          <div class="loading-terminal">Loading...</div>
         </div>
       </div>
-
       <div class="card expert-panel">
-        <h2>🏛️ POLITICS</h2>
+        <h2>POLITICS</h2>
         <div id="experts-politics" class="expert-list">
-          <div class="loading-terminal">Loading leaderboard...</div>
+          <div class="loading-terminal">Loading...</div>
         </div>
       </div>
-
       <div class="card expert-panel">
-        <h2>🌀 CLIMATE</h2>
+        <h2>CLIMATE</h2>
         <div id="experts-weather" class="expert-list">
-          <div class="loading-terminal">Loading leaderboard...</div>
+          <div class="loading-terminal">Loading...</div>
         </div>
       </div>
-
       <div class="card expert-panel">
-        <h2>📈 FINANCE</h2>
+        <h2>FINANCE</h2>
         <div id="experts-finance" class="expert-list">
-          <div class="loading-terminal">Loading leaderboard...</div>
+          <div class="loading-terminal">Loading...</div>
         </div>
       </div>
-
       <div class="card expert-panel">
-        <h2>🎬 CULTURE</h2>
+        <h2>CULTURE</h2>
         <div id="experts-entertainment" class="expert-list">
-          <div class="loading-terminal">Loading leaderboard...</div>
+          <div class="loading-terminal">Loading...</div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Kalshi Cross-Platform Intelligence -->
-    <div class="section-header" style="margin-top: 4px;">
-      <span class="section-title">KALSHI MARKET INTEL</span>
-      <span class="section-meta" id="kalshi-last-update">--</span>
-    </div>
-
+  <!-- Kalshi Panel (collapsed by default) -->
+  <div class="expandable-panel" id="kalshi-panel" style="display: none;">
     <div class="kalshi-grid">
       <!-- Movers Panel -->
       <div class="card kalshi-panel">
@@ -3682,7 +3739,22 @@
         </div>
       </div>
     </div>
+  </div>
 
+  <!-- Fixed Bottom Menu Bar -->
+  <div class="bottom-menu">
+    <div class="section-header collapsible" onclick="togglePanel('whale-leaderboard-section', 'leaderboard-icon')">
+      <span class="section-title">TOP TRADERS</span>
+      <span class="collapse-icon" id="leaderboard-icon">▶</span>
+    </div>
+    <div class="section-header collapsible" onclick="togglePanel('category-panel', 'category-icon')">
+      <span class="section-title">BY CATEGORY</span>
+      <span class="collapse-icon" id="category-icon">▶</span>
+    </div>
+    <div class="section-header collapsible" onclick="togglePanel('kalshi-panel', 'kalshi-icon')">
+      <span class="section-title">KALSHI</span>
+      <span class="collapse-icon" id="kalshi-icon">▶</span>
+    </div>
   </div>
 
   <!-- Whale Profile Panel -->
@@ -4399,54 +4471,51 @@
       return `https://polymarket.com/event/${clean}`;
     }
 
-    // Parse bet direction for clearer display (Kalshi-style)
+    // Parse bet direction for cleaner display (Polymarket-style)
+    // Shows just the outcome/team name - simpler and clearer
     function getBetDisplay(marketTitle, side, outcome) {
       const title = marketTitle || '';
       const isBuying = (side || '').toUpperCase() === 'BUY';
       const isYes = (outcome || '').toUpperCase() === 'YES';
 
       // Pattern 1: "Will the [Team A] beat [Team B]..." or "Will [Team A] win..."
-      // YES = Team A wins
       const willBeatMatch = title.match(/will\s+(?:the\s+)?(.+?)\s+(?:beat|defeat|win(?:\s+against)?)\s+(?:the\s+)?(.+?)(?:\s+by|\s+in|\s+on|\?|$)/i);
       if (willBeatMatch) {
         const team1 = willBeatMatch[1].trim();
         const team2 = willBeatMatch[2].trim();
-
-        // YES = team1 wins, NO = team1 loses (team2 wins)
         const bettingOnTeam1 = (isBuying && isYes) || (!isBuying && !isYes);
         const targetTeam = bettingOnTeam1 ? team1 : team2;
         const shortTeam = targetTeam.length > 15 ? targetTeam.slice(0, 12) + '..' : targetTeam;
 
         return {
-          action: isBuying ? 'Yes' : 'No',
+          action: side,  // Show BUY/SELL
           target: shortTeam,
           isLong: isBuying,
-          display: `${shortTeam} to win`
+          display: shortTeam  // Just the team name, no "to win"
         };
       }
 
-      // Pattern 2: "X vs. Y" or "X vs Y" (legacy/simple format)
+      // Pattern 2: "X vs. Y" or "X vs Y"
       const vsMatch = title.match(/^(.+?)\s+vs\.?\s+(.+?)$/i);
       if (vsMatch) {
         const team1 = vsMatch[1].trim();
         const team2 = vsMatch[2].trim();
-
         const bettingOnTeam1 = (isBuying && isYes) || (!isBuying && !isYes);
         const targetTeam = bettingOnTeam1 ? team1 : team2;
         const shortTeam = targetTeam.length > 15 ? targetTeam.slice(0, 12) + '..' : targetTeam;
 
         return {
-          action: isBuying ? 'Yes' : 'No',
+          action: side,  // Show BUY/SELL
           target: shortTeam,
           isLong: isBuying,
-          display: `${shortTeam} to win`
+          display: shortTeam  // Just the team name
         };
       }
 
-      // For non-sports markets, show YES/NO
+      // For non-sports binary markets (Will X happen?)
       return {
-        action: isBuying ? 'Yes' : 'No',
-        target: isYes ? 'YES' : 'NO',
+        action: side,  // Show BUY/SELL
+        target: isYes ? 'Yes' : 'No',
         isLong: isBuying,
         display: isYes ? 'Yes' : 'No'
       };
@@ -4472,6 +4541,31 @@
       return cat ? { ...cat, rank: info.rank, pnl: info.pnl } : null;
     }
 
+    // Generic panel toggle - closes others, opens clicked one
+    function togglePanel(panelId, iconId) {
+      const panels = ['whale-leaderboard-section', 'category-panel', 'kalshi-panel'];
+      const icons = ['leaderboard-icon', 'category-icon', 'kalshi-icon'];
+
+      const panel = document.getElementById(panelId);
+      const isOpen = panel.style.display !== 'none';
+
+      // Close all panels
+      panels.forEach(id => {
+        const p = document.getElementById(id);
+        if (p) p.style.display = 'none';
+      });
+      icons.forEach(id => {
+        const i = document.getElementById(id);
+        if (i) i.classList.remove('expanded');
+      });
+
+      // Open clicked panel if it was closed
+      if (!isOpen) {
+        panel.style.display = 'block';
+        document.getElementById(iconId).classList.add('expanded');
+      }
+    }
+
     async function refreshAll() {
       await Promise.all([
         loadHealth(),
@@ -4486,7 +4580,6 @@
       try {
         const data = await fetchJSON('/whales');
         const feedContainer = document.getElementById('whale-feed');
-        const leaderboardContainer = document.getElementById('whale-leaderboard');
         const lastUpdateEl = document.getElementById('whale-last-update');
 
         // Update status bar
@@ -4508,11 +4601,25 @@
             const shortTitle = marketTitle.length > 45 ? marketTitle.slice(0, 42) + '...' : marketTitle;
             const sizeStr = trade.sizeUsdc >= 1000 ? `$${(trade.sizeUsdc/1000).toFixed(1)}K` : `$${trade.sizeUsdc.toFixed(0)}`;
 
-            // Price is already the entry cost from server
-            const priceStr = trade.price ? `${(trade.price * 100).toFixed(0)}¢` : '--';
+            // Price from API is the actual entry price
+            const priceStr = trade.price >= 0 ? `${(trade.price * 100).toFixed(0)}¢` : '--';
 
-            // Get clearer bet display
-            const betDisplay = getBetDisplay(marketTitle, trade.side, trade.outcome);
+            // Get clearer bet display - follow Polymarket convention
+            // For sports: show team name directly (e.g., "Pistons" not "Yes Pistons to win")
+            // For YES/NO: show "Yes" or "No"
+            let betDisplay;
+            if (trade.outcomeLabel && trade.outcomeLabel !== 'Yes' && trade.outcomeLabel !== 'No') {
+              // Sports/multi-outcome market - show team name directly
+              // BUY = betting FOR this outcome, SELL = betting AGAINST
+              betDisplay = {
+                action: trade.side,  // Show BUY or SELL
+                display: trade.outcomeLabel,  // Just show "Pistons", "Warriors", etc.
+                isLong: trade.side === 'BUY'
+              };
+            } else {
+              // Standard YES/NO market
+              betDisplay = getBetDisplay(marketTitle, trade.side, trade.outcome);
+            }
 
             // Highlight big trades (whale alerts)
             const isMegaTrade = trade.sizeUsdc >= 50000;
@@ -4545,25 +4652,21 @@
         }
 
         // Render Leaderboard Table
-        if (topWhales && topWhales.length > 0) {
+        const leaderboardContainer = document.getElementById('whale-leaderboard');
+        if (leaderboardContainer && topWhales && topWhales.length > 0) {
           let tableHtml = `
-            <table class="data-table" style="table-layout: fixed; width: 100%;">
-              <colgroup>
-                <col style="width: 25px;">
-                <col style="width: auto;">
-                <col style="width: 70px;">
-              </colgroup>
+            <table class="data-table" style="width: 100%;">
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th style="width: 40px;">#</th>
                   <th>TRADER</th>
-                  <th class="right">P&L</th>
+                  <th class="right" style="width: 80px;">7D P&L</th>
                 </tr>
               </thead>
               <tbody>
           `;
 
-          for (let i = 0; i < Math.min(topWhales.length, 15); i++) {
+          for (let i = 0; i < Math.min(topWhales.length, 20); i++) {
             const whale = topWhales[i];
             const rankClass = whale.tier === 'top10' ? 'top10' : 'top50';
             const pnlClass = whale.pnl7d >= 0 ? 'positive' : 'negative';
@@ -4574,7 +4677,7 @@
             tableHtml += `
               <tr style="cursor: pointer;" onclick="openWhaleProfile('${whale.address}')">
                 <td><span class="rank-badge ${rankClass}">${i + 1}</span></td>
-                <td class="whale-clickable" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${whale.name || whale.address.slice(0, 10)}</td>
+                <td class="whale-clickable">${whale.name || whale.address.slice(0, 10)}</td>
                 <td class="right mono ${pnlClass}">${pnlStr}</td>
               </tr>
             `;
@@ -4582,8 +4685,6 @@
 
           tableHtml += '</tbody></table>';
           leaderboardContainer.innerHTML = tableHtml;
-        } else {
-          leaderboardContainer.innerHTML = '<div class="loading-terminal">Loading leaderboard...</div>';
         }
 
       } catch (e) {

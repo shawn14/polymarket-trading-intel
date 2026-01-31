@@ -491,6 +491,7 @@ export interface WhaleTradeResponse {
   marketSlug?: string;
   side: 'BUY' | 'SELL';
   outcome: 'YES' | 'NO';
+  outcomeLabel?: string;  // Original label (e.g., "Pistons", "Warriors")
   price: number;
   sizeUsdc: number;
   timestamp: number;

@@ -178,12 +178,14 @@ export class WhaleActivityMonitor extends EventEmitter<WhaleActivityEvents> {
     );
 
     // Convert to WhaleTrade format
+    // Keep original outcome (team name like "Pistons" or "Warriors", or "Yes"/"No")
+    // Don't convert to YES/NO - preserve for accurate display
     const whaleTrade: WhaleTrade = {
       whale,
       marketId: activity.conditionId,
       assetId: activity.asset,
       side: activity.side as 'BUY' | 'SELL',
-      outcome: activity.outcome === 'Yes' ? 'YES' : 'NO',
+      outcome: activity.outcome as 'YES' | 'NO', // Cast but preserve original value
       price: activity.price,
       size: activity.size,
       sizeUsdc: activity.usdcSize,
@@ -191,6 +193,7 @@ export class WhaleActivityMonitor extends EventEmitter<WhaleActivityEvents> {
       isMaker: false, // Can't tell from activity API
       marketTitle: activity.title,
       marketSlug: activity.slug,
+      outcomeLabel: activity.outcome, // Preserve original for display
     };
 
     // Emit the trade event

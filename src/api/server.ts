@@ -556,7 +556,6 @@ export class APIServer {
 
   private async serveDashboard(res: ServerResponse): Promise<void> {
     try {
-      // Find the public directory relative to this file
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = dirname(__filename);
       const htmlPath = join(__dirname, '..', '..', 'public', 'index.html');
@@ -566,7 +565,6 @@ export class APIServer {
       res.writeHead(200);
       res.end(html);
     } catch (error) {
-      // Fallback to API info if dashboard not found
       this.sendJSON(res, this.getAPIInfo());
     }
   }
@@ -1466,6 +1464,7 @@ export class APIServer {
         marketSlug: ct.trade.marketSlug,
         side: ct.trade.side,
         outcome: ct.trade.outcome,
+        outcomeLabel: ct.trade.outcomeLabel,
         price: ct.trade.price,
         sizeUsdc: ct.trade.sizeUsdc,
         timestamp: ct.trade.timestamp,
@@ -1513,6 +1512,7 @@ export class APIServer {
         marketSlug: ct.trade.marketSlug,
         side: ct.trade.side,
         outcome: ct.trade.outcome,
+        outcomeLabel: ct.trade.outcomeLabel,
         price: ct.trade.price,
         sizeUsdc: ct.trade.sizeUsdc,
         timestamp: ct.trade.timestamp,

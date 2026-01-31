@@ -52,6 +52,7 @@ export interface WhaleTrade {
   isMaker: boolean;
   marketTitle?: string;    // Market question/title
   marketSlug?: string;     // Market slug for URL
+  outcomeLabel?: string;   // Original outcome label (e.g., "Pistons", "Warriors")
 }
 
 // Position tracking
