@@ -1040,8 +1040,8 @@
     /* Bloomberg-style feed with aligned columns */
     .feed-row {
       display: grid;
-      grid-template-columns: 80px 95px 36px 90px 40px 50px 1fr 100px 45px;
-      gap: 6px;
+      grid-template-columns: 80px 55px 42px 36px 85px 38px 48px 1fr 90px 58px;
+      gap: 4px;
       align-items: center;
       padding: 5px 10px;
       border-bottom: 1px solid var(--border);
@@ -5212,14 +5212,16 @@
     }
 
     function formatTimeAgo(timestamp) {
-      // Show actual time in ET
+      // Show actual time in ET (compact format)
       const date = new Date(timestamp);
-      return date.toLocaleTimeString('en-US', {
+      const timeStr = date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
         timeZone: 'America/New_York'
-      }).replace(' ', '') + ' ET';
+      });
+      // Convert "10:42 PM" to "10:42p ET"
+      return timeStr.replace(' AM', 'a').replace(' PM', 'p') + ' ET';
     }
 
     // ============================================
