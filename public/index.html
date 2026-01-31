@@ -1040,7 +1040,7 @@
     /* Bloomberg-style feed with aligned columns */
     .feed-row {
       display: grid;
-      grid-template-columns: 80px 95px 36px 90px 40px 50px 1fr 45px;
+      grid-template-columns: 80px 95px 36px 90px 40px 50px 1fr 100px 45px;
       gap: 6px;
       align-items: center;
       padding: 5px 10px;
@@ -1135,6 +1135,27 @@
       color: var(--text-muted);
       font-size: 10px;
       text-align: right;
+    }
+
+    .col-score {
+      color: var(--bb-yellow);
+      font-size: 10px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .col-score.pregame {
+      color: var(--text-muted);
+    }
+
+    .col-score.live {
+      color: var(--bb-green);
+    }
+
+    .col-score.final {
+      color: var(--text-secondary);
     }
 
     .feed-item .trader-label {
@@ -4628,6 +4649,37 @@
       return '#';
     }
 
+    // Format game score for display
+    function formatGameScore(score) {
+      if (!score) return { text: '', status: '' };
+
+      if (score.status === 'pregame') {
+        return { text: 'Pregame', status: 'pregame' };
+      }
+
+      if (score.status === 'final') {
+        const winner = score.homeScore > score.awayScore ? score.homeAbbr : score.awayAbbr;
+        const high = Math.max(score.homeScore, score.awayScore);
+        const low = Math.min(score.homeScore, score.awayScore);
+        return { text: `F ${winner} ${high}-${low}`, status: 'final' };
+      }
+
+      if (score.status === 'halftime') {
+        return { text: `${score.awayAbbr} ${score.awayScore}-${score.homeScore} HT`, status: 'live' };
+      }
+
+      if (score.status === 'delayed' || score.status === 'postponed') {
+        return { text: score.status.charAt(0).toUpperCase() + score.status.slice(1), status: 'pregame' };
+      }
+
+      // Live game
+      const clock = score.clock ? ` ${score.clock}` : '';
+      return {
+        text: `${score.awayAbbr} ${score.awayScore}-${score.homeScore} ${score.period}${clock}`,
+        status: 'live'
+      };
+    }
+
     // Parse bet direction for cleaner display (Polymarket-style)
     // Shows just the outcome/team name - simpler and clearer
     function getBetDisplay(marketTitle, side, outcome) {
@@ -4864,6 +4916,12 @@
             ? `<span class="col-label" style="background: ${traderInfo.color}; color: #000;">${traderInfo.label}</span>`
             : `<span class="col-label" style="background: #333; color: #888;">WHALE</span>`;
 
+          // Format game score if available
+          const scoreInfo = formatGameScore(trade.gameScore);
+          const scoreHtml = scoreInfo.text
+            ? `<span class="col-score ${scoreInfo.status}">${scoreInfo.text}</span>`
+            : `<span class="col-score"></span>`;
+
           feedHtml += `
             <div class="feed-row ${tradeHighlight}">
               <span class="col-trader ${tierClass} whale-clickable" onclick="event.stopPropagation(); openWhaleProfile('${trade.whaleAddress}')">${trade.whaleName || trade.whaleAddress.slice(0, 8)}</span>
@@ -4873,6 +4931,7 @@
               <span class="col-price">${priceStr}</span>
               <span class="col-size">${sizeStr}</span>
               <span class="col-market" onclick="window.open('${marketUrl}', '_blank')">${escapeHtml(shortTitle)}</span>
+              ${scoreHtml}
               <span class="col-time">${timeAgo}</span>
             </div>
           `;

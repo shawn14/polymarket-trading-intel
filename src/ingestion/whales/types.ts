@@ -38,6 +38,20 @@ export interface StoredTrade {
   timestamp: number;       // Trade timestamp
 }
 
+// Game score snapshot (for sports trades)
+export interface GameScoreSnapshot {
+  league: string;
+  homeTeam: string;
+  homeAbbr: string;
+  homeScore: number;
+  awayTeam: string;
+  awayAbbr: string;
+  awayScore: number;
+  period: string;          // "Q3", "2nd", "7th", "OT"
+  clock: string;           // "8:42", ""
+  status: 'pregame' | 'live' | 'halftime' | 'final' | 'delayed' | 'postponed';
+}
+
 // Whale trade event
 export interface WhaleTrade {
   whale: WhaleInfo;
@@ -54,6 +68,7 @@ export interface WhaleTrade {
   marketSlug?: string;     // Market slug for URL
   eventSlug?: string;      // Parent event slug for clean URLs
   outcomeLabel?: string;   // Original outcome label (e.g., "Pistons", "Warriors")
+  gameScore?: GameScoreSnapshot;  // Live score at time of trade (sports only)
 }
 
 // Position tracking

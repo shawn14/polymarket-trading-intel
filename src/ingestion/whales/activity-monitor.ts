@@ -6,8 +6,9 @@
  */
 
 import { EventEmitter } from 'events';
-import type { WhaleInfo, WhaleTrade, StoredTrade } from './types.js';
+import type { WhaleInfo, WhaleTrade, StoredTrade, GameScoreSnapshot } from './types.js';
 import type { WhaleUniverse } from './whale-universe.js';
+import { getGameScoreForMarket, formatGameScore, type GameScore } from '../sports/scores.js';
 
 // Polymarket activity API
 const ACTIVITY_API = 'https://data-api.polymarket.com/activity';
@@ -164,7 +165,7 @@ export class WhaleActivityMonitor extends EventEmitter<WhaleActivityEvents> {
   /**
    * Process a detected whale trade
    */
-  private processActivity(whale: WhaleInfo, activity: ActivityEntry): void {
+  private async processActivity(whale: WhaleInfo, activity: ActivityEntry): Promise<void> {
     this.tradesDetected++;
 
     // Log the trade
@@ -177,6 +178,29 @@ export class WhaleActivityMonitor extends EventEmitter<WhaleActivityEvents> {
       `[WhaleActivity] ${whale.tier === 'top10' ? '🔴' : '🟡'} ${whale.name || whale.address.slice(0, 10)} ` +
       `${activity.side} ${activity.outcome} ${sizeStr} @ ${priceStr} - ${activity.title.slice(0, 40)}...`
     );
+
+    // Try to fetch game score for sports trades
+    let gameScore: GameScoreSnapshot | undefined;
+    try {
+      const score = await getGameScoreForMarket(activity.title);
+      if (score) {
+        gameScore = {
+          league: score.league,
+          homeTeam: score.homeTeam,
+          homeAbbr: score.homeAbbr,
+          homeScore: score.homeScore,
+          awayTeam: score.awayTeam,
+          awayAbbr: score.awayAbbr,
+          awayScore: score.awayScore,
+          period: score.period,
+          clock: score.clock,
+          status: score.status,
+        };
+        console.log(`[WhaleActivity] Game score: ${formatGameScore(score)}`);
+      }
+    } catch (err) {
+      // Silently fail - game score is optional enrichment
+    }
 
     // Convert to WhaleTrade format
     // Keep original outcome (team name like "Pistons" or "Warriors", or "Yes"/"No")
@@ -196,6 +220,7 @@ export class WhaleActivityMonitor extends EventEmitter<WhaleActivityEvents> {
       marketSlug: activity.slug,
       eventSlug: activity.eventSlug, // Parent event for clean URLs
       outcomeLabel: activity.outcome, // Preserve original for display
+      gameScore, // Live score at time of trade
     };
 
     // Emit the trade event

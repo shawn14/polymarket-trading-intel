@@ -1452,6 +1452,7 @@ export class APIServer {
         sizeUsdc: ct.trade.sizeUsdc,
         timestamp: ct.trade.timestamp,
         isMaker: ct.trade.isMaker,
+        gameScore: ct.trade.gameScore,
       }))
       .sort((a, b) => b.timestamp - a.timestamp);
 
@@ -1501,6 +1502,7 @@ export class APIServer {
         sizeUsdc: ct.trade.sizeUsdc,
         timestamp: ct.trade.timestamp,
         isMaker: ct.trade.isMaker,
+        gameScore: ct.trade.gameScore,
       }))
       .sort((a, b) => b.timestamp - a.timestamp);
   }
@@ -2168,13 +2170,14 @@ ${items}
       marketId: ct.trade.marketId,
       marketTitle: ct.trade.marketTitle,
       marketSlug: ct.trade.marketSlug,
-        eventSlug: ct.trade.eventSlug,
+      eventSlug: ct.trade.eventSlug,
       side: ct.trade.side,
       outcome: ct.trade.outcome,
       price: ct.trade.price,
       sizeUsdc: ct.trade.sizeUsdc,
       timestamp: ct.trade.timestamp,
       isMaker: ct.trade.isMaker,
+      gameScore: ct.trade.gameScore,
     }));
 
     return {
@@ -2212,13 +2215,14 @@ ${items}
       marketId: ct.trade.marketId,
       marketTitle: ct.trade.marketTitle,
       marketSlug: ct.trade.marketSlug,
-        eventSlug: ct.trade.eventSlug,
+      eventSlug: ct.trade.eventSlug,
       side: ct.trade.side,
       outcome: ct.trade.outcome,
       price: ct.trade.price,
       sizeUsdc: ct.trade.sizeUsdc,
       timestamp: ct.trade.timestamp,
       isMaker: ct.trade.isMaker,
+      gameScore: ct.trade.gameScore,
     }));
 
     // Calculate basic metrics from trades

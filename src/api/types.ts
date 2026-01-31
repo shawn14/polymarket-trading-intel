@@ -481,6 +481,20 @@ export interface WhaleInfoResponse {
   lastSeen: number;
 }
 
+// Game score snapshot for sports trades
+export interface GameScoreResponse {
+  league: string;
+  homeTeam: string;
+  homeAbbr: string;
+  homeScore: number;
+  awayTeam: string;
+  awayAbbr: string;
+  awayScore: number;
+  period: string;        // "Q3", "2nd", "7th", "OT"
+  clock: string;         // "8:42", ""
+  status: 'pregame' | 'live' | 'halftime' | 'final' | 'delayed' | 'postponed';
+}
+
 // Whale trade for API responses
 export interface WhaleTradeResponse {
   whaleAddress: string;
@@ -497,6 +511,7 @@ export interface WhaleTradeResponse {
   sizeUsdc: number;
   timestamp: number;
   isMaker: boolean;
+  gameScore?: GameScoreResponse;  // Live score at time of trade (sports only)
 }
 
 // API response for whale activity

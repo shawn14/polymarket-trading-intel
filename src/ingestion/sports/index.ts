@@ -16,3 +16,13 @@ export type {
   PlayerInfo,
 } from './types.js';
 export { STAR_PLAYERS, ESPN_ENDPOINTS } from './types.js';
+
+// Game scores
+export {
+  getGameScoreForMarket,
+  formatGameScore,
+  fetchScoreboard,
+  detectLeague,
+  parseTeamsFromTitle,
+  type GameScore,
+} from './scores.js';
